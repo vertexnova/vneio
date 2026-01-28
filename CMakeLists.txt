@@ -41,9 +41,13 @@ list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake")
 #-----------------------------------------------------------------------------
 option(VNEIO_BUILD_TESTS "Build VneIo tests" OFF)
 option(VNEIO_BUILD_EXAMPLES "Build VneIo examples" OFF)
+option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(VNEIO_USE_LOGGING "Use vnelogging when available" ON)
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
 option(VNEIO_BUILD_IMAGE "Build image component" ON)
+
+# Enable coverage (uses FindCoverage from cmake/vnecmake)
+include(FindCoverage)
 
 #-----------------------------------------------------------------------------
 # Platform detection

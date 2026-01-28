@@ -1,5 +1,16 @@
 # VneIo
 
+<p align="center">
+  <a href="https://github.com/vertexnova/vneio/actions/workflows/ci.yml">
+    <img src="https://github.com/vertexnova/vneio/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"/>
+  </a>
+  <a href="https://codecov.io/gh/vertexnova/vneio">
+    <img src="https://codecov.io/gh/vertexnova/vneio/branch/main/graph/badge.svg" alt="Coverage"/>
+  </a>
+  <img src="https://img.shields.io/badge/C%2B%2B-20-blue.svg" alt="C++ Standard"/>
+  <img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"/>
+</p>
+
 Mesh and Image library extracted from VertexNova core, structured like **vneevents** / **vnelogging** / **vnemath**. It provides:
 
 - **Mesh** – Load 3D meshes (Assimp), with vertex attributes, materials, submeshes, optional normalization and barycentrics.
@@ -52,6 +63,7 @@ cmake --build .
 - **VNEIO_USE_LOGGING** – use vnelogging when available (default ON). If OFF or libs not present, mesh uses no-op logging.
 - **VNEIO_BUILD_TESTS** – build tests (default OFF). Enable with `-DVNEIO_BUILD_TESTS=ON`.
 - **VNEIO_BUILD_EXAMPLES** – build examples (default OFF). Enable with `-DVNEIO_BUILD_EXAMPLES=ON`.
+- **ENABLE_COVERAGE** – enable code coverage (default OFF). Use with Debug + GCC/Clang and lcov for reports.
 
 To use a local Assimp or stb_image, place them under `3rd_party/assimp` and `3rd_party/stb_image` with their own `CMakeLists.txt` so that `add_subdirectory(3rd_party/...)` works.
 
