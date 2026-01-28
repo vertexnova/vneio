@@ -13,17 +13,17 @@
 #include <gmock/gmock.h>
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
+#include "vertexnova/io/utils/path_utils.h"
 
 #include <filesystem>
 
 using namespace VNE::Mesh;
+using VNE::IO::Utils::getTestdataPath;
 
 namespace {
-// Paths relative to project root (tests run with WORKING_DIRECTORY = VNEIO_ROOT)
-const std::string kMeshesDir = "testdata/vneresources/resources/meshes";
-const std::string kTeapotPath = kMeshesDir + "/teapot.stl";
-const std::string kNonExistentPath = kMeshesDir + "/does_not_exist.stl";
-const std::string kInvalidMeshPath = kMeshesDir + "/invalid_mesh.stl";
+const std::string kTeapotPath = getTestdataPath("meshes/teapot.stl");
+const std::string kNonExistentPath = getTestdataPath("meshes/does_not_exist.stl");
+const std::string kInvalidMeshPath = getTestdataPath("meshes/invalid_mesh.stl");
 }  // namespace
 
 class MeshLoaderTest : public ::testing::Test {

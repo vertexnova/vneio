@@ -12,18 +12,18 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "vertexnova/io/image/image.h"
+#include "vertexnova/io/utils/path_utils.h"
 
 #include <filesystem>
 #include <cstring>
 
 using namespace VNE::Image;
+using VNE::IO::Utils::getTestdataPath;
 
 namespace {
-// Paths relative to project root (tests run with WORKING_DIRECTORY = VNEIO_ROOT)
-const std::string kTexturesDir = "testdata/vneresources/resources/textures";
-const std::string kTestImagePath = kTexturesDir + "/container.jpg";
-const std::string kPngPath = kTexturesDir + "/awesomeface.png";
-const std::string kNonExistentPath = kTexturesDir + "/does_not_exist.png";
+const std::string kTestImagePath = getTestdataPath("textures/container.jpg");
+const std::string kPngPath = getTestdataPath("textures/awesomeface.png");
+const std::string kNonExistentPath = getTestdataPath("textures/does_not_exist.png");
 
 const std::string kTestOutputDir = "test_output";
 }  // namespace
@@ -32,7 +32,8 @@ class ImageTest : public ::testing::Test {
    protected:
     void SetUp() override {
         if (!std::filesystem::exists(kTestImagePath) && !std::filesystem::exists(kPngPath)) {
-            GTEST_SKIP() << "No test image found under " << kTexturesDir
+            GTEST_SKIP() << "No test image found at " << kTestImagePath
+                         << " or " << kPngPath
                          << " (run from project root with testdata/vneresources updated)";
         }
     }

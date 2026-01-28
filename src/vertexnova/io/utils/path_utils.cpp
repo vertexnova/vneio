@@ -25,6 +25,16 @@ std::string getTestdataRoot() {
 #endif
 }
 
+std::string getTestdataPath(const std::string& subpath) {
+    std::string root = getTestdataRoot();
+    if (root.empty()) return subpath;
+    std::string p = subpath;
+    while (!p.empty() && (p.front() == '/' || p.front() == '\\')) p.erase(0, 1);
+    if (p.empty()) return root;
+    if (root.back() == '/' || root.back() == '\\') return root + p;
+    return root + "/" + p;
+}
+
 }  // namespace Utils
 }  // namespace IO
 }  // namespace VNE
