@@ -12,6 +12,7 @@
 
 #include <string>
 #include "mesh.h"
+#include "mesh_loader.h"
 
 namespace VNE {
 namespace Mesh {
@@ -33,16 +34,17 @@ struct AssimpLoaderOptions {
 };
 
 /**
- * @brief Loader for 3D meshes using Assimp
+ * @brief Loader for 3D meshes using Assimp (implements IMeshLoader)
  */
-class AssimpLoader {
+class AssimpLoader : public IMeshLoader {
    public:
     AssimpLoader() = default;
-    ~AssimpLoader() = default;
+    ~AssimpLoader() override = default;
 
-    bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts = {});
-    static bool isExtensionSupported(const std::string& path);
-    const std::string& getLastError() const { return last_error_; }
+    bool loadFile(const std::string& path, Mesh& out_mesh) override;
+    bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts);
+    bool isExtensionSupported(const std::string& path) const override;
+    const std::string& getLastError() const override { return last_error_; }
 
    private:
     std::string last_error_;

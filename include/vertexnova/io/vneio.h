@@ -9,7 +9,12 @@
 
 // Mesh (requires Assimp when building)
 #include "vertexnova/io/mesh/mesh.h"
+#include "vertexnova/io/mesh/mesh_loader.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
+#include "vertexnova/io/mesh/mesh_loader_registry.h"
 
 // Image (requires stb when building)
 #include "vertexnova/io/image/image.h"
+#include "vertexnova/io/image/volume.h"
+#include "vertexnova/io/image/nrrd_loader.h"
+#include "vertexnova/io/image/mhd_loader.h"

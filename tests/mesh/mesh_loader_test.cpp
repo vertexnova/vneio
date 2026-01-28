@@ -12,7 +12,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "vertexnova/io/mesh/mesh.h"
+#include "vertexnova/io/mesh/mesh_loader.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
+#include "vertexnova/io/mesh/mesh_loader_registry.h"
 #include "vertexnova/io/utils/path_utils.h"
 
 #include <filesystem>
@@ -127,12 +129,13 @@ TEST_F(MeshLoaderTest, LoadNonExistentFile) {
 }
 
 TEST_F(MeshLoaderTest, FormatSupport) {
-    AssimpLoader::isExtensionSupported("test.stl");
-    AssimpLoader::isExtensionSupported("test.obj");
-    AssimpLoader::isExtensionSupported("test.fbx");
-    AssimpLoader::isExtensionSupported("test.gltf");
-    EXPECT_FALSE(AssimpLoader::isExtensionSupported("test.xyz"));
-    EXPECT_FALSE(AssimpLoader::isExtensionSupported("test.unknown"));
+    AssimpLoader loader;
+    EXPECT_TRUE(loader.isExtensionSupported("test.stl"));
+    EXPECT_TRUE(loader.isExtensionSupported("test.obj"));
+    EXPECT_TRUE(loader.isExtensionSupported("test.fbx"));
+    EXPECT_TRUE(loader.isExtensionSupported("test.gltf"));
+    EXPECT_FALSE(loader.isExtensionSupported("test.xyz"));
+    EXPECT_FALSE(loader.isExtensionSupported("test.unknown"));
 }
 
 TEST_F(MeshLoaderTest, VertexAttributes) {
@@ -224,4 +227,32 @@ TEST_F(MeshLoaderTest, MultipleLoads) {
     EXPECT_EQ(mesh1.getVertexCount(), mesh2.getVertexCount());
     EXPECT_EQ(mesh1.getIndexCount(), mesh2.getIndexCount());
     EXPECT_EQ(mesh1.getSubmeshCount(), mesh2.getSubmeshCount());
+}
+
+TEST_F(MeshLoaderTest, LoadViaIMeshLoader) {
+    AssimpLoader loader;
+    IMeshLoader* iface = &loader;
+    Mesh mesh;
+    AssimpLoaderOptions opts;
+    opts.triangulate = true;
+    opts.calc_normals_if_missing = true;
+    opts.pre_transform_vertices = false;
+    opts.flip_uvs = false;
+    opts.gen_tangents = false;
+    EXPECT_TRUE(iface->loadFile(kTeapotPath, mesh));
+    EXPECT_FALSE(mesh.isEmpty());
+    EXPECT_GT(mesh.getVertexCount(), 0u);
+}
+
+TEST_F(MeshLoaderTest, RegistryReturnsLoaderForSupportedPath) {
+    auto loader = MeshLoaderRegistry::getLoaderFor(kTeapotPath);
+    ASSERT_NE(loader, nullptr);
+    Mesh mesh;
+    EXPECT_TRUE(loader->loadFile(kTeapotPath, mesh));
+    EXPECT_FALSE(mesh.isEmpty());
+}
+
+TEST_F(MeshLoaderTest, RegistryReturnsNullForUnsupportedPath) {
+    auto loader = MeshLoaderRegistry::getLoaderFor("file.xyz");
+    EXPECT_EQ(loader, nullptr);
 }

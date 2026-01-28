@@ -89,6 +89,10 @@ uint32_t BuildAssimpFlags(const VNE::Mesh::AssimpLoaderOptions& opts) {
 namespace VNE {
 namespace Mesh {
 
+bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh) {
+    return loadFile(path, out_mesh, AssimpLoaderOptions{});
+}
+
 bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts) {
     last_error_.clear();
 
@@ -412,12 +416,18 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
     return success;
 }
 
-bool AssimpLoader::isExtensionSupported(const std::string& path) {
+namespace {
+bool AssimpIsExtensionSupported(const std::string& path) {
     const auto pos = path.find_last_of('.');
     if (pos == std::string::npos)
         return false;
     Assimp::Importer importer;
     return importer.IsExtensionSupported(path.substr(pos));
+}
+}  // namespace
+
+bool AssimpLoader::isExtensionSupported(const std::string& path) const {
+    return AssimpIsExtensionSupported(path);
 }
 
 }  // namespace Mesh

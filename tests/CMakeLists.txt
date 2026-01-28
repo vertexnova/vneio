@@ -62,6 +62,7 @@ endif()
 set(TEST_SOURCES
     mesh/mesh_loader_test.cpp
     image/image_test.cpp
+    image/volume_test.cpp
     main.cpp
 )
 # path_utils (needs config.h from build dir)

@@ -192,6 +192,7 @@ endif()
 if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
     add_library(vneio_mesh STATIC
         src/vertexnova/io/mesh/assimp_loader.cpp
+        src/vertexnova/io/mesh/mesh_loader_registry.cpp
     )
     target_include_directories(vneio_mesh
         PUBLIC
@@ -218,6 +219,8 @@ endif()
 if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     add_library(vneio_image STATIC
         src/vertexnova/io/image/image.cpp
+        src/vertexnova/io/image/nrrd_loader.cpp
+        src/vertexnova/io/image/mhd_loader.cpp
     )
     target_include_directories(vneio_image
         PUBLIC
