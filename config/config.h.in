@@ -1,0 +1,22 @@
+#pragma once
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   January 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
+// Project info
+#define VNEIO_PROJECT_NAME     "@CMAKE_PROJECT_NAME@"
+#define VNEIO_VERSION          "@PROJECT_VERSION@"
+
+// Project paths (absolute at configure time)
+#define VNEIO_ROOT_DIR         "@VNEIO_ROOT@"
+#define VNEIO_INCLUDE_DIR      "@VNEIO_INCLUDE_DIR@"
+#define VNEIO_SRC_DIR          "@VNEIO_SRC_DIR@"
+#define VNEIO_BUILD_DIR        "@CMAKE_BINARY_DIR@"
+#define VNEIO_TESTDATA_DIR     "@VNEIO_TESTDATA_DIR@"

@@ -17,13 +17,23 @@ Namespaces: `VNE::Mesh`, `VNE::Image`. Includes live under `vertexnova/io/`.
 
 ## Build
 
-Clone with submodules (for vnecmake, vnecommon, vnelogging, and external/assimp):
+Clone with submodules (for vnecmake, vnecommon, vnelogging, external/assimp, external/googletest):
 
 ```bash
 git clone --recursive https://github.com/vertexnova/vneio.git
 cd vneio
 # Or, if already cloned: git submodule update --init --recursive
 ```
+
+**Test data (for `VNEIO_BUILD_TESTS=ON`):** `testdata/vneresources` uses **Git LFS** for meshes and images. After updating submodules, pull LFS files:
+
+```bash
+# Install Git LFS once: https://git-lfs.github.com/  (e.g. brew install git-lfs && git lfs install)
+git submodule update --init testdata/vneresources
+cd testdata/vneresources && git lfs pull && cd ../..
+```
+
+Or run `./scripts/fetch_testdata.sh` from the repo root.
 
 Then build:
 

@@ -2,13 +2,14 @@
 
 Build and platform scripts for the VneIo library (mesh + image).
 
-| Script             | Purpose                      |
-|--------------------|------------------------------|
-| `build_linux.sh`   | Build on Linux (GCC/Clang)   |
-| `build_macos.sh`   | Build on macOS (Clang/Xcode) |
-| `build_windows.py` | Build on Windows (MSVC)      |
-| `build_web.sh`     | Build for Web (Emscripten)   |
-| `build_ios.sh`     | Build for iOS (simulator/device) |
+| Script              | Purpose                                      |
+|---------------------|----------------------------------------------|
+| `fetch_testdata.sh` | Init testdata/vneresources and run Git LFS pull |
+| `build_linux.sh`    | Build on Linux (GCC/Clang)                   |
+| `build_macos.sh`    | Build on macOS (Clang/Xcode)                 |
+| `build_windows.py`  | Build on Windows (MSVC)                      |
+| `build_web.sh`      | Build for Web (Emscripten)                   |
+| `build_ios.sh`      | Build for iOS (simulator/device)             |
 
 ## Quick usage
 
@@ -50,5 +51,6 @@ iOS: `-simulator` (default), `-device`, `-deployment-target <version>`.
 - For mesh: Assimp (via `external/assimp` or system)
 - For image: stb_image (via `external/stb_image` or FetchContent)
 - Optional logging: `libs/vnecommon`, `libs/vnelogging` (submodules)
+- **Tests:** testdata/vneresources (submodule) uses **Git LFS**; install [git-lfs](https://git-lfs.github.com/) and run `./scripts/fetch_testdata.sh` to pull meshes/textures.
 
 Clone with submodules: `git submodule update --init --recursive`

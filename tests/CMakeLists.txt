@@ -64,6 +64,8 @@ set(TEST_SOURCES
     image/image_test.cpp
     main.cpp
 )
+# path_utils (needs config.h from build dir)
+list(APPEND TEST_SOURCES ${VNEIO_ROOT}/src/vertexnova/io/utils/path_utils.cpp)
 
 add_executable(TestVneIo ${TEST_SOURCES})
 
@@ -71,6 +73,7 @@ target_include_directories(TestVneIo
     PUBLIC
         $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
         $<BUILD_INTERFACE:${VNEIO_SRC_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
 )
 if(GTEST_INCLUDE_DIRS)
     target_include_directories(TestVneIo SYSTEM PUBLIC ${GTEST_INCLUDE_DIRS})
@@ -91,6 +94,9 @@ target_link_libraries(TestVneIo
         ${VNEIO_TEST_LIBS}
 )
 
-# Run from project root so testdata/vneresources/resources/... paths work
+# Ensure testdata root is defined (config.h or fallback from CMake)
+target_compile_definitions(TestVneIo PRIVATE "VNEIO_TESTDATA_DIR=\"${VNEIO_TESTDATA_DIR}\"")
+
+# Run from project root so testdata paths resolve; testdata root is absolute from config
 add_test(NAME vneio.test COMMAND TestVneIo)
 set_tests_properties(vneio.test PROPERTIES WORKING_DIRECTORY ${VNEIO_ROOT})

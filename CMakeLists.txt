@@ -25,6 +25,10 @@ set(VNEIO_INCLUDE_DIR ${VNEIO_ROOT}/include)
 set(VNEIO_SRC_DIR ${VNEIO_ROOT}/src)
 set(VNEIO_EXTERNAL_DIR ${VNEIO_ROOT}/external)
 set(VNEIO_THIRD_PARTY_DIR ${VNEIO_ROOT}/3rd_party)
+set(VNEIO_TESTDATA_DIR "${VNEIO_ROOT}/testdata/vneresources/resources")
+
+# Configure config.h for path_utils and tests
+configure_file(${VNEIO_ROOT}/config/config.h.in ${CMAKE_BINARY_DIR}/config.h @ONLY)
 
 # VneCMake shared modules (submodule); then project-specific cmake
 if(EXISTS "${VNEIO_ROOT}/cmake/vnecmake/modules")
