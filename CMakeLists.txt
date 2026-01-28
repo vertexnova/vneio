@@ -35,8 +35,8 @@ list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake")
 #-----------------------------------------------------------------------------
 # Build options
 #-----------------------------------------------------------------------------
-option(BUILD_TESTS "Build tests" OFF)
-option(BUILD_EXAMPLES "Build examples" OFF)
+option(VNEIO_BUILD_TESTS "Build VneIo tests" OFF)
+option(VNEIO_BUILD_EXAMPLES "Build VneIo examples" OFF)
 option(VNEIO_USE_LOGGING "Use vnelogging when available" ON)
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
 option(VNEIO_BUILD_IMAGE "Build image component" ON)
@@ -96,8 +96,6 @@ if(VNEIO_USE_LOGGING AND EXISTS "${VNE_LIBS_DIR}/vnelogging/CMakeLists.txt")
         add_subdirectory(libs/vnecommon libs/vnecommon)
     endif()
     if(NOT TARGET vne::logging)
-        set(VNEIO_BUILD_TESTS ${BUILD_TESTS})
-        set(VNEIO_BUILD_EXAMPLES ${BUILD_EXAMPLES})
         set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
         set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
         add_subdirectory(libs/vnelogging ${CMAKE_BINARY_DIR}/libs/vnelogging)
@@ -249,11 +247,11 @@ add_library(vne::io ALIAS vneio)
 #-----------------------------------------------------------------------------
 # Tests & examples
 #-----------------------------------------------------------------------------
-if(BUILD_TESTS AND EXISTS "${VNEIO_ROOT}/tests/CMakeLists.txt")
+if(VNEIO_BUILD_TESTS AND EXISTS "${VNEIO_ROOT}/tests/CMakeLists.txt")
     enable_testing()
     add_subdirectory(tests)
 endif()
-if(BUILD_EXAMPLES AND EXISTS "${VNEIO_ROOT}/examples/CMakeLists.txt")
+if(VNEIO_BUILD_EXAMPLES AND EXISTS "${VNEIO_ROOT}/examples/CMakeLists.txt")
     add_subdirectory(examples)
 endif()
 

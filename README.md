@@ -31,12 +31,17 @@ Then build:
 mkdir build && cd build
 cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON
 cmake --build .
+
+# With tests (requires testdata/vneresources and external/googletest):
+# cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON -DVNEIO_BUILD_TESTS=ON
+# cmake --build . && ctest --output-on-failure
 ```
 
 - **VNEIO_BUILD_MESH** – build mesh component (default ON; needs Assimp).
 - **VNEIO_BUILD_IMAGE** – build image component (default ON; stb fetched if needed).
 - **VNEIO_USE_LOGGING** – use vnelogging when available (default ON). If OFF or libs not present, mesh uses no-op logging.
-- **BUILD_TESTS** / **BUILD_EXAMPLES** – off by default.
+- **VNEIO_BUILD_TESTS** – build tests (default OFF). Enable with `-DVNEIO_BUILD_TESTS=ON`.
+- **VNEIO_BUILD_EXAMPLES** – build examples (default OFF). Enable with `-DVNEIO_BUILD_EXAMPLES=ON`.
 
 To use a local Assimp or stb_image, place them under `3rd_party/assimp` and `3rd_party/stb_image` with their own `CMakeLists.txt` so that `add_subdirectory(3rd_party/...)` works.
 
