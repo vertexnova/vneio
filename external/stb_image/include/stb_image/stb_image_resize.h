@@ -1,0 +1,1 @@
+#include "../../src/stb_image_resize2.h"
