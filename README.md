@@ -1,4 +1,4 @@
-# VneIo
+# VertexNova I/O (vneio)
 
 <p align="center">
   <a href="https://github.com/vertexnova/vneio/actions/workflows/ci.yml">
