@@ -27,15 +27,19 @@ std::string getTestdataRoot() {
 
 std::string getTestdataPath(const std::string& subpath) {
     std::string root = getTestdataRoot();
-    if (root.empty())
+    if (root.empty()) {
         return subpath;
+    }
     std::string p = subpath;
-    while (!p.empty() && (p.front() == '/' || p.front() == '\\'))
+    while (!p.empty() && (p.front() == '/' || p.front() == '\\')) {
         p.erase(0, 1);
-    if (p.empty())
+    }
+    if (p.empty()) {
         return root;
-    if (root.back() == '/' || root.back() == '\\')
+    }
+    if (root.back() == '/' || root.back() == '\\') {
         return root + p;
+    }
     return root + "/" + p;
 }
 

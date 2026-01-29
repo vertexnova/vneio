@@ -77,8 +77,9 @@ inline Status_C ReadHeaderUntilBlankLine(std::ifstream& f, std::string& header_t
         header_text += "\n";
         if (line.empty()) {
             data_offset = f.tellg();
-            if (data_offset < 0)
+            if (data_offset < 0) {
                 data_offset = 0;
+            }
             return Status_C::OkStatus();
         }
     }
@@ -93,8 +94,9 @@ inline void ByteSwapInPlace(uint8_t* bytes, int elem_size) {
 }
 
 inline void ByteSwapBufferInPlace(std::vector<uint8_t>& buf, int elem_size) {
-    if (elem_size <= 1)
+    if (elem_size <= 1) {
         return;
+    }
     const size_t n = buf.size() / static_cast<size_t>(elem_size);
     for (size_t i = 0; i < n; ++i) {
         ByteSwapInPlace(buf.data() + i * static_cast<size_t>(elem_size), elem_size);

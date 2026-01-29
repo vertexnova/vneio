@@ -7,6 +7,24 @@ VneIo follows the **VertexNova** coding style. Summary and tooling:
 - **Static analysis / naming** — Enforced by [.clang-tidy](.clang-tidy).
 - **Editor defaults** — [.editorconfig](.editorconfig).
 
+## Control flow: braces
+
+- **Always use braces** after `if`, `else`, `for`, `while`, and `do` — even when the body is a single statement. This avoids bugs when adding lines later and keeps diffs clear.
+
+  ```cpp
+  // Good
+  if (cond) {
+      doSomething();
+  }
+  for (int i = 0; i < n; ++i) {
+      process(i);
+  }
+
+  // Avoid (single line without braces)
+  if (cond) doSomething();
+  for (int i = 0; i < n; ++i) process(i);
+  ```
+
 ## VneIo-specific
 
 - Public API: `include/vertexnova/io/` (mesh/, image/, vneio.h).

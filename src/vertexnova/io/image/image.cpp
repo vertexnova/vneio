@@ -123,8 +123,9 @@ bool Image::resize(int new_width, int new_height) {
 #if defined(VNEIO_USE_STB_IMAGE_RESIZE)
     const int ok =
         stbir_resize_uint8(data_.data(), width_, height_, 0, resized_data.data(), new_width, new_height, 0, channels_);
-    if (ok == 0)
+    if (ok == 0) {
         return false;
+    }
 #else
     // Bilinear resize (uint8). Good enough when stb_image_resize isn't available.
     const float sx = static_cast<float>(width_) / static_cast<float>(new_width);

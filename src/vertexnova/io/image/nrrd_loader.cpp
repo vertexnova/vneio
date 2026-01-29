@@ -36,8 +36,9 @@ namespace {
 
 std::string trim(const std::string& s) {
     auto start = s.find_first_not_of(" \t\r\n");
-    if (start == std::string::npos)
+    if (start == std::string::npos) {
         return "";
+    }
     auto end = s.find_last_not_of(" \t\r\n");
     return s.substr(start, end == std::string::npos ? std::string::npos : end - start + 1);
 }
@@ -45,8 +46,9 @@ std::string trim(const std::string& s) {
 bool parseSizes(const std::string& value, int dims[3], int dimension) {
     std::istringstream iss(value);
     for (int i = 0; i < dimension && iss; ++i) {
-        if (!(iss >> dims[i]) || dims[i] <= 0)
+        if (!(iss >> dims[i]) || dims[i] <= 0) {
             return false;
+        }
     }
     return true;
 }
@@ -54,8 +56,9 @@ bool parseSizes(const std::string& value, int dims[3], int dimension) {
 bool parseSpacings(const std::string& value, float spacing[3], int dimension) {
     std::istringstream iss(value);
     for (int i = 0; i < dimension && iss; ++i) {
-        if (!(iss >> spacing[i]))
+        if (!(iss >> spacing[i])) {
             return false;
+        }
     }
     return true;
 }
@@ -65,22 +68,30 @@ VolumePixelType parseType(const std::string& t) {
     std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
     });
-    if (lower == "uchar" || lower == "uint8" || lower == "unsigned char" || lower == "uint8_t")
+    if (lower == "uchar" || lower == "uint8" || lower == "unsigned char" || lower == "uint8_t") {
         return VolumePixelType::eUint8;
-    if (lower == "char" || lower == "int8" || lower == "signed char" || lower == "int8_t")
+    }
+    if (lower == "char" || lower == "int8" || lower == "signed char" || lower == "int8_t") {
         return VolumePixelType::eInt8;
-    if (lower == "ushort" || lower == "uint16" || lower == "unsigned short" || lower == "uint16_t")
+    }
+    if (lower == "ushort" || lower == "uint16" || lower == "unsigned short" || lower == "uint16_t") {
         return VolumePixelType::eUint16;
-    if (lower == "short" || lower == "int16" || lower == "signed short" || lower == "int16_t")
+    }
+    if (lower == "short" || lower == "int16" || lower == "signed short" || lower == "int16_t") {
         return VolumePixelType::eInt16;
-    if (lower == "uint" || lower == "uint32" || lower == "unsigned int" || lower == "uint32_t")
+    }
+    if (lower == "uint" || lower == "uint32" || lower == "unsigned int" || lower == "uint32_t") {
         return VolumePixelType::eUint32;
-    if (lower == "int" || lower == "int32" || lower == "signed int" || lower == "int32_t")
+    }
+    if (lower == "int" || lower == "int32" || lower == "signed int" || lower == "int32_t") {
         return VolumePixelType::eInt32;
-    if (lower == "float" || lower == "float32")
+    }
+    if (lower == "float" || lower == "float32") {
         return VolumePixelType::eFloat32;
-    if (lower == "double" || lower == "float64")
+    }
+    if (lower == "double" || lower == "float64") {
         return VolumePixelType::eFloat64;
+    }
     return VolumePixelType::eUnknown;
 }
 
@@ -93,8 +104,9 @@ std::string dirname(const std::string& path) {
 
 bool NrrdLoader::isExtensionSupported(const std::string& path) const {
     auto pos = path.find_last_of('.');
-    if (pos == std::string::npos)
+    if (pos == std::string::npos) {
         return false;
+    }
     std::string ext = path.substr(pos);
     std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
@@ -118,8 +130,9 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     if (nrrdLoad(nin, const_cast<char*>(path.c_str()), nullptr)) {
         err = biffGetDone(NRRD);
         last_error_ = std::string("NrrdLoader: ") + (err ? err : "unknown error");
-        if (err)
+        if (err) {
             free(err);
+        }
         nrrdNuke(nin);
         return false;
     }
@@ -269,14 +282,17 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     std::getline(hs, line);
     while (std::getline(hs, line)) {
         line = trim(line);
-        if (line.empty())
+        if (line.empty()) {
             break;
-        if (line[0] == '#')
+        }
+        if (line[0] == '#') {
             continue;
+        }
 
         size_t colon = line.find(':');
-        if (colon == std::string::npos)
+        if (colon == std::string::npos) {
             continue;
+        }
         std::string key = trim(line.substr(0, colon));
         std::string val = trim(line.substr(colon + 1));
         std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) {
@@ -311,8 +327,9 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
             data_file = trim(val);
         } else if (key == "spacings") {
             const int n = (dimension > 0) ? dimension : 3;
-            if (parseSpacings(val, spacings, n))
+            if (parseSpacings(val, spacings, n)) {
                 has_spacings = true;
+            }
         } else if (key == "byte skip" || key == "byteskip") {
             byte_skip = static_cast<size_t>(std::stoll(val));
         } else if (key == "line skip" || key == "lineskip") {
@@ -333,8 +350,9 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         last_error_ = "NrrdLoader: type not set";
         return false;
     }
-    if (encoding.empty())
+    if (encoding.empty()) {
         encoding = "raw";
+    }
     std::transform(encoding.begin(), encoding.end(), encoding.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
     });
@@ -376,10 +394,11 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         std::string data_path = data_file;
         if (data_file[0] != '/' && data_file[0] != '\\') {
             std::string base_dir = dirname(path);
-            if (!base_dir.empty())
+            if (!base_dir.empty()) {
                 data_path = base_dir + "/" + data_file;
-            else
+            } else {
                 data_path = data_file;
+            }
         }
 
         std::ifstream df(data_path, std::ios::binary);

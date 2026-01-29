@@ -3,6 +3,7 @@
 
 Checks: >
   -*,
+  readability-braces-around-statements,
   readability-identifier-naming,
   modernize-use-nullptr,
   modernize-use-override,
@@ -114,3 +115,5 @@ CheckOptions:
     value: reasonable
   - key: modernize-pass-by-value.IncludeStyle
     value: google
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: 0

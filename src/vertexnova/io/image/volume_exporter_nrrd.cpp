@@ -19,8 +19,9 @@ namespace VNE::Image {
 namespace {
 
 void SetError(std::string* out_error, const std::string& msg) {
-    if (out_error)
+    if (out_error) {
         *out_error = msg;
+    }
 }
 
 std::string PixelTypeToNrrd(VolumePixelType t) {

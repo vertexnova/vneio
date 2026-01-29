@@ -434,8 +434,9 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
 namespace {
 bool AssimpIsExtensionSupported(const std::string& path) {
     const auto pos = path.find_last_of('.');
-    if (pos == std::string::npos)
+    if (pos == std::string::npos) {
         return false;
+    }
     Assimp::Importer importer;
     return importer.IsExtensionSupported(path.substr(pos));
 }
