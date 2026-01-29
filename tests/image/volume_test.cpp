@@ -106,3 +106,26 @@ TEST(VolumeTest, NrrdLoaderLoadTestdataVolume) {
     EXPECT_GT(vol.byteCount(), 0u);
     EXPECT_NE(vol.getData(), nullptr);
 }
+
+TEST(VolumeTest, NrrdLoaderLoadFoolNrrd) {
+    // 2D NRRD from testdata (fool.nrrd), loaded as 3D with depth padded to 1
+    std::string path = getTestdataPath("volumes/fool.nrrd");
+    if (!std::filesystem::exists(path)) {
+        GTEST_SKIP() << "Test volume not found: " << path
+                     << " (run from project root with testdata/volumes present)";
+    }
+
+    NrrdLoader loader;
+    Volume vol;
+    EXPECT_TRUE(loader.load(path, vol)) << loader.getLastError();
+    EXPECT_FALSE(vol.isEmpty());
+    EXPECT_GT(vol.width(), 0);
+    EXPECT_GT(vol.height(), 0);
+    EXPECT_EQ(vol.depth(), 1) << "fool.nrrd is 2D, depth should be padded to 1";
+    EXPECT_GT(vol.voxelCount(), 0u);
+    EXPECT_GT(vol.byteCount(), 0u);
+    EXPECT_NE(vol.getData(), nullptr);
+    EXPECT_EQ(vol.voxelCount(), static_cast<size_t>(vol.width()) * static_cast<size_t>(vol.height())
+                                      * static_cast<size_t>(vol.depth()));
+    EXPECT_EQ(vol.byteCount(), vol.voxelCount() * static_cast<size_t>(bytesPerVoxel(vol.pixel_type)));
+}
