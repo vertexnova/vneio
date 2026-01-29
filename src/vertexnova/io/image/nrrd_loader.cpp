@@ -53,6 +53,21 @@ bool parseSizes(const std::string& value, int dims[3], int dimension) {
     return true;
 }
 
+// Parse 1, 2, or 3 sizes (for when dimension is unknown yet). Returns number parsed.
+int parseSizesUpTo3(const std::string& value, int dims[3]) {
+    std::istringstream iss(value);
+    int n = 0;
+    for (int i = 0; i < 3 && iss; ++i) {
+        int v = 0;
+        if (!(iss >> v) || v <= 0) {
+            break;
+        }
+        dims[i] = v;
+        n++;
+    }
+    return n;
+}
+
 bool parseSpacings(const std::string& value, float spacing[3], int dimension) {
     std::istringstream iss(value);
     for (int i = 0; i < dimension && iss; ++i) {
@@ -137,9 +152,9 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         return false;
     }
 
-    // Validate dimension
-    if (nin->dim != 3) {
-        last_error_ = "NrrdLoader: only dimension 3 is supported, got " + std::to_string(nin->dim);
+    // Support 1D, 2D, or 3D; store as 3D volume (unused dims = 1)
+    if (nin->dim < 1 || nin->dim > 3) {
+        last_error_ = "NrrdLoader: dimension 1, 2, or 3 supported, got " + std::to_string(nin->dim);
         nrrdNuke(nin);
         return false;
     }
@@ -177,11 +192,11 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
             return false;
     }
 
-    // Extract dimensions (axis[0] is fastest, axis[2] is slowest)
-    int sizes[3] = {static_cast<int>(nin->axis[0].size),
-                    static_cast<int>(nin->axis[1].size),
-                    static_cast<int>(nin->axis[2].size)};
-
+    // Extract dimensions (axis[0] fastest, axis[2] slowest); pad with 1 for 1D/2D
+    int sizes[3] = {1, 1, 1};
+    for (int i = 0; i < nin->dim && i < 3; ++i) {
+        sizes[i] = static_cast<int>(nin->axis[i].size);
+    }
     if (sizes[0] <= 0 || sizes[1] <= 0 || sizes[2] <= 0) {
         last_error_ = "NrrdLoader: invalid sizes";
         nrrdNuke(nin);
@@ -193,8 +208,8 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     out_volume.dims[2] = sizes[2];
     out_volume.pixel_type = pixel_type;
 
-    // Extract spacing (if available)
-    for (int i = 0; i < 3; ++i) {
+    // Extract spacing (if available); only set for present axes
+    for (int i = 0; i < nin->dim && i < 3; ++i) {
         if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
             out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
         }
@@ -268,6 +283,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 
     int dimension = 0;
     int sizes[3] = {0, 0, 0};
+    int sizes_count = 0;  // number of sizes parsed (1, 2, or 3)
     bool have_sizes = false;
     VolumePixelType pixel_type = VolumePixelType::eUnknown;
     std::string encoding;
@@ -301,13 +317,14 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 
         if (key == "dimension") {
             dimension = std::stoi(val);
-            if (dimension != 3) {
-                last_error_ = "NrrdLoader: only dimension 3 is supported, got " + std::to_string(dimension);
+            if (dimension < 1 || dimension > 3) {
+                last_error_ = "NrrdLoader: dimension 1, 2, or 3 supported, got " + std::to_string(dimension);
                 return false;
             }
         } else if (key == "sizes") {
-            // Some files place sizes before dimension. Try parsing as 3 regardless.
-            if (!parseSizes(val, sizes, 3)) {
+            // Some files place sizes before dimension; accept 1, 2, or 3 values.
+            sizes_count = parseSizesUpTo3(val, sizes);
+            if (sizes_count < 1) {
                 last_error_ = "NrrdLoader: invalid sizes";
                 return false;
             }
@@ -342,8 +359,16 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         }
     }
 
-    if (dimension != 3 || !have_sizes || sizes[0] <= 0 || sizes[1] <= 0 || sizes[2] <= 0) {
+    if (dimension < 1 || dimension > 3 || !have_sizes || sizes_count < dimension) {
         last_error_ = "NrrdLoader: invalid dimension or sizes";
+        return false;
+    }
+    // Normalize: pad trailing dims with 1 for 1D/2D
+    for (int i = dimension; i < 3; ++i) {
+        sizes[i] = 1;
+    }
+    if (sizes[0] <= 0 || sizes[1] <= 0 || sizes[2] <= 0) {
+        last_error_ = "NrrdLoader: invalid sizes";
         return false;
     }
     if (pixel_type == VolumePixelType::eUnknown) {
@@ -356,8 +381,9 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     std::transform(encoding.begin(), encoding.end(), encoding.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
     });
-    if (encoding != "raw") {
-        last_error_ = "NrrdLoader: only raw encoding is supported, got " + encoding;
+    const bool is_ascii = (encoding == "ascii" || encoding == "text");
+    if (encoding != "raw" && !is_ascii) {
+        last_error_ = "NrrdLoader: only raw and ascii encoding supported, got " + encoding;
         return false;
     }
 
@@ -372,8 +398,70 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     }
 
     size_t num_bytes = out_volume.byteCount();
+    const size_t voxels = out_volume.voxelCount();
+    const int bpp = bytesPerVoxel(pixel_type);
 
-    // Load payload: attached or detached.
+    auto readAsciiPayload = [&](std::istream& in) -> bool {
+        out_volume.data.resize(num_bytes);
+        uint8_t* ptr = out_volume.data.data();
+        for (size_t i = 0; i < voxels; ++i) {
+            switch (pixel_type) {
+                case VolumePixelType::eUint8: {
+                    int v;
+                    if (!(in >> v)) return false;
+                    ptr[i * bpp] = static_cast<uint8_t>(v);
+                    break;
+                }
+                case VolumePixelType::eInt8: {
+                    int v;
+                    if (!(in >> v)) return false;
+                    *reinterpret_cast<int8_t*>(ptr + i * bpp) = static_cast<int8_t>(v);
+                    break;
+                }
+                case VolumePixelType::eUint16: {
+                    int v;
+                    if (!(in >> v)) return false;
+                    *reinterpret_cast<uint16_t*>(ptr + i * bpp) = static_cast<uint16_t>(v);
+                    break;
+                }
+                case VolumePixelType::eInt16: {
+                    int v;
+                    if (!(in >> v)) return false;
+                    *reinterpret_cast<int16_t*>(ptr + i * bpp) = static_cast<int16_t>(v);
+                    break;
+                }
+                case VolumePixelType::eUint32: {
+                    unsigned long v;
+                    if (!(in >> v)) return false;
+                    *reinterpret_cast<uint32_t*>(ptr + i * bpp) = static_cast<uint32_t>(v);
+                    break;
+                }
+                case VolumePixelType::eInt32: {
+                    long v;
+                    if (!(in >> v)) return false;
+                    *reinterpret_cast<int32_t*>(ptr + i * bpp) = static_cast<int32_t>(v);
+                    break;
+                }
+                case VolumePixelType::eFloat32: {
+                    float v;
+                    if (!(in >> v)) return false;
+                    *reinterpret_cast<float*>(ptr + i * bpp) = v;
+                    break;
+                }
+                case VolumePixelType::eFloat64: {
+                    double v;
+                    if (!(in >> v)) return false;
+                    *reinterpret_cast<double*>(ptr + i * bpp) = v;
+                    break;
+                }
+                default:
+                    return false;
+            }
+        }
+        return true;
+    };
+
+    // Load payload: attached or detached; raw or ascii.
     if (data_file.empty()) {
         // Attached data starts at `data_offset`.
         f.clear();
@@ -383,10 +471,17 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         if (byte_skip > 0) {
             f.seekg(static_cast<std::streamoff>(byte_skip), std::ios::cur);
         }
-        out_volume.data.resize(num_bytes);
-        if (!f.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
-            last_error_ = "NrrdLoader: failed to read attached data";
-            return false;
+        if (is_ascii) {
+            if (!readAsciiPayload(f)) {
+                last_error_ = "NrrdLoader: failed to read attached ascii data";
+                return false;
+            }
+        } else {
+            out_volume.data.resize(num_bytes);
+            if (!f.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
+                last_error_ = "NrrdLoader: failed to read attached data";
+                return false;
+            }
         }
     } else {
         f.close();
@@ -401,7 +496,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
             }
         }
 
-        std::ifstream df(data_path, std::ios::binary);
+        std::ifstream df(data_path, is_ascii ? std::ios::in : std::ios::binary);
         if (!df) {
             last_error_ = "NrrdLoader: cannot open data file: " + data_path;
             return false;
@@ -411,10 +506,17 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         if (byte_skip > 0) {
             df.seekg(static_cast<std::streamoff>(byte_skip), std::ios::cur);
         }
-        out_volume.data.resize(num_bytes);
-        if (!df.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
-            last_error_ = "NrrdLoader: failed to read detached data";
-            return false;
+        if (is_ascii) {
+            if (!readAsciiPayload(df)) {
+                last_error_ = "NrrdLoader: failed to read detached ascii data";
+                return false;
+            }
+        } else {
+            out_volume.data.resize(num_bytes);
+            if (!df.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
+                last_error_ = "NrrdLoader: failed to read detached data";
+                return false;
+            }
         }
     }
 

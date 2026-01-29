@@ -8,11 +8,13 @@
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/nrrd_loader.h"
 #include "vertexnova/io/image/mhd_loader.h"
+#include "vertexnova/io/utils/path_utils.h"
 #include <filesystem>
 #include <fstream>
 #include <cstdint>
 
 using namespace VNE::Image;
+using VNE::IO::Utils::getTestdataPath;
 
 TEST(VolumeTest, DefaultEmpty) {
     Volume vol;
@@ -83,4 +85,24 @@ TEST(VolumeTest, NrrdLoaderLoadNonexistent) {
     EXPECT_FALSE(loader.load("/nonexistent/path.nrrd", vol));
     EXPECT_TRUE(vol.isEmpty());
     EXPECT_FALSE(loader.getLastError().empty());
+}
+
+TEST(VolumeTest, NrrdLoaderLoadTestdataVolume) {
+    // Use a small 1D NRRD from testdata (loader supports 1D, 2D, 3D)
+    std::string path = getTestdataPath("volumes/an-hist.nrrd");
+    if (!std::filesystem::exists(path)) {
+        GTEST_SKIP() << "Test volume not found: " << path
+                     << " (run from project root with testdata/volumes present)";
+    }
+
+    NrrdLoader loader;
+    Volume vol;
+    EXPECT_TRUE(loader.load(path, vol)) << loader.getLastError();
+    EXPECT_FALSE(vol.isEmpty());
+    EXPECT_GT(vol.width(), 0);
+    EXPECT_GT(vol.height(), 0);
+    EXPECT_GT(vol.depth(), 0);
+    EXPECT_GT(vol.voxelCount(), 0u);
+    EXPECT_GT(vol.byteCount(), 0u);
+    EXPECT_NE(vol.getData(), nullptr);
 }
