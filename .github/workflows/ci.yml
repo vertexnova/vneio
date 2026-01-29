@@ -45,13 +45,16 @@ jobs:
     - name: Remove external/assimp so CMake uses find_package(assimp)
       run: rm -rf external/assimp
 
+    # Disable LTO for Clang: vnelogging uses LTO by default; Clang+LTO produces bitcode in .a
+    # that GNU ld doesn't recognize ("file format not recognized"). ENABLE_IPO=OFF fixes it.
     - name: Configure CMake
       run: |
         cmake -B build -S . \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DVNEIO_BUILD_TESTS=ON
+          -DVNEIO_BUILD_TESTS=ON \
+          -DENABLE_IPO=OFF
 
     - name: Build
       run: cmake --build build --config Release --parallel
