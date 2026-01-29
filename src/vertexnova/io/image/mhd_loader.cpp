@@ -23,7 +23,8 @@ namespace {
 
 std::string trim(const std::string& s) {
     auto start = s.find_first_not_of(" \t\r\n");
-    if (start == std::string::npos) return "";
+    if (start == std::string::npos)
+        return "";
     auto end = s.find_last_not_of(" \t\r\n");
     return s.substr(start, end == std::string::npos ? std::string::npos : end - start + 1);
 }
@@ -31,7 +32,8 @@ std::string trim(const std::string& s) {
 bool parseDimSize(const std::string& value, int dims[3], int ndims) {
     std::istringstream iss(value);
     for (int i = 0; i < ndims && iss; ++i) {
-        if (!(iss >> dims[i]) || dims[i] <= 0) return false;
+        if (!(iss >> dims[i]) || dims[i] <= 0)
+            return false;
     }
     return true;
 }
@@ -39,22 +41,33 @@ bool parseDimSize(const std::string& value, int dims[3], int ndims) {
 bool parseElementSpacing(const std::string& value, float spacing[3], int ndims) {
     std::istringstream iss(value);
     for (int i = 0; i < ndims && iss; ++i) {
-        if (!(iss >> spacing[i])) return false;
+        if (!(iss >> spacing[i]))
+            return false;
     }
     return true;
 }
 
 VolumePixelType parseElementType(const std::string& t) {
     std::string upper = t;
-    std::transform(upper.begin(), upper.end(), upper.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-    if (upper == "MET_UCHAR") return VolumePixelType::eUint8;
-    if (upper == "MET_CHAR") return VolumePixelType::eInt8;
-    if (upper == "MET_USHORT") return VolumePixelType::eUint16;
-    if (upper == "MET_SHORT") return VolumePixelType::eInt16;
-    if (upper == "MET_UINT") return VolumePixelType::eUint32;
-    if (upper == "MET_INT") return VolumePixelType::eInt32;
-    if (upper == "MET_FLOAT") return VolumePixelType::eFloat32;
-    if (upper == "MET_DOUBLE") return VolumePixelType::eFloat64;
+    std::transform(upper.begin(), upper.end(), upper.begin(), [](unsigned char c) {
+        return static_cast<char>(std::toupper(c));
+    });
+    if (upper == "MET_UCHAR")
+        return VolumePixelType::eUint8;
+    if (upper == "MET_CHAR")
+        return VolumePixelType::eInt8;
+    if (upper == "MET_USHORT")
+        return VolumePixelType::eUint16;
+    if (upper == "MET_SHORT")
+        return VolumePixelType::eInt16;
+    if (upper == "MET_UINT")
+        return VolumePixelType::eUint32;
+    if (upper == "MET_INT")
+        return VolumePixelType::eInt32;
+    if (upper == "MET_FLOAT")
+        return VolumePixelType::eFloat32;
+    if (upper == "MET_DOUBLE")
+        return VolumePixelType::eFloat64;
     return VolumePixelType::eUnknown;
 }
 
@@ -67,9 +80,12 @@ std::string dirname(const std::string& path) {
 
 bool MhdLoader::isExtensionSupported(const std::string& path) const {
     auto pos = path.find_last_of('.');
-    if (pos == std::string::npos) return false;
+    if (pos == std::string::npos)
+        return false;
     std::string ext = path.substr(pos);
-    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(c));
+    });
     return ext == ".mhd" || ext == ".mha";
 }
 
@@ -110,13 +126,17 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
 
     while (std::getline(hs, line)) {
         line = trim(line);
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
 
         size_t eq = line.find('=');
-        if (eq == std::string::npos) continue;
+        if (eq == std::string::npos)
+            continue;
         std::string key = trim(line.substr(0, eq));
         std::string val = trim(line.substr(eq + 1));
-        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) {
+            return static_cast<char>(std::toupper(c));
+        });
 
         if (key == "NDIMS") {
             ndims = std::stoi(val);
@@ -165,8 +185,10 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     size_t num_bytes = out_volume.byteCount();
 
     std::string element_data_file_upper = element_data_file;
-    std::transform(element_data_file_upper.begin(), element_data_file_upper.end(), element_data_file_upper.begin(),
-        [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    std::transform(element_data_file_upper.begin(),
+                   element_data_file_upper.end(),
+                   element_data_file_upper.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
     if (element_data_file_upper == "LOCAL" || element_data_file.empty()) {
         if (data_start_offset < 0) {
             last_error_ = "MhdLoader: ElementDataFile LOCAL but could not determine data start";

@@ -24,7 +24,7 @@ struct ObjExportOptions {
     bool write_mtl = true;
     bool write_normals = true;
     bool write_texcoords = true;
-    bool flip_v = false; // invert texcoord Y (handy when your renderer uses a different convention)
+    bool flip_v = false;  // invert texcoord Y (handy when your renderer uses a different convention)
 };
 
 /**
@@ -35,6 +35,9 @@ struct ObjExportOptions {
  * @param opts     Export options
  * @param out_error If non-null, receives error description on failure
  */
-bool ExportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOptions& opts = {}, std::string* out_error = nullptr);
+bool ExportObj(const std::string& obj_path,
+               const Mesh& mesh,
+               const ObjExportOptions& opts = {},
+               std::string* out_error = nullptr);
 
 }  // namespace VNE::Mesh

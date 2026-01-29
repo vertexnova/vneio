@@ -17,16 +17,22 @@
 namespace VNE::Image {
 
 struct NrrdExportOptions {
-    bool detached_data = false;   // if true: writes .nhdr + separate .raw
-    std::string detached_data_name; // optional override name for the raw file
+    bool detached_data = false;      // if true: writes .nhdr + separate .raw
+    std::string detached_data_name;  // optional override name for the raw file
 };
 
 struct MhdExportOptions {
-    bool inline_data = false;     // if true: writes .mha (ElementDataFile = LOCAL)
-    std::string raw_data_name;    // used when inline_data==false
+    bool inline_data = false;   // if true: writes .mha (ElementDataFile = LOCAL)
+    std::string raw_data_name;  // used when inline_data==false
 };
 
-bool ExportNrrd(const std::string& nrrd_or_nhdr_path, const Volume& vol, const NrrdExportOptions& opts = {}, std::string* out_error = nullptr);
-bool ExportMhd(const std::string& mhd_or_mha_path, const Volume& vol, const MhdExportOptions& opts = {}, std::string* out_error = nullptr);
+bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
+                const Volume& vol,
+                const NrrdExportOptions& opts = {},
+                std::string* out_error = nullptr);
+bool ExportMhd(const std::string& mhd_or_mha_path,
+               const Volume& vol,
+               const MhdExportOptions& opts = {},
+               std::string* out_error = nullptr);
 
 }  // namespace VNE::Image

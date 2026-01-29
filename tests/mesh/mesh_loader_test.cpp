@@ -152,9 +152,8 @@ TEST_F(MeshLoaderTest, VertexAttributes) {
     EXPECT_FALSE(mesh.isEmpty());
 
     for (const auto& vertex : mesh.vertices) {
-        float pos_magnitude =
-            vertex.position[0] * vertex.position[0] + vertex.position[1] * vertex.position[1]
-            + vertex.position[2] * vertex.position[2];
+        float pos_magnitude = vertex.position[0] * vertex.position[0] + vertex.position[1] * vertex.position[1]
+                              + vertex.position[2] * vertex.position[2];
         EXPECT_GE(pos_magnitude, 0.0f);
 
         float normal_magnitude = vertex.normal[0] * vertex.normal[0] + vertex.normal[1] * vertex.normal[1]

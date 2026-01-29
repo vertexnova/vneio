@@ -57,7 +57,7 @@ struct Status_C {
     }
 };
 
-template <typename T>
+template<typename T>
 struct Result_T {
     T value{};
     Status_C status{};

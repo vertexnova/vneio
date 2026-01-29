@@ -22,10 +22,10 @@
 // Optional (better) resize. Enable by defining VNEIO_USE_STB_IMAGE_RESIZE.
 // If your build uses stb as header-only, also enable impl below.
 #if defined(VNEIO_USE_STB_IMAGE_RESIZE)
-  #ifdef VNEIO_STB_HEADER_ONLY
-    #define STB_IMAGE_RESIZE_IMPLEMENTATION
-  #endif
-  #include "stb_image_resize.h"
+#ifdef VNEIO_STB_HEADER_ONLY
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#endif
+#include "stb_image_resize.h"
 #endif
 
 #include <algorithm>
@@ -115,16 +115,16 @@ bool Image::resize(int new_width, int new_height) {
         return false;
     }
 
-    const size_t new_size = static_cast<size_t>(new_width) * static_cast<size_t>(new_height) * static_cast<size_t>(channels_);
+    const size_t new_size =
+        static_cast<size_t>(new_width) * static_cast<size_t>(new_height) * static_cast<size_t>(channels_);
     std::vector<uint8_t> resized_data(new_size);
 
     // Prefer stb_image_resize if enabled; otherwise use a simple bilinear fallback.
 #if defined(VNEIO_USE_STB_IMAGE_RESIZE)
-    const int ok = stbir_resize_uint8(
-        data_.data(), width_, height_, 0,
-        resized_data.data(), new_width, new_height, 0,
-        channels_);
-    if (ok == 0) return false;
+    const int ok =
+        stbir_resize_uint8(data_.data(), width_, height_, 0, resized_data.data(), new_width, new_height, 0, channels_);
+    if (ok == 0)
+        return false;
 #else
     // Bilinear resize (uint8). Good enough when stb_image_resize isn't available.
     const float sx = static_cast<float>(width_) / static_cast<float>(new_width);
@@ -140,12 +140,22 @@ bool Image::resize(int new_width, int new_height) {
             const int x1 = std::max(0, std::min(width_ - 1, x0 + 1));
             const float tx = std::min(1.0f, std::max(0.0f, fx - static_cast<float>(x0)));
 
-            const uint8_t* p00 = data_.data() + (static_cast<size_t>(y0) * static_cast<size_t>(width_) + static_cast<size_t>(x0)) * static_cast<size_t>(channels_);
-            const uint8_t* p10 = data_.data() + (static_cast<size_t>(y0) * static_cast<size_t>(width_) + static_cast<size_t>(x1)) * static_cast<size_t>(channels_);
-            const uint8_t* p01 = data_.data() + (static_cast<size_t>(y1) * static_cast<size_t>(width_) + static_cast<size_t>(x0)) * static_cast<size_t>(channels_);
-            const uint8_t* p11 = data_.data() + (static_cast<size_t>(y1) * static_cast<size_t>(width_) + static_cast<size_t>(x1)) * static_cast<size_t>(channels_);
+            const uint8_t* p00 = data_.data()
+                                 + (static_cast<size_t>(y0) * static_cast<size_t>(width_) + static_cast<size_t>(x0))
+                                       * static_cast<size_t>(channels_);
+            const uint8_t* p10 = data_.data()
+                                 + (static_cast<size_t>(y0) * static_cast<size_t>(width_) + static_cast<size_t>(x1))
+                                       * static_cast<size_t>(channels_);
+            const uint8_t* p01 = data_.data()
+                                 + (static_cast<size_t>(y1) * static_cast<size_t>(width_) + static_cast<size_t>(x0))
+                                       * static_cast<size_t>(channels_);
+            const uint8_t* p11 = data_.data()
+                                 + (static_cast<size_t>(y1) * static_cast<size_t>(width_) + static_cast<size_t>(x1))
+                                       * static_cast<size_t>(channels_);
 
-            uint8_t* dst = resized_data.data() + (static_cast<size_t>(y) * static_cast<size_t>(new_width) + static_cast<size_t>(x)) * static_cast<size_t>(channels_);
+            uint8_t* dst = resized_data.data()
+                           + (static_cast<size_t>(y) * static_cast<size_t>(new_width) + static_cast<size_t>(x))
+                                 * static_cast<size_t>(channels_);
             for (int c = 0; c < channels_; ++c) {
                 const float v00 = static_cast<float>(p00[c]);
                 const float v10 = static_cast<float>(p10[c]);
@@ -204,9 +214,10 @@ namespace {
 // stb_image uses global state (e.g. stbi_set_flip_vertically_on_load).
 // Guard it for thread-safe asset loading.
 std::mutex g_stbi_mutex;
-}
+}  // namespace
 
-uint8_t* loadImage(const std::string& file_path, int* width, int* height, int* channels, int desired_channels, bool flip_vertically) {
+uint8_t* loadImage(
+    const std::string& file_path, int* width, int* height, int* channels, int desired_channels, bool flip_vertically) {
     std::lock_guard<std::mutex> lock(g_stbi_mutex);
     stbi_set_flip_vertically_on_load(flip_vertically);
     uint8_t* data = stbi_load(file_path.c_str(), width, height, channels, desired_channels);
@@ -221,7 +232,8 @@ void freeImage(uint8_t* data) {
     }
 }
 
-bool saveImage(const std::string& file_path, const uint8_t* data, int width, int height, int channels, const std::string& format) {
+bool saveImage(
+    const std::string& file_path, const uint8_t* data, int width, int height, int channels, const std::string& format) {
     if (!data || width <= 0 || height <= 0 || (channels != 1 && channels != 3 && channels != 4)) {
         return false;
     }

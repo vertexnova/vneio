@@ -19,20 +19,30 @@ namespace VNE::Image {
 namespace {
 
 void SetError(std::string* out_error, const std::string& msg) {
-    if (out_error) *out_error = msg;
+    if (out_error)
+        *out_error = msg;
 }
 
 std::string PixelTypeToMet(VolumePixelType t) {
     switch (t) {
-        case VolumePixelType::eUint8: return "MET_UCHAR";
-        case VolumePixelType::eInt8: return "MET_CHAR";
-        case VolumePixelType::eUint16: return "MET_USHORT";
-        case VolumePixelType::eInt16: return "MET_SHORT";
-        case VolumePixelType::eUint32: return "MET_UINT";
-        case VolumePixelType::eInt32: return "MET_INT";
-        case VolumePixelType::eFloat32: return "MET_FLOAT";
-        case VolumePixelType::eFloat64: return "MET_DOUBLE";
-        case VolumePixelType::eUnknown: break;
+        case VolumePixelType::eUint8:
+            return "MET_UCHAR";
+        case VolumePixelType::eInt8:
+            return "MET_CHAR";
+        case VolumePixelType::eUint16:
+            return "MET_USHORT";
+        case VolumePixelType::eInt16:
+            return "MET_SHORT";
+        case VolumePixelType::eUint32:
+            return "MET_UINT";
+        case VolumePixelType::eInt32:
+            return "MET_INT";
+        case VolumePixelType::eFloat32:
+            return "MET_FLOAT";
+        case VolumePixelType::eFloat64:
+            return "MET_DOUBLE";
+        case VolumePixelType::eUnknown:
+            break;
     }
     return "MET_UNKNOWN";
 }
@@ -44,7 +54,10 @@ std::string Dirname(const std::string& p) {
 
 }  // namespace
 
-bool ExportMhd(const std::string& mhd_or_mha_path, const Volume& vol, const MhdExportOptions& opts, std::string* out_error) {
+bool ExportMhd(const std::string& mhd_or_mha_path,
+               const Volume& vol,
+               const MhdExportOptions& opts,
+               std::string* out_error) {
     if (vol.isEmpty()) {
         SetError(out_error, "ExportMhd: volume is empty");
         return false;
@@ -66,7 +79,8 @@ bool ExportMhd(const std::string& mhd_or_mha_path, const Volume& vol, const MhdE
     if (raw_name.empty()) {
         raw_name = std::filesystem::path(mhd_or_mha_path).stem().string() + ".raw";
     }
-    const std::string raw_path = (Dirname(mhd_or_mha_path).empty() ? raw_name : (Dirname(mhd_or_mha_path) + "/" + raw_name));
+    const std::string raw_path =
+        (Dirname(mhd_or_mha_path).empty() ? raw_name : (Dirname(mhd_or_mha_path) + "/" + raw_name));
 
     std::ofstream h(mhd_or_mha_path, std::ios::binary | std::ios::trunc);
     if (!h) {

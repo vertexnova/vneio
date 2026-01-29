@@ -15,17 +15,19 @@
 #include <iostream>
 namespace VNE {
 struct NullStream {
-    template <typename T>
-    NullStream& operator<<(const T&) { return *this; }
+    template<typename T>
+    NullStream& operator<<(const T&) {
+        return *this;
+    }
     NullStream& operator<<(std::ostream& (*)(std::ostream&)) { return *this; }
 };
 inline NullStream null_stream;
-}
+}  // namespace VNE
 #define CREATE_VNE_LOGGER_CATEGORY(name)
-#define VNE_LOG_INFO   VNE::null_stream
-#define VNE_LOG_DEBUG  VNE::null_stream
-#define VNE_LOG_WARN   VNE::null_stream
-#define VNE_LOG_ERROR  VNE::null_stream
+#define VNE_LOG_INFO VNE::null_stream
+#define VNE_LOG_DEBUG VNE::null_stream
+#define VNE_LOG_WARN VNE::null_stream
+#define VNE_LOG_ERROR VNE::null_stream
 #else
 #include <vertexnova/logging/logging.h>
 #endif
@@ -100,7 +102,8 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
     const unsigned int flags = BuildAssimpFlags(opts);
 
     VNE_LOG_INFO << "Loading mesh from: " << path;
-    VNE_LOG_INFO << "Using Assimp version: " << aiGetVersionMajor() << "." << aiGetVersionMinor() << "." << aiGetVersionRevision();
+    VNE_LOG_INFO << "Using Assimp version: " << aiGetVersionMajor() << "." << aiGetVersionMinor() << "."
+                 << aiGetVersionRevision();
     VNE_LOG_DEBUG << "Assimp processing flags: 0x" << std::hex << flags << std::dec;
 
     const aiScene* scene = importer.ReadFile(path, flags);
@@ -110,7 +113,8 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
         return false;
     }
 
-    VNE_LOG_INFO << "Successfully loaded scene with " << scene->mNumMeshes << " meshes and " << scene->mNumMaterials << " materials";
+    VNE_LOG_INFO << "Successfully loaded scene with " << scene->mNumMeshes << " meshes and " << scene->mNumMaterials
+                 << " materials";
 
     // Clear output mesh
     out_mesh.vertices.clear();
@@ -172,7 +176,8 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
             continue;
         }
 
-        VNE_LOG_DEBUG << "Processing mesh " << m << " with " << am->mNumVertices << " vertices and " << am->mNumFaces << " faces";
+        VNE_LOG_DEBUG << "Processing mesh " << m << " with " << am->mNumVertices << " vertices and " << am->mNumFaces
+                      << " faces";
 
         // Check vertex attributes
         const bool has_uv0 = am->HasTextureCoords(0);
@@ -184,7 +189,8 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
         out_mesh.has_normals = out_mesh.has_normals || has_normals;
         out_mesh.has_tangent = out_mesh.has_tangent || (has_tangent && has_uv0);
 
-        VNE_LOG_DEBUG << "Mesh attributes - UVs: " << has_uv0 << ", Normals: " << has_normals << ", Tangents: " << has_tangent;
+        VNE_LOG_DEBUG << "Mesh attributes - UVs: " << has_uv0 << ", Normals: " << has_normals
+                      << ", Tangents: " << has_tangent;
 
         // Copy vertices
         const uint32_t vcount = am->mNumVertices;
@@ -285,10 +291,12 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
     const bool success = !out_mesh.vertices.empty() && !out_mesh.indices.empty();
 
     if (success) {
-        VNE_LOG_INFO << "Successfully loaded mesh with " << out_mesh.getVertexCount() << " vertices, " << out_mesh.getIndexCount() << " indices, "
-                     << out_mesh.getSubmeshCount() << " submeshes, and " << out_mesh.getMaterialCount() << " materials";
-        VNE_LOG_INFO << "AABB min: [" << out_mesh.aabb_min[0] << ", " << out_mesh.aabb_min[1] << ", " << out_mesh.aabb_min[2] << "], max: ["
-                     << out_mesh.aabb_max[0] << ", " << out_mesh.aabb_max[1] << ", " << out_mesh.aabb_max[2] << "]";
+        VNE_LOG_INFO << "Successfully loaded mesh with " << out_mesh.getVertexCount() << " vertices, "
+                     << out_mesh.getIndexCount() << " indices, " << out_mesh.getSubmeshCount() << " submeshes, and "
+                     << out_mesh.getMaterialCount() << " materials";
+        VNE_LOG_INFO << "AABB min: [" << out_mesh.aabb_min[0] << ", " << out_mesh.aabb_min[1] << ", "
+                     << out_mesh.aabb_min[2] << "], max: [" << out_mesh.aabb_max[0] << ", " << out_mesh.aabb_max[1]
+                     << ", " << out_mesh.aabb_max[2] << "]";
     } else {
         last_error_ = "Failed to load any valid mesh data";
         VNE_LOG_ERROR << last_error_;
@@ -314,12 +322,14 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
         const float radius = 0.5f * std::sqrt(dx * dx + dy * dy + dz * dz);
 
         if (radius > 1e-6f && std::isfinite(radius)) {
-            const float fill = (opts.normalize_fill > 0.0f && opts.normalize_fill <= 1.0f) ? opts.normalize_fill : 0.999f;
+            const float fill =
+                (opts.normalize_fill > 0.0f && opts.normalize_fill <= 1.0f) ? opts.normalize_fill : 0.999f;
             const float target_r = std::max(1e-6f, opts.normalize_target_radius);
             const float scale = (target_r * fill) / radius;
 
             out_mesh.aabb_min[0] = out_mesh.aabb_min[1] = out_mesh.aabb_min[2] = std::numeric_limits<float>::infinity();
-            out_mesh.aabb_max[0] = out_mesh.aabb_max[1] = out_mesh.aabb_max[2] = -std::numeric_limits<float>::infinity();
+            out_mesh.aabb_max[0] = out_mesh.aabb_max[1] = out_mesh.aabb_max[2] =
+                -std::numeric_limits<float>::infinity();
 
             for (auto& v : out_mesh.vertices) {
                 v.position[0] = (v.position[0] - cx) * scale;
@@ -363,9 +373,15 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
                 VertexAttributes v1 = out_mesh.vertices[i1];
                 VertexAttributes v2 = out_mesh.vertices[i2];
 
-                v0.barycentric[0] = 1.0f; v0.barycentric[1] = 0.0f; v0.barycentric[2] = 0.0f;
-                v1.barycentric[0] = 0.0f; v1.barycentric[1] = 1.0f; v1.barycentric[2] = 0.0f;
-                v2.barycentric[0] = 0.0f; v2.barycentric[1] = 0.0f; v2.barycentric[2] = 1.0f;
+                v0.barycentric[0] = 1.0f;
+                v0.barycentric[1] = 0.0f;
+                v0.barycentric[2] = 0.0f;
+                v1.barycentric[0] = 0.0f;
+                v1.barycentric[1] = 1.0f;
+                v1.barycentric[2] = 0.0f;
+                v2.barycentric[0] = 0.0f;
+                v2.barycentric[1] = 0.0f;
+                v2.barycentric[2] = 1.0f;
 
                 new_vertices.push_back(v0);
                 new_vertices.push_back(v1);
@@ -404,11 +420,10 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
             }
 
             out_mesh.vertices = std::move(new_vertices);
-            out_mesh.indices  = std::move(new_indices);
-            out_mesh.parts    = std::move(new_parts);
+            out_mesh.indices = std::move(new_indices);
+            out_mesh.parts = std::move(new_parts);
 
-            VNE_LOG_INFO << "Barycentric generation complete. New mesh: "
-                         << out_mesh.getVertexCount() << " vertices, "
+            VNE_LOG_INFO << "Barycentric generation complete. New mesh: " << out_mesh.getVertexCount() << " vertices, "
                          << out_mesh.getIndexCount() << " indices";
         }
     }

@@ -119,10 +119,10 @@ class Image {
     void clear();
 
    private:
-    std::vector<uint8_t> data_;   //!< Raw pixel data
-    int width_;                   //!< Image width in pixels
-    int height_;                  //!< Image height in pixels
-    int channels_;                //!< Image channels (1=grayscale, 3=RGB, 4=RGBA)
+    std::vector<uint8_t> data_;  //!< Raw pixel data
+    int width_;                  //!< Image width in pixels
+    int height_;                 //!< Image height in pixels
+    int channels_;               //!< Image channels (1=grayscale, 3=RGB, 4=RGBA)
 };
 
 /**
@@ -140,7 +140,12 @@ namespace ImageUtils {
  * (default = true)
  * @return Pointer to image data, or nullptr if loading failed
  */
-uint8_t* loadImage(const std::string& file_path, int* width, int* height, int* channels, int desired_channels = 0, bool flip_vertically = true);
+uint8_t* loadImage(const std::string& file_path,
+                   int* width,
+                   int* height,
+                   int* channels,
+                   int desired_channels = 0,
+                   bool flip_vertically = true);
 
 /**
  * @brief Free image data loaded by loadImage
@@ -158,7 +163,12 @@ void freeImage(uint8_t* data);
  * @param format Format to save as (jpg, png, bmp, tga)
  * @return True if saving succeeded, false otherwise
  */
-bool saveImage(const std::string& file_path, const uint8_t* data, int width, int height, int channels, const std::string& format = "png");
+bool saveImage(const std::string& file_path,
+               const uint8_t* data,
+               int width,
+               int height,
+               int channels,
+               const std::string& format = "png");
 }  // namespace ImageUtils
 
 }  // namespace Image

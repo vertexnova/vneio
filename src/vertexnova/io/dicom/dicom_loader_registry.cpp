@@ -10,7 +10,7 @@ namespace VNE::DICOM {
 
 namespace {
 class NullDicomLoader final : public IDicomLoader {
-public:
+   public:
     bool loadDirectory(const std::string& directory_path, DicomSeries_C& out_series) override {
         (void)directory_path;
         out_series = {};
@@ -20,7 +20,7 @@ public:
 
     std::string getLastError() const override { return last_error_; }
 
-private:
+   private:
     std::string last_error_;
 };
 }  // namespace

@@ -39,15 +39,24 @@ enum class VolumePixelType : int {
  */
 inline int bytesPerVoxel(VolumePixelType t) {
     switch (t) {
-        case VolumePixelType::eUint8: return 1;
-        case VolumePixelType::eInt8: return 1;
-        case VolumePixelType::eUint16: return 2;
-        case VolumePixelType::eInt16: return 2;
-        case VolumePixelType::eUint32: return 4;
-        case VolumePixelType::eInt32: return 4;
-        case VolumePixelType::eFloat32: return 4;
-        case VolumePixelType::eFloat64: return 8;
-        case VolumePixelType::eUnknown: return 0;
+        case VolumePixelType::eUint8:
+            return 1;
+        case VolumePixelType::eInt8:
+            return 1;
+        case VolumePixelType::eUint16:
+            return 2;
+        case VolumePixelType::eInt16:
+            return 2;
+        case VolumePixelType::eUint32:
+            return 4;
+        case VolumePixelType::eInt32:
+            return 4;
+        case VolumePixelType::eFloat32:
+            return 4;
+        case VolumePixelType::eFloat64:
+            return 8;
+        case VolumePixelType::eUnknown:
+            return 0;
     }
     return 0;
 }
@@ -60,13 +69,19 @@ inline int bytesPerVoxel(VolumePixelType t) {
  * reformats and window/level in viewers.
  */
 struct Volume {
-    int dims[3] = {0, 0, 0};       // width (x), height (y), depth (z)
+    int dims[3] = {0, 0, 0};  // width (x), height (y), depth (z)
     float spacing[3] = {1.0f, 1.0f, 1.0f};
     float origin[3] = {0.0f, 0.0f, 0.0f};
     float direction[9] = {
-        1.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 1.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f,
     };
     VolumePixelType pixel_type = VolumePixelType::eUint8;
     int components = 1;
@@ -84,9 +99,7 @@ struct Volume {
         return voxelCount() * static_cast<size_t>(components) * static_cast<size_t>(bytesPerVoxel(pixel_type));
     }
 
-    bool isEmpty() const {
-        return dims[0] <= 0 || dims[1] <= 0 || dims[2] <= 0 || data.size() < byteCount();
-    }
+    bool isEmpty() const { return dims[0] <= 0 || dims[1] <= 0 || dims[2] <= 0 || data.size() < byteCount(); }
 
     const uint8_t* getData() const { return data.data(); }
     uint8_t* getData() { return data.data(); }

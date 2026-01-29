@@ -27,7 +27,8 @@ std::string Stem(const std::string& p) {
 }
 
 void SetError(std::string* out_error, const std::string& msg) {
-    if (out_error) *out_error = msg;
+    if (out_error)
+        *out_error = msg;
 }
 
 }  // namespace
@@ -81,20 +82,12 @@ bool ExportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOpt
         const uint32_t c = i2 + 1;
 
         if (write_vt && write_vn) {
-            f << "f "
-              << a << "/" << a << "/" << a << " "
-              << b << "/" << b << "/" << b << " "
-              << c << "/" << c << "/" << c << "\n";
+            f << "f " << a << "/" << a << "/" << a << " " << b << "/" << b << "/" << b << " " << c << "/" << c << "/"
+              << c << "\n";
         } else if (write_vt && !write_vn) {
-            f << "f "
-              << a << "/" << a << " "
-              << b << "/" << b << " "
-              << c << "/" << c << "\n";
+            f << "f " << a << "/" << a << " " << b << "/" << b << " " << c << "/" << c << "\n";
         } else if (!write_vt && write_vn) {
-            f << "f "
-              << a << "//" << a << " "
-              << b << "//" << b << " "
-              << c << "//" << c << "\n";
+            f << "f " << a << "//" << a << " " << b << "//" << b << " " << c << "//" << c << "\n";
         } else {
             f << "f " << a << " " << b << " " << c << "\n";
         }

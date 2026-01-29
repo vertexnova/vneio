@@ -19,20 +19,30 @@ namespace VNE::Image {
 namespace {
 
 void SetError(std::string* out_error, const std::string& msg) {
-    if (out_error) *out_error = msg;
+    if (out_error)
+        *out_error = msg;
 }
 
 std::string PixelTypeToNrrd(VolumePixelType t) {
     switch (t) {
-        case VolumePixelType::eUint8: return "uint8";
-        case VolumePixelType::eInt8: return "int8";
-        case VolumePixelType::eUint16: return "uint16";
-        case VolumePixelType::eInt16: return "int16";
-        case VolumePixelType::eUint32: return "uint32";
-        case VolumePixelType::eInt32: return "int32";
-        case VolumePixelType::eFloat32: return "float";
-        case VolumePixelType::eFloat64: return "double";
-        case VolumePixelType::eUnknown: break;
+        case VolumePixelType::eUint8:
+            return "uint8";
+        case VolumePixelType::eInt8:
+            return "int8";
+        case VolumePixelType::eUint16:
+            return "uint16";
+        case VolumePixelType::eInt16:
+            return "int16";
+        case VolumePixelType::eUint32:
+            return "uint32";
+        case VolumePixelType::eInt32:
+            return "int32";
+        case VolumePixelType::eFloat32:
+            return "float";
+        case VolumePixelType::eFloat64:
+            return "double";
+        case VolumePixelType::eUnknown:
+            break;
     }
     return "unknown";
 }
@@ -49,7 +59,10 @@ std::string Filename(const std::string& p) {
 
 }  // namespace
 
-bool ExportNrrd(const std::string& nrrd_or_nhdr_path, const Volume& vol, const NrrdExportOptions& opts, std::string* out_error) {
+bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
+                const Volume& vol,
+                const NrrdExportOptions& opts,
+                std::string* out_error) {
     if (vol.isEmpty()) {
         SetError(out_error, "ExportNrrd: volume is empty");
         return false;
@@ -73,7 +86,8 @@ bool ExportNrrd(const std::string& nrrd_or_nhdr_path, const Volume& vol, const N
     if (raw_name.empty()) {
         raw_name = std::filesystem::path(nrrd_or_nhdr_path).stem().string() + ".raw";
     }
-    const std::string raw_path = (Dirname(nrrd_or_nhdr_path).empty() ? raw_name : (Dirname(nrrd_or_nhdr_path) + "/" + raw_name));
+    const std::string raw_path =
+        (Dirname(nrrd_or_nhdr_path).empty() ? raw_name : (Dirname(nrrd_or_nhdr_path) + "/" + raw_name));
 
     // Write header
     std::ofstream h(nrrd_or_nhdr_path, std::ios::binary | std::ios::trunc);
@@ -90,15 +104,18 @@ bool ExportNrrd(const std::string& nrrd_or_nhdr_path, const Volume& vol, const N
     h << "spacings: " << vol.spacing[0] << " " << vol.spacing[1] << " " << vol.spacing[2] << "\n";
     h << "space origin: (" << vol.origin[0] << "," << vol.origin[1] << "," << vol.origin[2] << ")\n";
     // direction cosines (optional)
-    h << "space directions: (" << vol.direction[0] * vol.spacing[0] << "," << vol.direction[1] * vol.spacing[0] << "," << vol.direction[2] * vol.spacing[0] << ") "
-      << "(" << vol.direction[3] * vol.spacing[1] << "," << vol.direction[4] * vol.spacing[1] << "," << vol.direction[5] * vol.spacing[1] << ") "
-      << "(" << vol.direction[6] * vol.spacing[2] << "," << vol.direction[7] * vol.spacing[2] << "," << vol.direction[8] * vol.spacing[2] << ")\n";
+    h << "space directions: (" << vol.direction[0] * vol.spacing[0] << "," << vol.direction[1] * vol.spacing[0] << ","
+      << vol.direction[2] * vol.spacing[0] << ") "
+      << "(" << vol.direction[3] * vol.spacing[1] << "," << vol.direction[4] * vol.spacing[1] << ","
+      << vol.direction[5] * vol.spacing[1] << ") "
+      << "(" << vol.direction[6] * vol.spacing[2] << "," << vol.direction[7] * vol.spacing[2] << ","
+      << vol.direction[8] * vol.spacing[2] << ")\n";
 
     if (detached || writing_nhdr) {
         h << "data file: " << raw_name << "\n";
     }
 
-    h << "\n"; // blank line terminator
+    h << "\n";  // blank line terminator
     if (!h) {
         SetError(out_error, "ExportNrrd: failed while writing header");
         return false;

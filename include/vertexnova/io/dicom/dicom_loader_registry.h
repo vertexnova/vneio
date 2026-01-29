@@ -21,7 +21,7 @@
 namespace VNE::DICOM {
 
 class DicomLoaderRegistry {
-public:
+   public:
     static std::unique_ptr<IDicomLoader> Create();
 };
 

@@ -42,9 +42,7 @@ class ImageTest : public ::testing::Test {
         }
     }
 
-    static std::string getTestImagePath() {
-        return std::filesystem::exists(kTestImagePath) ? kTestImagePath : "";
-    }
+    static std::string getTestImagePath() { return std::filesystem::exists(kTestImagePath) ? kTestImagePath : ""; }
 
     static std::vector<uint8_t> createTestData(int width, int height, int channels) {
         std::vector<uint8_t> data(static_cast<size_t>(width * height * channels));
@@ -69,7 +67,8 @@ TEST_F(ImageTest, DefaultConstructor) {
 
 TEST_F(ImageTest, FileConstructor) {
     std::string path = getTestImagePath();
-    if (path.empty()) return;
+    if (path.empty())
+        return;
 
     Image valid_image(path);
     EXPECT_FALSE(valid_image.isEmpty());
@@ -106,7 +105,8 @@ TEST_F(ImageTest, DataConstructor) {
 
 TEST_F(ImageTest, LoadFromFile) {
     std::string path = getTestImagePath();
-    if (path.empty()) return;
+    if (path.empty())
+        return;
 
     Image image;
     EXPECT_TRUE(image.loadFromFile(path));
@@ -122,7 +122,8 @@ TEST_F(ImageTest, LoadFromFile) {
 
 TEST_F(ImageTest, SaveToFile) {
     std::string path = getTestImagePath();
-    if (path.empty()) return;
+    if (path.empty())
+        return;
 
     Image image(path);
     ASSERT_FALSE(image.isEmpty());
@@ -147,7 +148,8 @@ TEST_F(ImageTest, SaveToFile) {
 
 TEST_F(ImageTest, Resize) {
     std::string path = getTestImagePath();
-    if (path.empty()) return;
+    if (path.empty())
+        return;
 
     Image image(path);
     ASSERT_FALSE(image.isEmpty());
@@ -173,8 +175,10 @@ TEST_F(ImageTest, FlipVertically) {
     const int height = 4;
     const int channels = 3;
     std::vector<uint8_t> data(width * height * channels);
-    for (int i = 0; i < width * channels; ++i) data[i] = 255;
-    for (int i = (height - 1) * width * channels; i < height * width * channels; ++i) data[i] = 0;
+    for (int i = 0; i < width * channels; ++i)
+        data[i] = 255;
+    for (int i = (height - 1) * width * channels; i < height * width * channels; ++i)
+        data[i] = 0;
 
     Image image(data.data(), width, height, channels);
     ASSERT_FALSE(image.isEmpty());
@@ -195,7 +199,8 @@ TEST_F(ImageTest, FlipVertically) {
 
 TEST_F(ImageTest, ImageUtils) {
     std::string path = getTestImagePath();
-    if (path.empty()) return;
+    if (path.empty())
+        return;
 
     int width = 0;
     int height = 0;
