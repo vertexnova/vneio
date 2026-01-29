@@ -36,10 +36,14 @@ jobs:
       with:
         submodules: true
 
+    # Use system Assimp to avoid building ~300 sources (prevents timeout / 6hr builds)
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake
+        sudo apt-get install -y build-essential cmake libassimp-dev
+
+    - name: Remove external/assimp so CMake uses find_package(assimp)
+      run: rm -rf external/assimp
 
     - name: Configure CMake
       run: |
@@ -47,8 +51,6 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DVNEIO_BUILD_MESH=ON \
-          -DVNEIO_BUILD_IMAGE=ON \
           -DVNEIO_BUILD_TESTS=ON
 
     - name: Build
@@ -65,10 +67,14 @@ jobs:
       with:
         submodules: true
 
+    # Use system Assimp to avoid building ~300 sources (prevents timeout)
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake lcov
+        sudo apt-get install -y build-essential cmake lcov libassimp-dev
+
+    - name: Remove external/assimp so CMake uses find_package(assimp)
+      run: rm -rf external/assimp
 
     - name: Configure CMake with Coverage
       run: |
@@ -76,8 +82,6 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_C_COMPILER=gcc \
           -DCMAKE_CXX_COMPILER=g++ \
-          -DVNEIO_BUILD_MESH=ON \
-          -DVNEIO_BUILD_IMAGE=ON \
           -DVNEIO_BUILD_TESTS=ON \
           -DENABLE_COVERAGE=ON
 
@@ -111,12 +115,18 @@ jobs:
       with:
         submodules: true
 
+    # Use Homebrew Assimp so we don't build ~300 Assimp .cpp files on macOS (avoids ~6hr build)
+    - name: Install Assimp via Homebrew
+      run: brew install assimp
+
+    - name: Remove external/assimp so CMake uses find_package(assimp)
+      run: rm -rf external/assimp
+
     - name: Configure CMake
       run: |
         cmake -B build -S . \
           -DCMAKE_BUILD_TYPE=Release \
-          -DVNEIO_BUILD_MESH=ON \
-          -DVNEIO_BUILD_IMAGE=ON \
+          -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
           -DVNEIO_BUILD_TESTS=ON
 
     - name: Build
