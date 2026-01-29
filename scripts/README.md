@@ -40,16 +40,16 @@ python scripts/build_windows.py -t Debug -a configure_and_build
 - `-clean` — remove build directory before running
 - `-j <N>` — parallel jobs (where supported)
 
-macOS: `-xcode` (also generate Xcode project), `-xcode-only` (only generate Xcode project).  
+macOS: `-xcode` (also generate Xcode project), `-xcode-only` (only generate Xcode project).
 iOS: `-simulator` (default), `-device`, `-deployment-target <version>`.
 
 ## Prerequisites
 
 - CMake 3.16+
 - C++20-capable compiler
-- For mesh: Assimp (via `external/assimp` or system)
-- For image: stb_image (via `external/stb_image` or FetchContent)
-- Optional logging: `libs/vnecommon`, `libs/vnelogging` (submodules)
+- For mesh: Assimp (via `deps/external/assimp` or system)
+- For image: stb_image (via `deps/external/stb_image` or FetchContent)
+- Optional logging: `deps/internal/vnecommon`, `deps/internal/vnelogging` (submodules)
 - **Tests:** minimal testdata is in `testdata/` (no LFS).
 
 Clone with submodules: `git submodule update --init --recursive`

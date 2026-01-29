@@ -46,7 +46,7 @@ print_status "VneIo Web Build — $PROJECT_ROOT — $BUILD_TYPE — jobs $JOBS"
 [[ ! -f "$PROJECT_ROOT/CMakeLists.txt" ]] && { print_error "CMakeLists.txt not found"; exit 1; }
 
 EMSDK_DIR=""
-[[ -d "$PROJECT_ROOT/external/emsdk" ]] && EMSDK_DIR="$PROJECT_ROOT/external/emsdk"
+[[ -d "$PROJECT_ROOT/deps/external/emsdk" ]] && EMSDK_DIR="$PROJECT_ROOT/deps/external/emsdk"
 [[ -d "$HOME/emsdk" ]] && EMSDK_DIR="$HOME/emsdk"
 [[ -n "$EMSDK" ]] && EMSDK_DIR="$EMSDK"
 [[ -z "$EMSDK_DIR" ]] && { print_error "Emscripten SDK not found. Install: git clone https://github.com/emscripten-core/emsdk.git ~/emsdk && cd ~/emsdk && ./emsdk install latest && ./emsdk activate latest"; exit 1; }

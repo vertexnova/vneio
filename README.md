@@ -25,12 +25,12 @@ Namespaces: `VNE::Mesh`, `VNE::Image`. Includes live under `vertexnova/io/`.
 - CMake 3.16+
 - **Mesh:** [Assimp](https://github.com/assimp/assimp) (optional; add under `3rd_party/assimp` or use `find_package(assimp)`)
 - **Image:** [stb](https://github.com/nothings/stb) (fetched automatically if `3rd_party/stb_image` is not present)
-- **Volume (NRRD):** [Teem nrrdio](https://teem.sourceforge.net/nrrd/lib.html) (optional; add under `external/nrrdio/` or `3rd_party/nrrdio/`). Falls back to built-in parser if not found.
-- **Logging (optional):** [vnelogging](https://github.com/vertexnova/vnelogging) and [vnecommon](https://github.com/vertexnova/vnecommon) under `libs/` for mesh load logging
+- **Volume (NRRD):** [Teem nrrdio](https://teem.sourceforge.net/nrrd/lib.html) (optional; add under `deps/external/nrrdio/` or `3rd_party/nrrdio/`). Falls back to built-in parser if not found.
+- **Logging (optional):** [vnelogging](https://github.com/vertexnova/vnelogging) and [vnecommon](https://github.com/vertexnova/vnecommon) under `deps/internal/` for mesh load logging
 
 ## Build
 
-Clone with submodules (for vnecmake, vnecommon, vnelogging, external/assimp, external/googletest):
+Clone with submodules (for vnecmake, deps/internal, deps/external/assimp, deps/external/googletest):
 
 ```bash
 git clone --recursive https://github.com/vertexnova/vneio.git
@@ -47,7 +47,7 @@ mkdir build && cd build
 cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON
 cmake --build .
 
-# With tests (requires external/googletest; testdata/ is in repo):
+# With tests (requires deps/external/googletest; testdata/ is in repo):
 # cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON -DVNEIO_BUILD_TESTS=ON
 # cmake --build . && ctest --output-on-failure
 ```
@@ -55,7 +55,7 @@ cmake --build .
 - **VNEIO_BUILD_MESH** – build mesh component (default ON; needs Assimp).
 - **VNEIO_BUILD_IMAGE** – build image component (default ON; stb fetched if needed).
 - **VNEIO_USE_NRRDIO** – use Teem nrrdio for NRRD loading (default ON). Falls back to built-in parser if nrrdio not found. Disable with `-DVNEIO_USE_NRRDIO=OFF` to always use built-in parser.
-- **VNEIO_USE_LOGGING** – use vnelogging when available (default ON). If OFF or libs not present, mesh uses no-op logging.
+- **VNEIO_USE_LOGGING** – use vnelogging when available (default ON). If OFF or deps/internal not present, mesh uses no-op logging.
 - **VNEIO_BUILD_TESTS** – build tests (default OFF). Enable with `-DVNEIO_BUILD_TESTS=ON`.
 - **VNEIO_BUILD_EXAMPLES** – build examples (default OFF). Enable with `-DVNEIO_BUILD_EXAMPLES=ON`.
 - **ENABLE_COVERAGE** – enable code coverage (default OFF). Use with Debug + GCC/Clang and lcov for reports.
@@ -103,8 +103,8 @@ if (!img.isEmpty()) {
 - `include/vertexnova/io/` – public headers (mesh/, image/, vneio.h)
 - `src/vertexnova/io/` – implementation (mesh/, image/)
 - `cmake/vnecmake/` – shared CMake modules (submodule)
-- `libs/vnecommon/`, `libs/vnelogging/` – submodules used when `VNEIO_USE_LOGGING` is ON
-- `external/assimp`, `external/stb_image` – mesh/image dependencies (assimp is submodule, stb_image is a copy)
+- `deps/internal/vnecommon/`, `deps/internal/vnelogging/` – submodules used when `VNEIO_USE_LOGGING` is ON
+- `deps/external/assimp`, `deps/external/stb_image` – mesh/image dependencies (assimp is submodule, stb_image is a copy)
 - `tests/`, `examples/` – optional
 
 ## License

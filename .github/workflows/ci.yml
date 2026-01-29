@@ -42,8 +42,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake libassimp-dev
 
-    - name: Remove external/assimp so CMake uses find_package(assimp)
-      run: rm -rf external/assimp
+    - name: Remove deps/external/assimp so CMake uses find_package(assimp)
+      run: rm -rf deps/external/assimp
 
     # Disable LTO for Clang: vnelogging uses LTO by default; Clang+LTO produces bitcode in .a
     # that GNU ld doesn't recognize ("file format not recognized"). ENABLE_IPO=OFF fixes it.
@@ -76,8 +76,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential cmake lcov libassimp-dev
 
-    - name: Remove external/assimp so CMake uses find_package(assimp)
-      run: rm -rf external/assimp
+    - name: Remove deps/external/assimp so CMake uses find_package(assimp)
+      run: rm -rf deps/external/assimp
 
     - name: Configure CMake with Coverage
       run: |
@@ -98,7 +98,7 @@ jobs:
     - name: Generate Coverage Report
       run: |
         lcov --capture --directory build --output-file coverage.info --ignore-errors mismatch,unused
-        lcov --remove coverage.info '/usr/*' '*/tests/*' '*/external/*' '*/libs/*' '*/_deps/*' '*/googletest/*' '*/googlemock/*' --output-file coverage.info --ignore-errors mismatch,unused
+        lcov --remove coverage.info '/usr/*' '*/tests/*' '*/deps/*' '*/_deps/*' '*/googletest/*' '*/googlemock/*' --output-file coverage.info --ignore-errors mismatch,unused
         lcov --list coverage.info --ignore-errors mismatch,unused
 
     - name: Upload coverage reports to Codecov
@@ -122,8 +122,8 @@ jobs:
     - name: Install Assimp via Homebrew
       run: brew install assimp
 
-    - name: Remove external/assimp so CMake uses find_package(assimp)
-      run: rm -rf external/assimp
+    - name: Remove deps/external/assimp so CMake uses find_package(assimp)
+      run: rm -rf deps/external/assimp
 
     - name: Configure CMake
       run: |

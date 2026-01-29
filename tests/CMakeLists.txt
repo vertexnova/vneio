@@ -25,16 +25,16 @@ if(NOT TARGET vneio_mesh OR NOT TARGET vneio_image)
 endif()
 
 #-----------------------------------------------------------------------------
-# Google Test (external submodule, stable v1.14.0)
+# Google Test (deps/external submodule, stable v1.14.0)
 #-----------------------------------------------------------------------------
-if(EXISTS "${VNEIO_ROOT}/external/googletest/CMakeLists.txt")
-    message(STATUS "Using Google Test from external/googletest (v1.14.0)")
-    add_subdirectory(${VNEIO_ROOT}/external/googletest ${CMAKE_BINARY_DIR}/external/googletest)
+if(EXISTS "${VNEIO_ROOT}/deps/external/googletest/CMakeLists.txt")
+    message(STATUS "Using Google Test from deps/external/googletest (v1.14.0)")
+    add_subdirectory(${VNEIO_ROOT}/deps/external/googletest ${CMAKE_BINARY_DIR}/deps/external/googletest)
     include(GoogleTest)
     set(GTEST_LIBRARIES gtest_main gmock)
     set(GTEST_INCLUDE_DIRS
-        ${VNEIO_ROOT}/external/googletest/googletest/include
-        ${VNEIO_ROOT}/external/googletest/googlemock/include
+        ${VNEIO_ROOT}/deps/external/googletest/googletest/include
+        ${VNEIO_ROOT}/deps/external/googletest/googlemock/include
     )
 else()
     find_package(GTest QUIET)
@@ -43,7 +43,7 @@ else()
         set(GTEST_LIBRARIES GTest::gtest_main GTest::gmock)
         set(GTEST_INCLUDE_DIRS "")
     else()
-        message(STATUS "external/googletest not found, using FetchContent")
+        message(STATUS "deps/external/googletest not found, using FetchContent")
         include(FetchContent)
         FetchContent_Declare(
             googletest
