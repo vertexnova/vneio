@@ -23,7 +23,7 @@ using namespace VNE::Mesh;
 using VNE::IO::Utils::getTestdataPath;
 
 namespace {
-const std::string kTeapotPath = getTestdataPath("meshes/teapot.stl");
+const std::string kMeshPath = getTestdataPath("meshes/minimal.stl");
 const std::string kNonExistentPath = getTestdataPath("meshes/does_not_exist.stl");
 const std::string kInvalidMeshPath = getTestdataPath("meshes/invalid_mesh.stl");
 }  // namespace
@@ -31,9 +31,8 @@ const std::string kInvalidMeshPath = getTestdataPath("meshes/invalid_mesh.stl");
 class MeshLoaderTest : public ::testing::Test {
    protected:
     void SetUp() override {
-        if (!std::filesystem::exists(kTeapotPath)) {
-            GTEST_SKIP() << "Test mesh not found: " << kTeapotPath
-                         << " (run from project root with testdata/vneresources updated)";
+        if (!std::filesystem::exists(kMeshPath)) {
+            GTEST_SKIP() << "Test mesh not found: " << kMeshPath << " (run from project root)";
         }
     }
     void TearDown() override {}
@@ -68,7 +67,7 @@ TEST_F(MeshLoaderTest, LoadTeapotSTL) {
     opts.flip_uvs = false;
     opts.gen_tangents = false;
 
-    EXPECT_TRUE(loader.loadFile(kTeapotPath, mesh, opts));
+    EXPECT_TRUE(loader.loadFile(kMeshPath, mesh, opts));
     EXPECT_FALSE(mesh.isEmpty());
 
     EXPECT_GT(mesh.getVertexCount(), 0u);
@@ -101,7 +100,7 @@ TEST_F(MeshLoaderTest, LoadWithOptions) {
     safe_opts.flip_uvs = false;
     safe_opts.gen_tangents = false;
 
-    EXPECT_TRUE(loader.loadFile(kTeapotPath, mesh, safe_opts));
+    EXPECT_TRUE(loader.loadFile(kMeshPath, mesh, safe_opts));
     EXPECT_FALSE(mesh.isEmpty());
 
     Mesh mesh_custom;
@@ -112,7 +111,7 @@ TEST_F(MeshLoaderTest, LoadWithOptions) {
     custom_opts.calc_normals_if_missing = true;
     custom_opts.pre_transform_vertices = false;
 
-    EXPECT_TRUE(loader.loadFile(kTeapotPath, mesh_custom, custom_opts));
+    EXPECT_TRUE(loader.loadFile(kMeshPath, mesh_custom, custom_opts));
     EXPECT_FALSE(mesh_custom.isEmpty());
     EXPECT_GT(mesh_custom.getVertexCount(), 0u);
     EXPECT_GT(mesh_custom.getIndexCount(), 0u);
@@ -149,7 +148,7 @@ TEST_F(MeshLoaderTest, VertexAttributes) {
     opts.flip_uvs = false;
     opts.gen_tangents = false;
 
-    EXPECT_TRUE(loader.loadFile(kTeapotPath, mesh, opts));
+    EXPECT_TRUE(loader.loadFile(kMeshPath, mesh, opts));
     EXPECT_FALSE(mesh.isEmpty());
 
     for (const auto& vertex : mesh.vertices) {
@@ -180,10 +179,10 @@ TEST_F(MeshLoaderTest, MeshProperties) {
     opts.flip_uvs = false;
     opts.gen_tangents = false;
 
-    EXPECT_TRUE(loader.loadFile(kTeapotPath, mesh, opts));
+    EXPECT_TRUE(loader.loadFile(kMeshPath, mesh, opts));
     EXPECT_FALSE(mesh.isEmpty());
 
-    EXPECT_EQ(mesh.name, kTeapotPath);
+    EXPECT_EQ(mesh.name, kMeshPath);
     EXPECT_GE(mesh.getMaterialCount(), 0u);
 
     for (const auto& part : mesh.parts) {
@@ -219,8 +218,8 @@ TEST_F(MeshLoaderTest, MultipleLoads) {
     opts.flip_uvs = false;
     opts.gen_tangents = false;
 
-    EXPECT_TRUE(loader.loadFile(kTeapotPath, mesh1, opts));
-    EXPECT_TRUE(loader.loadFile(kTeapotPath, mesh2, opts));
+    EXPECT_TRUE(loader.loadFile(kMeshPath, mesh1, opts));
+    EXPECT_TRUE(loader.loadFile(kMeshPath, mesh2, opts));
 
     EXPECT_FALSE(mesh1.isEmpty());
     EXPECT_FALSE(mesh2.isEmpty());
@@ -239,16 +238,16 @@ TEST_F(MeshLoaderTest, LoadViaIMeshLoader) {
     opts.pre_transform_vertices = false;
     opts.flip_uvs = false;
     opts.gen_tangents = false;
-    EXPECT_TRUE(iface->loadFile(kTeapotPath, mesh));
+    EXPECT_TRUE(iface->loadFile(kMeshPath, mesh));
     EXPECT_FALSE(mesh.isEmpty());
     EXPECT_GT(mesh.getVertexCount(), 0u);
 }
 
 TEST_F(MeshLoaderTest, RegistryReturnsLoaderForSupportedPath) {
-    auto loader = MeshLoaderRegistry::getLoaderFor(kTeapotPath);
+    auto loader = MeshLoaderRegistry::getLoaderFor(kMeshPath);
     ASSERT_NE(loader, nullptr);
     Mesh mesh;
-    EXPECT_TRUE(loader->loadFile(kTeapotPath, mesh));
+    EXPECT_TRUE(loader->loadFile(kMeshPath, mesh));
     EXPECT_FALSE(mesh.isEmpty());
 }
 

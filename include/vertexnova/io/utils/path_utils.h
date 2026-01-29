@@ -19,9 +19,8 @@ namespace Utils {
 /**
  * @brief Returns the absolute path of the VneIo testdata resources root.
  *
- * When built with CMake, this is the directory containing "meshes", "textures", "materials", etc.
- * (typically testdata/vneresources/resources). Tests use getTestdataPath("meshes/teapot.stl")
- * or getTestdataPath("textures/container.jpg").
+ * When built with CMake, this is the testdata root (typically testdata/). Tests use
+ * getTestdataPath("meshes/minimal.stl") or getTestdataPath("textures/sample.png").
  *
  * Include directory for the build must contain the generated config.h (VNEIO_TESTDATA_DIR).
  * @return Testdata resources root path, or empty string if not defined.

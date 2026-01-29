@@ -36,15 +36,7 @@ cd vneio
 # Or, if already cloned: git submodule update --init --recursive
 ```
 
-**Test data (for `VNEIO_BUILD_TESTS=ON`):** `testdata/vneresources` uses **Git LFS** for meshes and images. After updating submodules, pull LFS files:
-
-```bash
-# Install Git LFS once: https://git-lfs.github.com/  (e.g. brew install git-lfs && git lfs install)
-git submodule update --init testdata/vneresources
-cd testdata/vneresources && git lfs pull && cd ../..
-```
-
-Or run `./scripts/fetch_testdata.sh` from the repo root.
+**Test data (for `VNEIO_BUILD_TESTS=ON`):** Minimal assets live in `testdata/` (e.g. `meshes/minimal.stl`, `textures/sample.png`). No LFS or extra submodules required. If you had the old `testdata/vneresources` submodule, run `git submodule deinit testdata/vneresources` and remove the folder if desired.
 
 Then build:
 
@@ -53,7 +45,7 @@ mkdir build && cd build
 cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON
 cmake --build .
 
-# With tests (requires testdata/vneresources and external/googletest):
+# With tests (requires external/googletest; testdata/ is in repo):
 # cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON -DVNEIO_BUILD_TESTS=ON
 # cmake --build . && ctest --output-on-failure
 ```

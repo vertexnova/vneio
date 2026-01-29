@@ -21,8 +21,7 @@ using namespace VNE::Image;
 using VNE::IO::Utils::getTestdataPath;
 
 namespace {
-const std::string kTestImagePath = getTestdataPath("textures/container.jpg");
-const std::string kPngPath = getTestdataPath("textures/awesomeface.png");
+const std::string kTestImagePath = getTestdataPath("textures/sample.png");
 const std::string kNonExistentPath = getTestdataPath("textures/does_not_exist.png");
 
 const std::string kTestOutputDir = "test_output";
@@ -31,10 +30,8 @@ const std::string kTestOutputDir = "test_output";
 class ImageTest : public ::testing::Test {
    protected:
     void SetUp() override {
-        if (!std::filesystem::exists(kTestImagePath) && !std::filesystem::exists(kPngPath)) {
-            GTEST_SKIP() << "No test image found at " << kTestImagePath
-                         << " or " << kPngPath
-                         << " (run from project root with testdata/vneresources updated)";
+        if (!std::filesystem::exists(kTestImagePath)) {
+            GTEST_SKIP() << "Test image not found: " << kTestImagePath << " (run from project root)";
         }
     }
 
@@ -46,9 +43,7 @@ class ImageTest : public ::testing::Test {
     }
 
     static std::string getTestImagePath() {
-        if (std::filesystem::exists(kTestImagePath)) return kTestImagePath;
-        if (std::filesystem::exists(kPngPath)) return kPngPath;
-        return "";
+        return std::filesystem::exists(kTestImagePath) ? kTestImagePath : "";
     }
 
     static std::vector<uint8_t> createTestData(int width, int height, int channels) {
