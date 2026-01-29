@@ -23,9 +23,15 @@ namespace Image {
  * @brief Scalar pixel/voxel type for volumes
  */
 enum class VolumePixelType : int {
+    eUnknown = -1,
     eUint8 = 0,
-    eUint16 = 1,
-    eFloat32 = 2,
+    eInt8,
+    eUint16,
+    eInt16,
+    eUint32,
+    eInt32,
+    eFloat32,
+    eFloat64,
 };
 
 /**
@@ -34,8 +40,14 @@ enum class VolumePixelType : int {
 inline int bytesPerVoxel(VolumePixelType t) {
     switch (t) {
         case VolumePixelType::eUint8: return 1;
+        case VolumePixelType::eInt8: return 1;
         case VolumePixelType::eUint16: return 2;
+        case VolumePixelType::eInt16: return 2;
+        case VolumePixelType::eUint32: return 4;
+        case VolumePixelType::eInt32: return 4;
         case VolumePixelType::eFloat32: return 4;
+        case VolumePixelType::eFloat64: return 8;
+        case VolumePixelType::eUnknown: return 0;
     }
     return 0;
 }
@@ -51,7 +63,13 @@ struct Volume {
     int dims[3] = {0, 0, 0};       // width (x), height (y), depth (z)
     float spacing[3] = {1.0f, 1.0f, 1.0f};
     float origin[3] = {0.0f, 0.0f, 0.0f};
+    float direction[9] = {
+        1.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 1.0f,
+    };
     VolumePixelType pixel_type = VolumePixelType::eUint8;
+    int components = 1;
     std::vector<uint8_t> data;
 
     int width() const { return dims[0]; }
@@ -63,7 +81,7 @@ struct Volume {
     }
 
     size_t byteCount() const {
-        return voxelCount() * static_cast<size_t>(bytesPerVoxel(pixel_type));
+        return voxelCount() * static_cast<size_t>(components) * static_cast<size_t>(bytesPerVoxel(pixel_type));
     }
 
     bool isEmpty() const {

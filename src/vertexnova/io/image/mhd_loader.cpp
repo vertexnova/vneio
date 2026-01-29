@@ -14,6 +14,8 @@
 #include <cstring>
 #include <filesystem>
 
+#include "vertexnova/io/common/binary_io.h"
+
 namespace VNE {
 namespace Image {
 
@@ -45,10 +47,15 @@ bool parseElementSpacing(const std::string& value, float spacing[3], int ndims) 
 VolumePixelType parseElementType(const std::string& t) {
     std::string upper = t;
     std::transform(upper.begin(), upper.end(), upper.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-    if (upper == "MET_UCHAR" || upper == "MET_CHAR") return VolumePixelType::eUint8;
-    if (upper == "MET_USHORT" || upper == "MET_SHORT") return VolumePixelType::eUint16;
+    if (upper == "MET_UCHAR") return VolumePixelType::eUint8;
+    if (upper == "MET_CHAR") return VolumePixelType::eInt8;
+    if (upper == "MET_USHORT") return VolumePixelType::eUint16;
+    if (upper == "MET_SHORT") return VolumePixelType::eInt16;
+    if (upper == "MET_UINT") return VolumePixelType::eUint32;
+    if (upper == "MET_INT") return VolumePixelType::eInt32;
     if (upper == "MET_FLOAT") return VolumePixelType::eFloat32;
-    return static_cast<VolumePixelType>(-1);
+    if (upper == "MET_DOUBLE") return VolumePixelType::eFloat64;
+    return VolumePixelType::eUnknown;
 }
 
 std::string dirname(const std::string& path) {
@@ -78,14 +85,30 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
 
     int ndims = 0;
     int dims[3] = {0, 0, 0};
-    VolumePixelType pixel_type = static_cast<VolumePixelType>(-1);
+    VolumePixelType pixel_type = VolumePixelType::eUnknown;
     float spacing[3] = {1.0f, 1.0f, 1.0f};
     std::string element_data_file;
     bool msb = false;
     std::string line;
+
+    // For .mha (ElementDataFile = LOCAL), binary starts right after the header blank line.
+    // We therefore parse the header first (terminated by a blank line), then use the recorded offset.
     std::streamoff data_start_offset = -1;
 
-    while (std::getline(f, line)) {
+    std::string header;
+    {
+        std::streamoff off = 0;
+        auto st = VNE::IO::BinaryIO::ReadHeaderUntilBlankLine(f, header, off);
+        if (!st) {
+            last_error_ = "MhdLoader: " + st.message;
+            return false;
+        }
+        data_start_offset = off;
+    }
+
+    std::istringstream hs(header);
+
+    while (std::getline(hs, line)) {
         line = trim(line);
         if (line.empty()) continue;
 
@@ -102,21 +125,21 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
                 return false;
             }
         } else if (key == "DIMSIZE") {
-            if (!parseDimSize(val, dims, ndims)) {
+            // Some files place DimSize before NDims; parse as 3 regardless.
+            if (!parseDimSize(val, dims, 3)) {
                 last_error_ = "MhdLoader: invalid DimSize";
                 return false;
             }
         } else if (key == "ELEMENTTYPE") {
             pixel_type = parseElementType(val);
-            if (static_cast<int>(pixel_type) < 0) {
+            if (pixel_type == VolumePixelType::eUnknown) {
                 last_error_ = "MhdLoader: unsupported ElementType: " + val;
                 return false;
             }
         } else if (key == "ELEMENTSPACING") {
-            parseElementSpacing(val, spacing, ndims);
+            parseElementSpacing(val, spacing, (ndims > 0) ? ndims : 3);
         } else if (key == "ELEMENTDATAFILE") {
             element_data_file = trim(val);
-            data_start_offset = f.tellg();
         } else if (key == "ELEMENTBYTEORDERMSB") {
             msb = (val.find("TRUE") != std::string::npos || val.find("True") != std::string::npos || val == "1");
         }
@@ -126,7 +149,7 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
         last_error_ = "MhdLoader: invalid NDims or DimSize";
         return false;
     }
-    if (static_cast<int>(pixel_type) < 0) {
+    if (pixel_type == VolumePixelType::eUnknown) {
         last_error_ = "MhdLoader: ElementType not set";
         return false;
     }

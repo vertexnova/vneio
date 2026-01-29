@@ -14,6 +14,8 @@
 #include <cstring>
 #include <filesystem>
 
+#include "vertexnova/io/common/binary_io.h"
+
 namespace VNE {
 namespace Image {
 
@@ -46,9 +48,14 @@ VolumePixelType parseType(const std::string& t) {
     std::string lower = t;
     std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     if (lower == "uchar" || lower == "uint8" || lower == "unsigned char" || lower == "uint8_t") return VolumePixelType::eUint8;
+    if (lower == "char" || lower == "int8" || lower == "signed char" || lower == "int8_t") return VolumePixelType::eInt8;
     if (lower == "ushort" || lower == "uint16" || lower == "unsigned short" || lower == "uint16_t") return VolumePixelType::eUint16;
-    if (lower == "float") return VolumePixelType::eFloat32;
-    return static_cast<VolumePixelType>(-1);
+    if (lower == "short" || lower == "int16" || lower == "signed short" || lower == "int16_t") return VolumePixelType::eInt16;
+    if (lower == "uint" || lower == "uint32" || lower == "unsigned int" || lower == "uint32_t") return VolumePixelType::eUint32;
+    if (lower == "int" || lower == "int32" || lower == "signed int" || lower == "int32_t") return VolumePixelType::eInt32;
+    if (lower == "float" || lower == "float32") return VolumePixelType::eFloat32;
+    if (lower == "double" || lower == "float64") return VolumePixelType::eFloat64;
+    return VolumePixelType::eUnknown;
 }
 
 std::string dirname(const std::string& path) {
@@ -76,28 +83,52 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         return false;
     }
 
+    // Read header until blank line. This is robust for attached-data NRRD.
+    std::string header;
+    std::streamoff data_offset = 0;
+    {
+        std::string first_line;
+        if (!std::getline(f, first_line)) {
+            last_error_ = "NrrdLoader: empty file";
+            return false;
+        }
+        first_line = trim(first_line);
+        if (first_line.compare(0, 4, "NRRD") != 0) {
+            last_error_ = "NrrdLoader: invalid magic, expected NRRD";
+            return false;
+        }
+        header = first_line + "\n";
+
+        std::string rest;
+        std::streamoff off = 0;
+        auto st = VNE::IO::BinaryIO::ReadHeaderUntilBlankLine(f, rest, off);
+        if (!st) {
+            last_error_ = "NrrdLoader: " + st.message;
+            return false;
+        }
+        header += rest;
+        data_offset = off;
+    }
+
+    // Parse header lines
+    std::istringstream hs(header);
     std::string line;
-    if (!std::getline(f, line)) {
-        last_error_ = "NrrdLoader: empty file";
-        return false;
-    }
-    line = trim(line);
-    if (line.compare(0, 4, "NRRD") != 0) {
-        last_error_ = "NrrdLoader: invalid magic, expected NRRD";
-        return false;
-    }
 
     int dimension = 0;
     int sizes[3] = {0, 0, 0};
-    VolumePixelType pixel_type = static_cast<VolumePixelType>(-1);
+    bool have_sizes = false;
+    VolumePixelType pixel_type = VolumePixelType::eUnknown;
     std::string encoding;
     std::string data_file;
     float spacings[3] = {1.0f, 1.0f, 1.0f};
     bool has_spacings = false;
     size_t byte_skip = 0;
     int line_skip = 0;
+    std::string endian;
 
-    while (std::getline(f, line)) {
+    // Skip the first "NRRD..." line, it's already validated.
+    std::getline(hs, line);
+    while (std::getline(hs, line)) {
         line = trim(line);
         if (line.empty()) break;
         if (line[0] == '#') continue;
@@ -115,13 +146,15 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
                 return false;
             }
         } else if (key == "sizes") {
-            if (!parseSizes(val, sizes, dimension)) {
+            // Some files place sizes before dimension. Try parsing as 3 regardless.
+            if (!parseSizes(val, sizes, 3)) {
                 last_error_ = "NrrdLoader: invalid sizes";
                 return false;
             }
+            have_sizes = true;
         } else if (key == "type") {
             pixel_type = parseType(val);
-            if (static_cast<int>(pixel_type) < 0) {
+            if (pixel_type == VolumePixelType::eUnknown) {
                 last_error_ = "NrrdLoader: unsupported type: " + val;
                 return false;
             }
@@ -131,19 +164,23 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         } else if (key == "data file" || key == "datafile") {
             data_file = trim(val);
         } else if (key == "spacings") {
-            if (parseSpacings(val, spacings, dimension)) has_spacings = true;
+            const int n = (dimension > 0) ? dimension : 3;
+            if (parseSpacings(val, spacings, n)) has_spacings = true;
         } else if (key == "byte skip" || key == "byteskip") {
             byte_skip = static_cast<size_t>(std::stoll(val));
         } else if (key == "line skip" || key == "lineskip") {
             line_skip = std::stoi(val);
+        } else if (key == "endian") {
+            std::transform(val.begin(), val.end(), val.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            endian = val;
         }
     }
 
-    if (dimension != 3 || sizes[0] <= 0 || sizes[1] <= 0 || sizes[2] <= 0) {
+    if (dimension != 3 || !have_sizes || sizes[0] <= 0 || sizes[1] <= 0 || sizes[2] <= 0) {
         last_error_ = "NrrdLoader: invalid dimension or sizes";
         return false;
     }
-    if (static_cast<int>(pixel_type) < 0) {
+    if (pixel_type == VolumePixelType::eUnknown) {
         last_error_ = "NrrdLoader: type not set";
         return false;
     }
@@ -166,7 +203,11 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 
     size_t num_bytes = out_volume.byteCount();
 
+    // Load payload: attached or detached.
     if (data_file.empty()) {
+        // Attached data starts at `data_offset`.
+        f.clear();
+        f.seekg(data_offset, std::ios::beg);
         for (int i = 0; i < line_skip && std::getline(f, line); ++i) {}
         if (byte_skip > 0) {
             f.seekg(static_cast<std::streamoff>(byte_skip), std::ios::cur);
@@ -176,10 +217,8 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
             last_error_ = "NrrdLoader: failed to read attached data";
             return false;
         }
-        return true;
-    }
-
-    f.close();
+    } else {
+        f.close();
 
     std::string data_path = data_file;
     if (data_file[0] != '/' && data_file[0] != '\\') {
@@ -188,20 +227,32 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         else data_path = data_file;
     }
 
-    std::ifstream df(data_path, std::ios::binary);
-    if (!df) {
-        last_error_ = "NrrdLoader: cannot open data file: " + data_path;
-        return false;
+        std::ifstream df(data_path, std::ios::binary);
+        if (!df) {
+            last_error_ = "NrrdLoader: cannot open data file: " + data_path;
+            return false;
+        }
+        for (int i = 0; i < line_skip && std::getline(df, line); ++i) {}
+        if (byte_skip > 0) {
+            df.seekg(static_cast<std::streamoff>(byte_skip), std::ios::cur);
+        }
+        out_volume.data.resize(num_bytes);
+        if (!df.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
+            last_error_ = "NrrdLoader: failed to read detached data";
+            return false;
+        }
     }
-    for (int i = 0; i < line_skip && std::getline(df, line); ++i) {}
-    if (byte_skip > 0) {
-        df.seekg(static_cast<std::streamoff>(byte_skip), std::ios::cur);
+
+    // Endianness fixup if present and multi-byte type.
+    if (!endian.empty() && bytesPerVoxel(out_volume.pixel_type) > 1) {
+        // Assume host is little endian on most platforms; if you need big-endian hosts, extend this.
+        const bool data_is_big = (endian == "big");
+        const bool host_is_big = false;
+        if (data_is_big != host_is_big) {
+            VNE::IO::BinaryIO::ByteSwapBufferInPlace(out_volume.data, bytesPerVoxel(out_volume.pixel_type));
+        }
     }
-    out_volume.data.resize(num_bytes);
-    if (!df.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
-        last_error_ = "NrrdLoader: failed to read detached data";
-        return false;
-    }
+
     return true;
 }
 

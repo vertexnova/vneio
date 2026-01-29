@@ -45,6 +45,9 @@ option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(VNEIO_USE_LOGGING "Use vnelogging when available" ON)
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
 option(VNEIO_BUILD_IMAGE "Build image component" ON)
+option(VNEIO_USE_STB_IMAGE_RESIZE "Enable stb_image_resize for higher-quality resizing" OFF)
+option(VNEIO_WITH_GDCM "Enable DICOM support via GDCM" OFF)
+option(VNEIO_WITH_DCMTK "Enable DICOM support via DCMTK" OFF)
 
 # Enable coverage (uses FindCoverage from cmake/vnecmake)
 include(FindCoverage)
@@ -193,6 +196,7 @@ if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
     add_library(vneio_mesh STATIC
         src/vertexnova/io/mesh/assimp_loader.cpp
         src/vertexnova/io/mesh/mesh_loader_registry.cpp
+        src/vertexnova/io/mesh/mesh_exporter_obj.cpp
     )
     target_include_directories(vneio_mesh
         PUBLIC
@@ -221,6 +225,8 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         src/vertexnova/io/image/image.cpp
         src/vertexnova/io/image/nrrd_loader.cpp
         src/vertexnova/io/image/mhd_loader.cpp
+        src/vertexnova/io/image/volume_exporter_nrrd.cpp
+        src/vertexnova/io/image/volume_exporter_mhd.cpp
     )
     target_include_directories(vneio_image
         PUBLIC
@@ -233,6 +239,9 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     if(VNEIO_STB_HEADER_ONLY)
         target_compile_definitions(vneio_image PRIVATE VNEIO_STB_HEADER_ONLY)
     endif()
+    if(VNEIO_USE_STB_IMAGE_RESIZE)
+        target_compile_definitions(vneio_image PRIVATE VNEIO_USE_STB_IMAGE_RESIZE)
+    endif()
     target_link_libraries(vneio_image
         PUBLIC VneIoWarnings VneIoBuildSettings
     )
@@ -240,6 +249,48 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         target_link_libraries(vneio_image PRIVATE ${VNEIO_STB_TARGET})
     endif()
     add_library(vne::io::image ALIAS vneio_image)
+endif()
+
+#-----------------------------------------------------------------------------
+# DICOM library (optional)
+#-----------------------------------------------------------------------------
+if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
+    add_library(vneio_dicom STATIC
+        src/vertexnova/io/dicom/dicom_loader_registry.cpp
+    )
+    target_include_directories(vneio_dicom
+        PUBLIC
+            $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${VNEIO_SRC_DIR}>
+            $<INSTALL_INTERFACE:include>
+    )
+    target_link_libraries(vneio_dicom
+        PUBLIC VneIoWarnings VneIoBuildSettings
+    )
+    if(VNEIO_WITH_GDCM)
+        target_compile_definitions(vneio_dicom PRIVATE VNEIO_WITH_GDCM)
+        # TODO: find_package(GDCM) and link
+    endif()
+    if(VNEIO_WITH_DCMTK)
+        target_compile_definitions(vneio_dicom PRIVATE VNEIO_WITH_DCMTK)
+        # TODO: find_package(DCMTK) and link
+    endif()
+    add_library(vne::io::dicom ALIAS vneio_dicom)
+else()
+    # Always build dicom_loader_registry.cpp (null loader) so the interface is available
+    add_library(vneio_dicom STATIC
+        src/vertexnova/io/dicom/dicom_loader_registry.cpp
+    )
+    target_include_directories(vneio_dicom
+        PUBLIC
+            $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${VNEIO_SRC_DIR}>
+            $<INSTALL_INTERFACE:include>
+    )
+    target_link_libraries(vneio_dicom
+        PUBLIC VneIoWarnings VneIoBuildSettings
+    )
+    add_library(vne::io::dicom ALIAS vneio_dicom)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -252,6 +303,9 @@ if(TARGET vneio_mesh)
 endif()
 if(TARGET vneio_image)
     target_link_libraries(vneio INTERFACE vneio_image)
+endif()
+if(TARGET vneio_dicom)
+    target_link_libraries(vneio INTERFACE vneio_dicom)
 endif()
 add_library(vne::io ALIAS vneio)
 
@@ -280,6 +334,9 @@ if(TARGET vneio_image)
     if(TARGET stb_image)
         list(APPEND VNEIO_INSTALL_TARGETS stb_image)
     endif()
+endif()
+if(TARGET vneio_dicom)
+    list(APPEND VNEIO_INSTALL_TARGETS vneio_dicom)
 endif()
 install(TARGETS ${VNEIO_INSTALL_TARGETS} vneio
     EXPORT VneIoTargets
