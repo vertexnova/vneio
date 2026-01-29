@@ -129,3 +129,26 @@ TEST(VolumeTest, NrrdLoaderLoadFoolNrrd) {
                                       * static_cast<size_t>(vol.depth()));
     EXPECT_EQ(vol.byteCount(), vol.voxelCount() * static_cast<size_t>(bytesPerVoxel(vol.pixel_type)));
 }
+
+TEST(VolumeTest, NrrdLoaderLoadSmall3dNrrd) {
+    // 3D NRRD from testdata (small3d.nrrd), Teem-style: 4x4x4 uchar raw
+    std::string path = getTestdataPath("volumes/small3d.nrrd");
+    if (!std::filesystem::exists(path)) {
+        GTEST_SKIP() << "Test volume not found: " << path
+                     << " (run from project root with testdata/volumes present)";
+    }
+
+    NrrdLoader loader;
+    Volume vol;
+    EXPECT_TRUE(loader.load(path, vol)) << loader.getLastError();
+    EXPECT_FALSE(vol.isEmpty());
+    EXPECT_EQ(vol.width(), 4);
+    EXPECT_EQ(vol.height(), 4);
+    EXPECT_EQ(vol.depth(), 4);
+    EXPECT_EQ(vol.pixel_type, VolumePixelType::eUint8);
+    EXPECT_EQ(vol.voxelCount(), 64u);
+    EXPECT_EQ(vol.byteCount(), 64u);
+    EXPECT_NE(vol.getData(), nullptr);
+    EXPECT_EQ(vol.getData()[0], 0);
+    EXPECT_EQ(vol.getData()[63], 63);
+}
