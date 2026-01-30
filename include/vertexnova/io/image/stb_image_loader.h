@@ -35,5 +35,5 @@ class StbImageLoader : public IImageLoader {
     std::string last_error_;
 };
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

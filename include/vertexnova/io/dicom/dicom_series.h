@@ -20,10 +20,10 @@
 
 #include "vertexnova/io/image/volume.h"
 
-namespace vne::DICOM {
+namespace vne::dicom {
 
 struct DicomSeries_C {
-    vne::Image::Volume volume;
+    vne::image::Volume volume;
     std::unordered_map<std::string, std::string> meta;
     std::string series_uid;
     std::string study_uid;
@@ -31,4 +31,4 @@ struct DicomSeries_C {
     std::string modality;
 };
 
-}  // namespace vne::DICOM
+}  // namespace vne::dicom

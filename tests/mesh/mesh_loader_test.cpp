@@ -19,7 +19,7 @@
 
 #include <filesystem>
 
-using namespace vne::Mesh;
+using namespace vne::mesh;
 using vne::io::utils::getTestdataPath;
 
 namespace {

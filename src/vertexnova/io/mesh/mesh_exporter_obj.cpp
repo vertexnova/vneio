@@ -12,7 +12,7 @@
 #include <sstream>
 #include <filesystem>
 
-namespace vne::Mesh {
+namespace vne::mesh {
 
 namespace {
 
@@ -157,4 +157,4 @@ bool exportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOpt
     return true;
 }
 
-}  // namespace vne::Mesh
+}  // namespace vne::mesh

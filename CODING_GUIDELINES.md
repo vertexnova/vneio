@@ -29,6 +29,6 @@ VneIo follows the **VertexNova** coding style. Summary and tooling:
 
 - Public API: `include/vertexnova/io/` (mesh/, image/, vneio.h).
 - Implementation: `src/vertexnova/io/`.
-- Use namespaces `VNE::Mesh` and `VNE::Image`; keep struct/class and function names consistent with the guidelines above.
+- Use namespaces `vne::mesh` and `vne::image` (lowercase); keep struct/class and function names consistent with the guidelines above.
 
 For the full VertexNova C++ guidelines (used across events, logging, math, and io), refer to the main VertexNova documentation or the same structure in sibling repos (e.g. vneevents, vnelogging).

@@ -11,7 +11,7 @@
 #include "vertexnova/io/mesh/assimp_loader.h"
 
 namespace vne {
-namespace Mesh {
+namespace mesh {
 
 std::unique_ptr<IMeshLoader> MeshLoaderRegistry::getLoaderFor(const std::string& path) {
     AssimpLoader checker;
@@ -21,5 +21,5 @@ std::unique_ptr<IMeshLoader> MeshLoaderRegistry::getLoaderFor(const std::string&
     return nullptr;
 }
 
-}  // namespace Mesh
+}  // namespace mesh
 }  // namespace vne

@@ -14,7 +14,7 @@
 
 #include "vertexnova/io/common/binary_io.h"
 
-namespace vne::Image {
+namespace vne::image {
 
 namespace {
 
@@ -124,7 +124,7 @@ bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
 
     const size_t bytes = vol.byteCount();
     if (detached || writing_nhdr) {
-        auto st = vne::io::BinaryIO::WriteFile(raw_path, vol.data.data(), bytes);
+        auto st = vne::io::binaryio::WriteFile(raw_path, vol.data.data(), bytes);
         if (!st) {
             SetError(out_error, "ExportNrrd: " + st.message);
             return false;
@@ -141,4 +141,4 @@ bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
     return true;
 }
 
-}  // namespace vne::Image
+}  // namespace vne::image

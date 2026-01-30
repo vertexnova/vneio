@@ -34,21 +34,21 @@ class AssetIO {
     AssetIO() = default;
     ~AssetIO() = default;
 
-    void registerImageLoader(std::unique_ptr<vne::Image::IImageLoader> loader);
-    void registerMeshLoader(std::unique_ptr<vne::Mesh::IMeshLoader> loader);
-    void registerVolumeLoader(std::unique_ptr<vne::Image::IVolumeLoader> loader);
-    void registerDicomLoader(std::unique_ptr<vne::DICOM::IDicomLoader> loader);
+    void registerImageLoader(std::unique_ptr<vne::image::IImageLoader> loader);
+    void registerMeshLoader(std::unique_ptr<vne::mesh::IMeshLoader> loader);
+    void registerVolumeLoader(std::unique_ptr<vne::image::IVolumeLoader> loader);
+    void registerDicomLoader(std::unique_ptr<vne::dicom::IDicomLoader> loader);
 
-    LoadResult<vne::Image::Image> loadImage(const LoadRequest& request);
-    LoadResult<vne::Mesh::Mesh> loadMesh(const LoadRequest& request);
-    LoadResult<vne::Image::Volume> loadVolume(const LoadRequest& request);
-    LoadResult<vne::DICOM::DicomSeries_C> loadDicomSeries(const LoadRequest& request);
+    LoadResult<vne::image::Image> loadImage(const LoadRequest& request);
+    LoadResult<vne::mesh::Mesh> loadMesh(const LoadRequest& request);
+    LoadResult<vne::image::Volume> loadVolume(const LoadRequest& request);
+    LoadResult<vne::dicom::DicomSeries_C> loadDicomSeries(const LoadRequest& request);
 
    private:
-    std::vector<std::unique_ptr<vne::Image::IImageLoader>> image_loaders_;
-    std::vector<std::unique_ptr<vne::Mesh::IMeshLoader>> mesh_loaders_;
-    std::vector<std::unique_ptr<vne::Image::IVolumeLoader>> volume_loaders_;
-    std::vector<std::unique_ptr<vne::DICOM::IDicomLoader>> dicom_loaders_;
+    std::vector<std::unique_ptr<vne::image::IImageLoader>> image_loaders_;
+    std::vector<std::unique_ptr<vne::mesh::IMeshLoader>> mesh_loaders_;
+    std::vector<std::unique_ptr<vne::image::IVolumeLoader>> volume_loaders_;
+    std::vector<std::unique_ptr<vne::dicom::IDicomLoader>> dicom_loaders_;
 };
 
 }  // namespace io

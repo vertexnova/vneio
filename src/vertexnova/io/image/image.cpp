@@ -33,7 +33,7 @@
 #include <mutex>
 
 namespace vne {
-namespace Image {
+namespace image {
 
 Image::Image()
     : width_(0)
@@ -68,7 +68,7 @@ bool Image::loadFromFile(const std::string& file_path, bool flip_vertically) {
     int width;
     int height;
     int channels;
-    uint8_t* data = ImageUtils::loadImage(file_path, &width, &height, &channels, 0, flip_vertically);
+    uint8_t* data = image_utils::loadImage(file_path, &width, &height, &channels, 0, flip_vertically);
 
     if (!data) {
         return false;
@@ -82,7 +82,7 @@ bool Image::loadFromFile(const std::string& file_path, bool flip_vertically) {
     data_.resize(data_size);
     std::memcpy(data_.data(), data, data_size);
 
-    ImageUtils::freeImage(data);
+    image_utils::freeImage(data);
     return true;
 }
 
@@ -91,7 +91,7 @@ bool Image::saveToFile(const std::string& file_path, const std::string& format) 
         return false;
     }
 
-    return ImageUtils::saveImage(file_path, data_.data(), width_, height_, channels_, format);
+    return image_utils::saveImage(file_path, data_.data(), width_, height_, channels_, format);
 }
 
 const uint8_t* Image::getData() const {
@@ -209,7 +209,7 @@ void Image::clear() {
     channels_ = 0;
 }
 
-namespace ImageUtils {
+namespace image_utils {
 
 namespace {
 // stb_image uses global state (e.g. stbi_set_flip_vertically_on_load).
@@ -257,7 +257,7 @@ bool saveImage(
     return result != 0;
 }
 
-}  // namespace ImageUtils
+}  // namespace image_utils
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

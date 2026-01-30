@@ -13,7 +13,7 @@
 #include <fstream>
 #include <cstdint>
 
-using namespace vne::Image;
+using namespace vne::image;
 using vne::io::utils::getTestdataPath;
 
 TEST(VolumeTest, DefaultEmpty) {

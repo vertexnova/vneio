@@ -18,7 +18,7 @@
 
 namespace vne {
 namespace io {
-namespace BinaryIO {
+namespace binaryio {
 
 inline Status ReadFile(const std::string& path, std::vector<uint8_t>& out) {
     out.clear();
@@ -103,6 +103,6 @@ inline void ByteSwapBufferInPlace(std::vector<uint8_t>& buf, int elem_size) {
     }
 }
 
-}  // namespace BinaryIO
+}  // namespace binaryio
 }  // namespace io
 }  // namespace vne

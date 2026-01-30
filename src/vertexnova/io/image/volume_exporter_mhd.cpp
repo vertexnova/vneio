@@ -14,7 +14,7 @@
 
 #include "vertexnova/io/common/binary_io.h"
 
-namespace vne::Image {
+namespace vne::image {
 
 namespace {
 
@@ -115,7 +115,7 @@ bool ExportMhd(const std::string& mhd_or_mha_path,
     }
 
     const size_t bytes = vol.byteCount();
-    auto st = vne::io::BinaryIO::WriteFile(raw_path, vol.data.data(), bytes);
+    auto st = vne::io::binaryio::WriteFile(raw_path, vol.data.data(), bytes);
     if (!st) {
         SetError(out_error, "ExportMhd: " + st.message);
         return false;
@@ -123,4 +123,4 @@ bool ExportMhd(const std::string& mhd_or_mha_path,
     return true;
 }
 
-}  // namespace vne::Image
+}  // namespace vne::image

@@ -18,8 +18,8 @@ using vne::io::utils::getTestdataPath;
 
 TEST(AssetIOTest, LoadVolumeViaRegistry) {
     AssetIO io;
-    io.registerVolumeLoader(std::make_unique<vne::Image::NrrdLoader>());
-    io.registerVolumeLoader(std::make_unique<vne::Image::MhdLoader>());
+    io.registerVolumeLoader(std::make_unique<vne::image::NrrdLoader>());
+    io.registerVolumeLoader(std::make_unique<vne::image::MhdLoader>());
 
     std::string path = getTestdataPath("volumes/small3d.nrrd");
     if (!std::filesystem::exists(path)) {
@@ -30,7 +30,7 @@ TEST(AssetIOTest, LoadVolumeViaRegistry) {
     request.asset_type = AssetType::eVolume;
     request.uri = path;
 
-    LoadResult<vne::Image::Volume> result = io.loadVolume(request);
+    LoadResult<vne::image::Volume> result = io.loadVolume(request);
     ASSERT_TRUE(result.ok()) << result.status.message;
     EXPECT_FALSE(result.value.isEmpty());
     EXPECT_EQ(result.value.width(), 4);
@@ -39,7 +39,7 @@ TEST(AssetIOTest, LoadVolumeViaRegistry) {
 
 TEST(AssetIOTest, LoadImageViaRegistry) {
     AssetIO io;
-    io.registerImageLoader(std::make_unique<vne::Image::StbImageLoader>());
+    io.registerImageLoader(std::make_unique<vne::image::StbImageLoader>());
 
     std::string path = getTestdataPath("textures/sample.png");
     if (!std::filesystem::exists(path)) {
@@ -50,14 +50,14 @@ TEST(AssetIOTest, LoadImageViaRegistry) {
     request.asset_type = AssetType::eImage;
     request.uri = path;
 
-    LoadResult<vne::Image::Image> result = io.loadImage(request);
+    LoadResult<vne::image::Image> result = io.loadImage(request);
     ASSERT_TRUE(result.ok()) << result.status.message;
     EXPECT_FALSE(result.value.isEmpty());
 }
 
 TEST(AssetIOTest, LoadMeshViaRegistry) {
     AssetIO io;
-    io.registerMeshLoader(std::make_unique<vne::Mesh::AssimpLoader>());
+    io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
 
     std::string path = getTestdataPath("meshes/minimal.stl");
     if (!std::filesystem::exists(path)) {
@@ -68,7 +68,7 @@ TEST(AssetIOTest, LoadMeshViaRegistry) {
     request.asset_type = AssetType::eMesh;
     request.uri = path;
 
-    LoadResult<vne::Mesh::Mesh> result = io.loadMesh(request);
+    LoadResult<vne::mesh::Mesh> result = io.loadMesh(request);
     ASSERT_TRUE(result.ok()) << result.status.message;
     EXPECT_FALSE(result.value.isEmpty());
 }
@@ -79,7 +79,7 @@ TEST(AssetIOTest, NoLoaderReturnsError) {
     request.asset_type = AssetType::eVolume;
     request.uri = "/nonexistent.nrrd";
 
-    LoadResult<vne::Image::Volume> result = io.loadVolume(request);
+    LoadResult<vne::image::Volume> result = io.loadVolume(request);
     EXPECT_FALSE(result.ok());
     EXPECT_FALSE(result.status.message.empty());
 }

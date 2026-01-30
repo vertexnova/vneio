@@ -12,7 +12,7 @@
 #include <string>
 
 namespace vne {
-namespace Image {
+namespace image {
 
 namespace {
 
@@ -58,5 +58,5 @@ vne::io::LoadResult<Image> StbImageLoader::loadImage(const vne::io::LoadRequest&
     return result;
 }
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

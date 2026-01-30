@@ -21,7 +21,7 @@
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/load_request.h"
 
-namespace vne::DICOM {
+namespace vne::dicom {
 
 class IDicomLoader : public vne::io::IAssetLoader {
    public:
@@ -54,4 +54,4 @@ inline bool IDicomLoader::canLoad(const vne::io::LoadRequest& request) const {
     return request.asset_type == vne::io::AssetType::eDicomSeries && !request.uri.empty();
 }
 
-}  // namespace vne::DICOM
+}  // namespace vne::dicom

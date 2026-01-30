@@ -51,7 +51,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.core.mesh.assimp");
  * @param opts Loading options
  * @return Assimp processing flags
  */
-uint32_t BuildAssimpFlags(const vne::Mesh::AssimpLoaderOptions& opts) {
+uint32_t BuildAssimpFlags(const vne::mesh::AssimpLoaderOptions& opts) {
     unsigned int flags = 0;
 
     if (opts.triangulate) {
@@ -91,7 +91,7 @@ uint32_t BuildAssimpFlags(const vne::Mesh::AssimpLoaderOptions& opts) {
 }  // namespace
 
 namespace vne {
-namespace Mesh {
+namespace mesh {
 
 vne::io::LoadResult<Mesh> AssimpLoader::loadMesh(const vne::io::LoadRequest& request) {
     vne::io::LoadResult<Mesh> result;
@@ -459,5 +459,5 @@ bool AssimpLoader::isExtensionSupported(const std::string& path) const {
     return AssimpIsExtensionSupported(path);
 }
 
-}  // namespace Mesh
+}  // namespace mesh
 }  // namespace vne

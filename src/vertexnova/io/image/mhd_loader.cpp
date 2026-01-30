@@ -19,7 +19,7 @@
 #include "vertexnova/io/load_request.h"
 
 namespace vne {
-namespace Image {
+namespace image {
 
 namespace {
 
@@ -98,8 +98,8 @@ bool MhdLoader::canLoad(const vne::io::LoadRequest& request) const {
     return isExtensionSupported(request.uri);
 }
 
-vne::io::LoadResult<vne::Image::Volume> MhdLoader::loadVolume(const vne::io::LoadRequest& request) {
-    vne::io::LoadResult<vne::Image::Volume> result;
+vne::io::LoadResult<vne::image::Volume> MhdLoader::loadVolume(const vne::io::LoadRequest& request) {
+    vne::io::LoadResult<vne::image::Volume> result;
     if (!load(request.uri, result.value)) {
         result.status =
             vne::io::Status::make(vne::io::ErrorCode::eParseError, getLastError(), request.uri, "MhdLoader");
@@ -146,7 +146,7 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     std::string header;
     {
         std::streamoff off = 0;
-        auto st = vne::io::BinaryIO::ReadHeaderUntilBlankLine(f, header, off);
+        auto st = vne::io::binaryio::ReadHeaderUntilBlankLine(f, header, off);
         if (!st) {
             last_error_ = "MhdLoader: " + st.message;
             return false;
@@ -269,5 +269,5 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     return true;
 }
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

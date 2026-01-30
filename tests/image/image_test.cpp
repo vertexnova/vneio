@@ -17,7 +17,7 @@
 #include <filesystem>
 #include <cstring>
 
-using namespace vne::Image;
+using namespace vne::image;
 using vne::io::utils::getTestdataPath;
 
 namespace {
@@ -205,12 +205,12 @@ TEST_F(ImageTest, ImageUtils) {
     int width = 0;
     int height = 0;
     int channels = 0;
-    uint8_t* data = ImageUtils::loadImage(path, &width, &height, &channels);
+    uint8_t* data = image_utils::loadImage(path, &width, &height, &channels);
     ASSERT_NE(data, nullptr);
     EXPECT_GT(width, 0);
     EXPECT_GT(height, 0);
     EXPECT_GE(channels, 1);
-    ImageUtils::freeImage(data);
+    image_utils::freeImage(data);
 
     const int tw = 16;
     const int th = 16;
@@ -220,10 +220,10 @@ TEST_F(ImageTest, ImageUtils) {
     std::string save_path = kTestOutputDir + "/test_direct_save.png";
     temp_files_to_delete_.push_back(save_path);
 
-    EXPECT_TRUE(ImageUtils::saveImage(save_path, test_data.data(), tw, th, tc));
+    EXPECT_TRUE(image_utils::saveImage(save_path, test_data.data(), tw, th, tc));
     EXPECT_TRUE(std::filesystem::exists(save_path));
 
-    EXPECT_FALSE(ImageUtils::saveImage(save_path, nullptr, tw, th, tc));
-    EXPECT_FALSE(ImageUtils::saveImage(save_path, test_data.data(), 0, th, tc));
-    EXPECT_FALSE(ImageUtils::saveImage(save_path, test_data.data(), tw, 0, tc));
+    EXPECT_FALSE(image_utils::saveImage(save_path, nullptr, tw, th, tc));
+    EXPECT_FALSE(image_utils::saveImage(save_path, test_data.data(), 0, th, tc));
+    EXPECT_FALSE(image_utils::saveImage(save_path, test_data.data(), tw, 0, tc));
 }

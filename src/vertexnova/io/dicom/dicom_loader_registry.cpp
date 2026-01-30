@@ -8,7 +8,7 @@
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/load_request.h"
 
-namespace vne::DICOM {
+namespace vne::dicom {
 
 namespace {
 class NullDicomLoader final : public IDicomLoader {
@@ -52,4 +52,4 @@ std::unique_ptr<IDicomLoader> DicomLoaderRegistry::Create() {
 #endif
 }
 
-}  // namespace vne::DICOM
+}  // namespace vne::dicom
