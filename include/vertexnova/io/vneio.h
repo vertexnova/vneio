@@ -11,6 +11,11 @@
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/common/binary_io.h"
 
+// Asset IO (LoadRequest, registry, loader interfaces)
+#include "vertexnova/io/load_request.h"
+#include "vertexnova/io/asset_loader.h"
+#include "vertexnova/io/asset_io.h"
+
 // Mesh (requires Assimp when building)
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
@@ -21,6 +26,9 @@
 // Image (requires stb when building)
 #include "vertexnova/io/image/image.h"
 #include "vertexnova/io/image/volume.h"
+#include "vertexnova/io/image/image_loader.h"
+#include "vertexnova/io/image/volume_loader.h"
+#include "vertexnova/io/image/stb_image_loader.h"
 #include "vertexnova/io/image/nrrd_loader.h"
 #include "vertexnova/io/image/mhd_loader.h"
 #include "vertexnova/io/image/volume_exporter.h"

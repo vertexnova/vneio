@@ -72,4 +72,7 @@ struct Mesh {
     bool isEmpty() const { return vertices.empty() || indices.empty(); }
 };
 
+/** @brief Canonical CPU mesh type alias (for AssetIO / upload documentation). */
+using MeshAsset = Mesh;
+
 }  // namespace VNE::Mesh

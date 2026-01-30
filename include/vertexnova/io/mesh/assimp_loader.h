@@ -41,6 +41,7 @@ class AssimpLoader : public IMeshLoader {
     AssimpLoader() = default;
     ~AssimpLoader() override = default;
 
+    VNE::IO::LoadResult<Mesh> loadMesh(const VNE::IO::LoadRequest& request) override;
     bool loadFile(const std::string& path, Mesh& out_mesh) override;
     bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts);
     bool isExtensionSupported(const std::string& path) const override;

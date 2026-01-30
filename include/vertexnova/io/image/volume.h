@@ -105,5 +105,8 @@ struct Volume {
     uint8_t* getData() { return data.data(); }
 };
 
+/** @brief Canonical CPU volume type alias (for AssetIO / upload documentation). */
+using VolumeAsset = Volume;
+
 }  // namespace Image
 }  // namespace VNE

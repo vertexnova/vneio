@@ -125,6 +125,9 @@ class Image {
     int channels_;               //!< Image channels (1=grayscale, 3=RGB, 4=RGBA)
 };
 
+/** @brief Canonical CPU image type alias (for AssetIO / upload documentation). */
+using ImageAsset = Image;
+
 /**
  * @brief Utility functions for image loading/saving
  */

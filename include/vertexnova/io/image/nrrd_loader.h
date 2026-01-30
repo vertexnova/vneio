@@ -13,7 +13,10 @@
  */
 
 #include <string>
-#include "volume.h"
+
+#include "vertexnova/io/image/volume.h"
+#include "vertexnova/io/image/volume_loader.h"
+#include "vertexnova/io/load_request.h"
 
 #ifdef VNEIO_USE_NRRDIO
 // nrrdio headers (path may vary: nrrdio.h, NrrdIO.h, or nrrdio/nrrdio.h)
@@ -38,9 +41,12 @@ namespace Image {
  * encoding raw, attached or detached data file. spacings and
  * (optionally) space origin are read when present.
  */
-class NrrdLoader {
+class NrrdLoader : public IVolumeLoader {
    public:
     NrrdLoader() = default;
+
+    bool canLoad(const VNE::IO::LoadRequest& request) const override;
+    VNE::IO::LoadResult<Volume> loadVolume(const VNE::IO::LoadRequest& request) override;
 
     bool load(const std::string& path, Volume& out_volume);
     bool isExtensionSupported(const std::string& path) const;

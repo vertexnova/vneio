@@ -12,7 +12,10 @@
  */
 
 #include <string>
-#include "volume.h"
+
+#include "vertexnova/io/image/volume.h"
+#include "vertexnova/io/image/volume_loader.h"
+#include "vertexnova/io/load_request.h"
 
 namespace VNE {
 namespace Image {
@@ -23,9 +26,12 @@ namespace Image {
  * Reads NDims, DimSize, ElementType, ElementSpacing, ElementDataFile
  * (or inline data in MHA). ElementType: MET_UCHAR, MET_USHORT, MET_FLOAT.
  */
-class MhdLoader {
+class MhdLoader : public IVolumeLoader {
    public:
     MhdLoader() = default;
+
+    bool canLoad(const VNE::IO::LoadRequest& request) const override;
+    VNE::IO::LoadResult<Volume> loadVolume(const VNE::IO::LoadRequest& request) override;
 
     bool load(const std::string& path, Volume& out_volume);
     bool isExtensionSupported(const std::string& path) const;

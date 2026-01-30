@@ -275,6 +275,7 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         src/vertexnova/io/image/image.cpp
         src/vertexnova/io/image/nrrd_loader.cpp
         src/vertexnova/io/image/mhd_loader.cpp
+        src/vertexnova/io/image/stb_image_loader.cpp
         src/vertexnova/io/image/volume_exporter_nrrd.cpp
         src/vertexnova/io/image/volume_exporter_mhd.cpp
     )
@@ -306,6 +307,24 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         endif()
     endif()
     add_library(vne::io::image ALIAS vneio_image)
+endif()
+
+#-----------------------------------------------------------------------------
+# AssetIO registry (unified load by request; depends on image + mesh)
+#-----------------------------------------------------------------------------
+if(TARGET vneio_image AND TARGET vneio_mesh)
+    add_library(vneio_asset_io STATIC src/vertexnova/io/asset_io.cpp)
+    target_include_directories(vneio_asset_io
+        PUBLIC
+            $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
+            $<INSTALL_INTERFACE:include>
+    )
+    target_link_libraries(vneio_asset_io PUBLIC vneio_image vneio_mesh)
+    if(TARGET vneio_dicom)
+        target_link_libraries(vneio_asset_io PUBLIC vneio_dicom)
+    endif()
+    target_link_libraries(vneio_asset_io PUBLIC VneIoWarnings VneIoBuildSettings)
+    add_library(vne::io::AssetIO ALIAS vneio_asset_io)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -361,6 +380,9 @@ endif()
 if(TARGET vneio_image)
     target_link_libraries(vneio INTERFACE vneio_image)
 endif()
+if(TARGET vneio_asset_io)
+    target_link_libraries(vneio INTERFACE vneio_asset_io)
+endif()
 if(TARGET vneio_dicom)
     target_link_libraries(vneio INTERFACE vneio_dicom)
 endif()
@@ -391,6 +413,9 @@ if(TARGET vneio_image)
     if(TARGET stb_image)
         list(APPEND VNEIO_INSTALL_TARGETS stb_image)
     endif()
+endif()
+if(TARGET vneio_asset_io)
+    list(APPEND VNEIO_INSTALL_TARGETS vneio_asset_io)
 endif()
 if(TARGET vneio_dicom)
     list(APPEND VNEIO_INSTALL_TARGETS vneio_dicom)

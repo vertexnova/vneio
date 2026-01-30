@@ -10,6 +10,8 @@
  */
 
 #include "vertexnova/io/mesh/assimp_loader.h"
+#include "vertexnova/io/common/status.h"
+#include "vertexnova/io/load_request.h"
 
 #ifdef VNEIO_NO_LOGGING
 #include <iostream>
@@ -90,6 +92,17 @@ uint32_t BuildAssimpFlags(const VNE::Mesh::AssimpLoaderOptions& opts) {
 
 namespace VNE {
 namespace Mesh {
+
+VNE::IO::LoadResult<Mesh> AssimpLoader::loadMesh(const VNE::IO::LoadRequest& request) {
+    VNE::IO::LoadResult<Mesh> result;
+    if (!loadFile(request.uri, result.value)) {
+        result.status =
+            VNE::IO::Status_C::Make(VNE::IO::ErrorCode_TP::PARSE_ERROR, getLastError(), request.uri, "AssimpLoader");
+        return result;
+    }
+    result.status = VNE::IO::Status_C::OkStatus();
+    return result;
+}
 
 bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh) {
     return loadFile(path, out_mesh, AssimpLoaderOptions{});

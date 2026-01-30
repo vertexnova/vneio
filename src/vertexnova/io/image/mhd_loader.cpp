@@ -15,6 +15,8 @@
 #include <filesystem>
 
 #include "vertexnova/io/common/binary_io.h"
+#include "vertexnova/io/common/status.h"
+#include "vertexnova/io/load_request.h"
 
 namespace VNE {
 namespace Image {
@@ -88,6 +90,24 @@ std::string dirname(const std::string& path) {
 }
 
 }  // namespace
+
+bool MhdLoader::canLoad(const VNE::IO::LoadRequest& request) const {
+    if (request.asset_type != VNE::IO::AssetType::eVolume) {
+        return false;
+    }
+    return isExtensionSupported(request.uri);
+}
+
+VNE::IO::LoadResult<VNE::Image::Volume> MhdLoader::loadVolume(const VNE::IO::LoadRequest& request) {
+    VNE::IO::LoadResult<VNE::Image::Volume> result;
+    if (!load(request.uri, result.value)) {
+        result.status =
+            VNE::IO::Status_C::Make(VNE::IO::ErrorCode_TP::PARSE_ERROR, getLastError(), request.uri, "MhdLoader");
+        return result;
+    }
+    result.status = VNE::IO::Status_C::OkStatus();
+    return result;
+}
 
 bool MhdLoader::isExtensionSupported(const std::string& path) const {
     auto pos = path.find_last_of('.');

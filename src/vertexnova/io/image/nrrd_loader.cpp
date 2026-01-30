@@ -15,6 +15,8 @@
 #include <filesystem>
 
 #include "vertexnova/io/common/binary_io.h"
+#include "vertexnova/io/common/status.h"
+#include "vertexnova/io/load_request.h"
 
 #ifdef VNEIO_USE_NRRDIO
 #if __has_include(<nrrdio.h>)
@@ -116,6 +118,24 @@ std::string dirname(const std::string& path) {
 }
 
 }  // namespace
+
+bool NrrdLoader::canLoad(const VNE::IO::LoadRequest& request) const {
+    if (request.asset_type != VNE::IO::AssetType::eVolume) {
+        return false;
+    }
+    return isExtensionSupported(request.uri);
+}
+
+VNE::IO::LoadResult<VNE::Image::Volume> NrrdLoader::loadVolume(const VNE::IO::LoadRequest& request) {
+    VNE::IO::LoadResult<VNE::Image::Volume> result;
+    if (!load(request.uri, result.value)) {
+        result.status =
+            VNE::IO::Status_C::Make(VNE::IO::ErrorCode_TP::PARSE_ERROR, getLastError(), request.uri, "NrrdLoader");
+        return result;
+    }
+    result.status = VNE::IO::Status_C::OkStatus();
+    return result;
+}
 
 bool NrrdLoader::isExtensionSupported(const std::string& path) const {
     auto pos = path.find_last_of('.');
@@ -408,49 +428,57 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
             switch (pixel_type) {
                 case VolumePixelType::eUint8: {
                     int v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     ptr[i * bpp] = static_cast<uint8_t>(v);
                     break;
                 }
                 case VolumePixelType::eInt8: {
                     int v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     *reinterpret_cast<int8_t*>(ptr + i * bpp) = static_cast<int8_t>(v);
                     break;
                 }
                 case VolumePixelType::eUint16: {
                     int v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     *reinterpret_cast<uint16_t*>(ptr + i * bpp) = static_cast<uint16_t>(v);
                     break;
                 }
                 case VolumePixelType::eInt16: {
                     int v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     *reinterpret_cast<int16_t*>(ptr + i * bpp) = static_cast<int16_t>(v);
                     break;
                 }
                 case VolumePixelType::eUint32: {
                     unsigned long v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     *reinterpret_cast<uint32_t*>(ptr + i * bpp) = static_cast<uint32_t>(v);
                     break;
                 }
                 case VolumePixelType::eInt32: {
                     long v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     *reinterpret_cast<int32_t*>(ptr + i * bpp) = static_cast<int32_t>(v);
                     break;
                 }
                 case VolumePixelType::eFloat32: {
                     float v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     *reinterpret_cast<float*>(ptr + i * bpp) = v;
                     break;
                 }
                 case VolumePixelType::eFloat64: {
                     double v;
-                    if (!(in >> v)) return false;
+                    if (!(in >> v))
+                        return false;
                     *reinterpret_cast<double*>(ptr + i * bpp) = v;
                     break;
                 }

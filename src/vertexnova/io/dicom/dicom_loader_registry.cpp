@@ -5,12 +5,27 @@
  */
 
 #include "vertexnova/io/dicom/dicom_loader_registry.h"
+#include "vertexnova/io/common/status.h"
+#include "vertexnova/io/load_request.h"
 
 namespace VNE::DICOM {
 
 namespace {
 class NullDicomLoader final : public IDicomLoader {
    public:
+    VNE::IO::LoadResult<DicomSeries_C> loadDicomSeries(const VNE::IO::LoadRequest& request) override {
+        VNE::IO::LoadResult<DicomSeries_C> result;
+        if (!loadDirectory(request.uri, result.value)) {
+            result.status = VNE::IO::Status_C::Make(VNE::IO::ErrorCode_TP::NOT_IMPLEMENTED,
+                                                    getLastError(),
+                                                    request.uri,
+                                                    "DicomLoader");
+            return result;
+        }
+        result.status = VNE::IO::Status_C::OkStatus();
+        return result;
+    }
+
     bool loadDirectory(const std::string& directory_path, DicomSeries_C& out_series) override {
         (void)directory_path;
         out_series = {};
