@@ -17,7 +17,7 @@
 #include <vector>
 
 namespace vne {
-namespace Image {
+namespace image {
 
 /**
  * @brief Scalar pixel/voxel type for volumes
@@ -108,5 +108,5 @@ struct Volume {
 /** @brief Canonical CPU volume type alias (for AssetIO / upload documentation). */
 using VolumeAsset = Volume;
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

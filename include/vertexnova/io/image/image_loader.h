@@ -12,7 +12,7 @@
 #include "vertexnova/io/image/image.h"
 
 namespace vne {
-namespace Image {
+namespace image {
 
 /**
  * @brief Interface for loading 2D images (PNG, JPG, etc.)
@@ -29,5 +29,5 @@ class IImageLoader : public vne::io::IAssetLoader {
     virtual vne::io::LoadResult<Image> loadImage(const vne::io::LoadRequest& request) = 0;
 };
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

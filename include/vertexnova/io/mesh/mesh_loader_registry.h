@@ -17,7 +17,7 @@
 #include "mesh_loader.h"
 
 namespace vne {
-namespace Mesh {
+namespace mesh {
 
 /**
  * @brief Factory for mesh loaders by file path
@@ -37,5 +37,5 @@ class MeshLoaderRegistry {
     static std::unique_ptr<IMeshLoader> getLoaderFor(const std::string& path);
 };
 
-}  // namespace Mesh
+}  // namespace mesh
 }  // namespace vne

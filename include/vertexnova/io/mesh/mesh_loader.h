@@ -18,7 +18,7 @@
 #include "vertexnova/io/mesh/mesh.h"
 
 namespace vne {
-namespace Mesh {
+namespace mesh {
 
 /**
  * @brief Interface for loading 3D meshes from file
@@ -64,5 +64,5 @@ inline bool IMeshLoader::canLoad(const vne::io::LoadRequest& request) const {
     return request.asset_type == vne::io::AssetType::eMesh && isExtensionSupported(request.uri);
 }
 
-}  // namespace Mesh
+}  // namespace mesh
 }  // namespace vne

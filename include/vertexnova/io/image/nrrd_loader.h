@@ -32,7 +32,7 @@
 #endif
 
 namespace vne {
-namespace Image {
+namespace image {
 
 /**
  * @brief Loader for NRRD 3D volumes
@@ -56,5 +56,5 @@ class NrrdLoader : public IVolumeLoader {
     std::string last_error_;
 };
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

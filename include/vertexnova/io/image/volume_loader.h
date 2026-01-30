@@ -12,7 +12,7 @@
 #include "vertexnova/io/image/volume.h"
 
 namespace vne {
-namespace Image {
+namespace image {
 
 /**
  * @brief Interface for loading volumes (NRRD, MHD, etc.)
@@ -29,5 +29,5 @@ class IVolumeLoader : public vne::io::IAssetLoader {
     virtual vne::io::LoadResult<Volume> loadVolume(const vne::io::LoadRequest& request) = 0;
 };
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

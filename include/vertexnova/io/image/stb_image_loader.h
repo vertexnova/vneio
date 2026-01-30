@@ -14,7 +14,7 @@
 #include "vertexnova/io/load_request.h"
 
 namespace vne {
-namespace Image {
+namespace image {
 
 /**
  * @brief Loader for 2D images (PNG, JPG, BMP, TGA, etc.) using stb_image

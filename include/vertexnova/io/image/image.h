@@ -15,7 +15,7 @@
 #include <cstdint>
 
 namespace vne {
-namespace Image {
+namespace image {
 
 /**
  * @brief Image class for loading, manipulating and saving images
@@ -131,7 +131,7 @@ using ImageAsset = Image;
 /**
  * @brief Utility functions for image loading/saving
  */
-namespace ImageUtils {
+namespace image_utils {
 /**
  * @brief Load an image file directly into raw data
  * @param file_path Path to the image file
@@ -172,7 +172,7 @@ bool saveImage(const std::string& file_path,
                int height,
                int channels,
                const std::string& format = "png");
-}  // namespace ImageUtils
+}  // namespace image_utils
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

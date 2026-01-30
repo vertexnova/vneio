@@ -18,7 +18,7 @@
 #include "vertexnova/io/load_request.h"
 
 namespace vne {
-namespace Image {
+namespace image {
 
 /**
  * @brief Loader for MetaImage (MHD/MHA) 3D volumes
@@ -41,5 +41,5 @@ class MhdLoader : public IVolumeLoader {
     std::string last_error_;
 };
 
-}  // namespace Image
+}  // namespace image
 }  // namespace vne

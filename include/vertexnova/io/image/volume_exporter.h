@@ -14,7 +14,7 @@
 
 #include "vertexnova/io/image/volume.h"
 
-namespace vne::Image {
+namespace vne::image {
 
 struct NrrdExportOptions {
     bool detached_data = false;      // if true: writes .nhdr + separate .raw
@@ -35,4 +35,4 @@ bool ExportMhd(const std::string& mhd_or_mha_path,
                const MhdExportOptions& opts = {},
                std::string* out_error = nullptr);
 
-}  // namespace vne::Image
+}  // namespace vne::image
