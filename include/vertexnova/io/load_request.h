@@ -3,8 +3,8 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
- * Load request and result types for asset IO. Used by AssetIO registry
- * and loader interfaces. Reuses Status / ResultT from common/status.h.
+ * Load request and result types for asset io. Used by AssetIO registry
+ * and loader interfaces. Reuses Status / Result from common/status.h.
  * ----------------------------------------------------------------------
  */
 
@@ -12,8 +12,8 @@
 
 #include "vertexnova/io/common/status.h"
 
-namespace VNE {
-namespace IO {
+namespace vne {
+namespace io {
 
 /**
  * @brief Asset kind for load requests
@@ -38,10 +38,10 @@ struct LoadRequest {
 };
 
 /**
- * @brief Load result: asset + status. Alias to ResultT for consistency with loader APIs.
+ * @brief Load result: asset + status. Alias to Result for consistency with loader APIs.
  */
 template<typename T>
-using LoadResult = ResultT<T>;
+using LoadResult = Result<T>;
 
-}  // namespace IO
-}  // namespace VNE
+}  // namespace io
+}  // namespace vne

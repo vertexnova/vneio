@@ -17,7 +17,7 @@ Mesh and Image library extracted from VertexNova core, structured like **vneeven
 - **Image** – Load/save images (stb_image), resize, flip, raw pixel access.
 - **Volume** – Load 3D volumes (NRRD, MHD), with spacing, origin, direction matrix. Uses Teem nrrdio when available (supports compressed formats), otherwise built-in parser (raw only).
 
-Namespaces: `VNE::Mesh`, `VNE::Image`. Includes live under `vertexnova/io/`.
+Namespaces: `vne::Mesh`, `vne::Image`. Includes live under `vertexnova/io/`.
 
 ## Requirements
 
@@ -79,8 +79,8 @@ Link against `vne::io` (or `vne::io::mesh` / `vne::io::image`). Include:
 ```cpp
 #include <vertexnova/io/mesh/assimp_loader.h>
 
-VNE::Mesh::AssimpLoader loader;
-VNE::Mesh::Mesh mesh;
+vne::Mesh::AssimpLoader loader;
+vne::Mesh::Mesh mesh;
 if (loader.loadFile("model.obj", mesh)) {
     // mesh.vertices, mesh.indices, mesh.parts, mesh.materials
 }
@@ -91,7 +91,7 @@ if (loader.loadFile("model.obj", mesh)) {
 ```cpp
 #include <vertexnova/io/image/image.h>
 
-VNE::Image::Image img("texture.png");
+vne::Image::Image img("texture.png");
 if (!img.isEmpty()) {
     int w = img.getWidth(), h = img.getHeight();
     const uint8_t* data = img.getData();

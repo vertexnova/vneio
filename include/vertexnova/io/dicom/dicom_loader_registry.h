@@ -18,11 +18,11 @@
 
 #include "vertexnova/io/dicom/dicom_loader.h"
 
-namespace VNE::DICOM {
+namespace vne::DICOM {
 
 class DicomLoaderRegistry {
    public:
     static std::unique_ptr<IDicomLoader> Create();
 };
 
-}  // namespace VNE::DICOM
+}  // namespace vne::DICOM

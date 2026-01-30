@@ -13,9 +13,9 @@
 #include <config.h>
 #endif
 
-namespace VNE {
-namespace IO {
-namespace Utils {
+namespace vne {
+namespace io {
+namespace utils {
 
 std::string getTestdataRoot() {
 #ifdef VNEIO_TESTDATA_DIR
@@ -43,6 +43,6 @@ std::string getTestdataPath(const std::string& subpath) {
     return root + "/" + p;
 }
 
-}  // namespace Utils
-}  // namespace IO
-}  // namespace VNE
+}  // namespace utils
+}  // namespace io
+}  // namespace vne

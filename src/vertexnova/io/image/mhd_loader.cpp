@@ -18,7 +18,7 @@
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/load_request.h"
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 namespace {
@@ -91,21 +91,21 @@ std::string dirname(const std::string& path) {
 
 }  // namespace
 
-bool MhdLoader::canLoad(const VNE::IO::LoadRequest& request) const {
-    if (request.asset_type != VNE::IO::AssetType::eVolume) {
+bool MhdLoader::canLoad(const vne::io::LoadRequest& request) const {
+    if (request.asset_type != vne::io::AssetType::eVolume) {
         return false;
     }
     return isExtensionSupported(request.uri);
 }
 
-VNE::IO::LoadResult<VNE::Image::Volume> MhdLoader::loadVolume(const VNE::IO::LoadRequest& request) {
-    VNE::IO::LoadResult<VNE::Image::Volume> result;
+vne::io::LoadResult<vne::Image::Volume> MhdLoader::loadVolume(const vne::io::LoadRequest& request) {
+    vne::io::LoadResult<vne::Image::Volume> result;
     if (!load(request.uri, result.value)) {
         result.status =
-            VNE::IO::Status::make(VNE::IO::ErrorCode::eParseError, getLastError(), request.uri, "MhdLoader");
+            vne::io::Status::make(vne::io::ErrorCode::eParseError, getLastError(), request.uri, "MhdLoader");
         return result;
     }
-    result.status = VNE::IO::Status::okStatus();
+    result.status = vne::io::Status::okStatus();
     return result;
 }
 
@@ -146,7 +146,7 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     std::string header;
     {
         std::streamoff off = 0;
-        auto st = VNE::IO::BinaryIO::ReadHeaderUntilBlankLine(f, header, off);
+        auto st = vne::io::BinaryIO::ReadHeaderUntilBlankLine(f, header, off);
         if (!st) {
             last_error_ = "MhdLoader: " + st.message;
             return false;
@@ -270,4 +270,4 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
 }
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

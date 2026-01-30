@@ -13,8 +13,8 @@
 #include <fstream>
 #include <cstdint>
 
-using namespace VNE::Image;
-using VNE::IO::Utils::getTestdataPath;
+using namespace vne::Image;
+using vne::io::utils::getTestdataPath;
 
 TEST(VolumeTest, DefaultEmpty) {
     Volume vol;

@@ -11,7 +11,7 @@
 #include <cctype>
 #include <string>
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 namespace {
@@ -36,27 +36,27 @@ bool StbImageLoader::isExtensionSupported(const std::string& path) {
            || ext == ".psd" || ext == ".hdr";
 }
 
-bool StbImageLoader::canLoad(const VNE::IO::LoadRequest& request) const {
-    if (request.asset_type != VNE::IO::AssetType::eImage) {
+bool StbImageLoader::canLoad(const vne::io::LoadRequest& request) const {
+    if (request.asset_type != vne::io::AssetType::eImage) {
         return false;
     }
     return isExtensionSupported(request.uri);
 }
 
-VNE::IO::LoadResult<Image> StbImageLoader::loadImage(const VNE::IO::LoadRequest& request) {
-    VNE::IO::LoadResult<Image> result;
+vne::io::LoadResult<Image> StbImageLoader::loadImage(const vne::io::LoadRequest& request) {
+    vne::io::LoadResult<Image> result;
     last_error_.clear();
     if (!result.value.loadFromFile(request.uri)) {
         last_error_ = "StbImageLoader: failed to load image: " + request.uri;
-        result.status = VNE::IO::Status::make(VNE::IO::ErrorCode::eFileReadFailed,
+        result.status = vne::io::Status::make(vne::io::ErrorCode::eFileReadFailed,
                                                last_error_,
                                                request.uri,
                                                "StbImageLoader");
         return result;
     }
-    result.status = VNE::IO::Status::okStatus();
+    result.status = vne::io::Status::okStatus();
     return result;
 }
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

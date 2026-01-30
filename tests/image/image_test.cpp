@@ -17,8 +17,8 @@
 #include <filesystem>
 #include <cstring>
 
-using namespace VNE::Image;
-using VNE::IO::Utils::getTestdataPath;
+using namespace vne::Image;
+using vne::io::utils::getTestdataPath;
 
 namespace {
 const std::string kTestImagePath = getTestdataPath("textures/sample.png");

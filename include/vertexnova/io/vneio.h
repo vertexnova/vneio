@@ -11,7 +11,7 @@
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/common/binary_io.h"
 
-// Asset IO (LoadRequest, registry, loader interfaces)
+// Asset io (LoadRequest, registry, loader interfaces)
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/asset_io.h"

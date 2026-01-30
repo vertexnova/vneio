@@ -8,21 +8,21 @@
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/load_request.h"
 
-namespace VNE::DICOM {
+namespace vne::DICOM {
 
 namespace {
 class NullDicomLoader final : public IDicomLoader {
    public:
-    VNE::IO::LoadResult<DicomSeries_C> loadDicomSeries(const VNE::IO::LoadRequest& request) override {
-        VNE::IO::LoadResult<DicomSeries_C> result;
+    vne::io::LoadResult<DicomSeries_C> loadDicomSeries(const vne::io::LoadRequest& request) override {
+        vne::io::LoadResult<DicomSeries_C> result;
         if (!loadDirectory(request.uri, result.value)) {
-            result.status = VNE::IO::Status::make(VNE::IO::ErrorCode::eNotImplemented,
+            result.status = vne::io::Status::make(vne::io::ErrorCode::eNotImplemented,
                                                    getLastError(),
                                                    request.uri,
                                                    "DicomLoader");
             return result;
         }
-        result.status = VNE::IO::Status::okStatus();
+        result.status = vne::io::Status::okStatus();
         return result;
     }
 
@@ -52,4 +52,4 @@ std::unique_ptr<IDicomLoader> DicomLoaderRegistry::Create() {
 #endif
 }
 
-}  // namespace VNE::DICOM
+}  // namespace vne::DICOM

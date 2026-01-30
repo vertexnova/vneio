@@ -15,7 +15,7 @@
 
 #ifdef VNEIO_NO_LOGGING
 #include <iostream>
-namespace VNE {
+namespace vne {
 struct NullStream {
     template<typename T>
     NullStream& operator<<(const T&) {
@@ -24,12 +24,12 @@ struct NullStream {
     NullStream& operator<<(std::ostream& (*)(std::ostream&)) { return *this; }
 };
 inline NullStream null_stream;
-}  // namespace VNE
+}  // namespace vne
 #define CREATE_VNE_LOGGER_CATEGORY(name)
-#define VNE_LOG_INFO VNE::null_stream
-#define VNE_LOG_DEBUG VNE::null_stream
-#define VNE_LOG_WARN VNE::null_stream
-#define VNE_LOG_ERROR VNE::null_stream
+#define VNE_LOG_INFO vne::null_stream
+#define VNE_LOG_DEBUG vne::null_stream
+#define VNE_LOG_WARN vne::null_stream
+#define VNE_LOG_ERROR vne::null_stream
 #else
 #include <vertexnova/logging/logging.h>
 #endif
@@ -51,7 +51,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.core.mesh.assimp");
  * @param opts Loading options
  * @return Assimp processing flags
  */
-uint32_t BuildAssimpFlags(const VNE::Mesh::AssimpLoaderOptions& opts) {
+uint32_t BuildAssimpFlags(const vne::Mesh::AssimpLoaderOptions& opts) {
     unsigned int flags = 0;
 
     if (opts.triangulate) {
@@ -90,17 +90,17 @@ uint32_t BuildAssimpFlags(const VNE::Mesh::AssimpLoaderOptions& opts) {
 }
 }  // namespace
 
-namespace VNE {
+namespace vne {
 namespace Mesh {
 
-VNE::IO::LoadResult<Mesh> AssimpLoader::loadMesh(const VNE::IO::LoadRequest& request) {
-    VNE::IO::LoadResult<Mesh> result;
+vne::io::LoadResult<Mesh> AssimpLoader::loadMesh(const vne::io::LoadRequest& request) {
+    vne::io::LoadResult<Mesh> result;
     if (!loadFile(request.uri, result.value)) {
         result.status =
-            VNE::IO::Status::make(VNE::IO::ErrorCode::eParseError, getLastError(), request.uri, "AssimpLoader");
+            vne::io::Status::make(vne::io::ErrorCode::eParseError, getLastError(), request.uri, "AssimpLoader");
         return result;
     }
-    result.status = VNE::IO::Status::okStatus();
+    result.status = vne::io::Status::okStatus();
     return result;
 }
 
@@ -460,4 +460,4 @@ bool AssimpLoader::isExtensionSupported(const std::string& path) const {
 }
 
 }  // namespace Mesh
-}  // namespace VNE
+}  // namespace vne

@@ -3,7 +3,7 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
- * Small IO helpers (no third-party deps).
+ * Small io helpers (no third-party deps).
  * Read header until blank line; read/write full buffers; byte swap.
  * ----------------------------------------------------------------------
  */
@@ -16,8 +16,8 @@
 
 #include "vertexnova/io/common/status.h"
 
-namespace VNE {
-namespace IO {
+namespace vne {
+namespace io {
 namespace BinaryIO {
 
 inline Status ReadFile(const std::string& path, std::vector<uint8_t>& out) {
@@ -104,5 +104,5 @@ inline void ByteSwapBufferInPlace(std::vector<uint8_t>& buf, int elem_size) {
 }
 
 }  // namespace BinaryIO
-}  // namespace IO
-}  // namespace VNE
+}  // namespace io
+}  // namespace vne

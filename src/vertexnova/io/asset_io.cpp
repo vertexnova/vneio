@@ -7,35 +7,35 @@
 #include "vertexnova/io/asset_io.h"
 #include "vertexnova/io/common/status.h"
 
-namespace VNE {
-namespace IO {
+namespace vne {
+namespace io {
 
-void AssetIO::registerImageLoader(std::unique_ptr<VNE::Image::IImageLoader> loader) {
+void AssetIO::registerImageLoader(std::unique_ptr<vne::Image::IImageLoader> loader) {
     if (loader) {
         image_loaders_.push_back(std::move(loader));
     }
 }
 
-void AssetIO::registerMeshLoader(std::unique_ptr<VNE::Mesh::IMeshLoader> loader) {
+void AssetIO::registerMeshLoader(std::unique_ptr<vne::Mesh::IMeshLoader> loader) {
     if (loader) {
         mesh_loaders_.push_back(std::move(loader));
     }
 }
 
-void AssetIO::registerVolumeLoader(std::unique_ptr<VNE::Image::IVolumeLoader> loader) {
+void AssetIO::registerVolumeLoader(std::unique_ptr<vne::Image::IVolumeLoader> loader) {
     if (loader) {
         volume_loaders_.push_back(std::move(loader));
     }
 }
 
-void AssetIO::registerDicomLoader(std::unique_ptr<VNE::DICOM::IDicomLoader> loader) {
+void AssetIO::registerDicomLoader(std::unique_ptr<vne::DICOM::IDicomLoader> loader) {
     if (loader) {
         dicom_loaders_.push_back(std::move(loader));
     }
 }
 
-LoadResult<VNE::Image::Image> AssetIO::loadImage(const LoadRequest& request) {
-    LoadResult<VNE::Image::Image> result;
+LoadResult<vne::Image::Image> AssetIO::loadImage(const LoadRequest& request) {
+    LoadResult<vne::Image::Image> result;
     for (const auto& loader : image_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadImage(request);
@@ -54,8 +54,8 @@ LoadResult<VNE::Image::Image> AssetIO::loadImage(const LoadRequest& request) {
     return result;
 }
 
-LoadResult<VNE::Mesh::Mesh> AssetIO::loadMesh(const LoadRequest& request) {
-    LoadResult<VNE::Mesh::Mesh> result;
+LoadResult<vne::Mesh::Mesh> AssetIO::loadMesh(const LoadRequest& request) {
+    LoadResult<vne::Mesh::Mesh> result;
     for (const auto& loader : mesh_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadMesh(request);
@@ -74,8 +74,8 @@ LoadResult<VNE::Mesh::Mesh> AssetIO::loadMesh(const LoadRequest& request) {
     return result;
 }
 
-LoadResult<VNE::Image::Volume> AssetIO::loadVolume(const LoadRequest& request) {
-    LoadResult<VNE::Image::Volume> result;
+LoadResult<vne::Image::Volume> AssetIO::loadVolume(const LoadRequest& request) {
+    LoadResult<vne::Image::Volume> result;
     for (const auto& loader : volume_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadVolume(request);
@@ -94,8 +94,8 @@ LoadResult<VNE::Image::Volume> AssetIO::loadVolume(const LoadRequest& request) {
     return result;
 }
 
-LoadResult<VNE::DICOM::DicomSeries_C> AssetIO::loadDicomSeries(const LoadRequest& request) {
-    LoadResult<VNE::DICOM::DicomSeries_C> result;
+LoadResult<vne::DICOM::DicomSeries_C> AssetIO::loadDicomSeries(const LoadRequest& request) {
+    LoadResult<vne::DICOM::DicomSeries_C> result;
     for (const auto& loader : dicom_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadDicomSeries(request);
@@ -114,5 +114,5 @@ LoadResult<VNE::DICOM::DicomSeries_C> AssetIO::loadDicomSeries(const LoadRequest
     return result;
 }
 
-}  // namespace IO
-}  // namespace VNE
+}  // namespace io
+}  // namespace vne

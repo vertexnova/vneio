@@ -19,8 +19,8 @@
 
 #include <filesystem>
 
-using namespace VNE::Mesh;
-using VNE::IO::Utils::getTestdataPath;
+using namespace vne::Mesh;
+using vne::io::utils::getTestdataPath;
 
 namespace {
 const std::string kMeshPath = getTestdataPath("meshes/minimal.stl");

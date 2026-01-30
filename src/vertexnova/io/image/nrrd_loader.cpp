@@ -31,7 +31,7 @@
 #endif
 #endif
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 namespace {
@@ -119,21 +119,21 @@ std::string dirname(const std::string& path) {
 
 }  // namespace
 
-bool NrrdLoader::canLoad(const VNE::IO::LoadRequest& request) const {
-    if (request.asset_type != VNE::IO::AssetType::eVolume) {
+bool NrrdLoader::canLoad(const vne::io::LoadRequest& request) const {
+    if (request.asset_type != vne::io::AssetType::eVolume) {
         return false;
     }
     return isExtensionSupported(request.uri);
 }
 
-VNE::IO::LoadResult<VNE::Image::Volume> NrrdLoader::loadVolume(const VNE::IO::LoadRequest& request) {
-    VNE::IO::LoadResult<VNE::Image::Volume> result;
+vne::io::LoadResult<vne::Image::Volume> NrrdLoader::loadVolume(const vne::io::LoadRequest& request) {
+    vne::io::LoadResult<vne::Image::Volume> result;
     if (!load(request.uri, result.value)) {
         result.status =
-            VNE::IO::Status::make(VNE::IO::ErrorCode::eParseError, getLastError(), request.uri, "NrrdLoader");
+            vne::io::Status::make(vne::io::ErrorCode::eParseError, getLastError(), request.uri, "NrrdLoader");
         return result;
     }
-    result.status = VNE::IO::Status::okStatus();
+    result.status = vne::io::Status::okStatus();
     return result;
 }
 
@@ -288,7 +288,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 
         std::string rest;
         std::streamoff off = 0;
-        auto st = VNE::IO::BinaryIO::ReadHeaderUntilBlankLine(f, rest, off);
+        auto st = vne::io::BinaryIO::ReadHeaderUntilBlankLine(f, rest, off);
         if (!st) {
             last_error_ = "NrrdLoader: " + st.message;
             return false;
@@ -554,7 +554,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         const bool data_is_big = (endian == "big");
         const bool host_is_big = false;
         if (data_is_big != host_is_big) {
-            VNE::IO::BinaryIO::ByteSwapBufferInPlace(out_volume.data, bytesPerVoxel(out_volume.pixel_type));
+            vne::io::BinaryIO::ByteSwapBufferInPlace(out_volume.data, bytesPerVoxel(out_volume.pixel_type));
         }
     }
 
@@ -563,4 +563,4 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 }
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

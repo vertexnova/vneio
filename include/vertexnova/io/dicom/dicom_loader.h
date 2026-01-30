@@ -21,20 +21,20 @@
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/load_request.h"
 
-namespace VNE::DICOM {
+namespace vne::DICOM {
 
-class IDicomLoader : public VNE::IO::IAssetLoader {
+class IDicomLoader : public vne::io::IAssetLoader {
    public:
     ~IDicomLoader() override = default;
 
-    bool canLoad(const VNE::IO::LoadRequest& request) const override;
+    bool canLoad(const vne::io::LoadRequest& request) const override;
 
     /**
      * @brief Load a DICOM series from the given request (AssetIO registry API)
      * @param request Load request (uri = directory path, hint_format optional)
      * @return Load result with DicomSeries_C on success, Status on failure
      */
-    virtual VNE::IO::LoadResult<DicomSeries_C> loadDicomSeries(const VNE::IO::LoadRequest& request) = 0;
+    virtual vne::io::LoadResult<DicomSeries_C> loadDicomSeries(const vne::io::LoadRequest& request) = 0;
 
     /** @brief Load a series from a directory containing DICOM slices (legacy API). */
     virtual bool loadDirectory(const std::string& directory_path, DicomSeries_C& out_series) = 0;
@@ -50,8 +50,8 @@ class IDicomLoader : public VNE::IO::IAssetLoader {
     virtual std::string getLastError() const = 0;
 };
 
-inline bool IDicomLoader::canLoad(const VNE::IO::LoadRequest& request) const {
-    return request.asset_type == VNE::IO::AssetType::eDicomSeries && !request.uri.empty();
+inline bool IDicomLoader::canLoad(const vne::io::LoadRequest& request) const {
+    return request.asset_type == vne::io::AssetType::eDicomSeries && !request.uri.empty();
 }
 
-}  // namespace VNE::DICOM
+}  // namespace vne::DICOM

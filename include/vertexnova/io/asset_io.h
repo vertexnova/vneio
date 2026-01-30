@@ -21,11 +21,11 @@
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
 
-namespace VNE {
-namespace IO {
+namespace vne {
+namespace io {
 
 /**
- * @brief Unified asset IO: register loaders and load by request
+ * @brief Unified asset io: register loaders and load by request
  *
  * Decode on CPU only; upload to GPU lives in a separate module (e.g. engine).
  */
@@ -34,22 +34,22 @@ class AssetIO {
     AssetIO() = default;
     ~AssetIO() = default;
 
-    void registerImageLoader(std::unique_ptr<VNE::Image::IImageLoader> loader);
-    void registerMeshLoader(std::unique_ptr<VNE::Mesh::IMeshLoader> loader);
-    void registerVolumeLoader(std::unique_ptr<VNE::Image::IVolumeLoader> loader);
-    void registerDicomLoader(std::unique_ptr<VNE::DICOM::IDicomLoader> loader);
+    void registerImageLoader(std::unique_ptr<vne::Image::IImageLoader> loader);
+    void registerMeshLoader(std::unique_ptr<vne::Mesh::IMeshLoader> loader);
+    void registerVolumeLoader(std::unique_ptr<vne::Image::IVolumeLoader> loader);
+    void registerDicomLoader(std::unique_ptr<vne::DICOM::IDicomLoader> loader);
 
-    LoadResult<VNE::Image::Image> loadImage(const LoadRequest& request);
-    LoadResult<VNE::Mesh::Mesh> loadMesh(const LoadRequest& request);
-    LoadResult<VNE::Image::Volume> loadVolume(const LoadRequest& request);
-    LoadResult<VNE::DICOM::DicomSeries_C> loadDicomSeries(const LoadRequest& request);
+    LoadResult<vne::Image::Image> loadImage(const LoadRequest& request);
+    LoadResult<vne::Mesh::Mesh> loadMesh(const LoadRequest& request);
+    LoadResult<vne::Image::Volume> loadVolume(const LoadRequest& request);
+    LoadResult<vne::DICOM::DicomSeries_C> loadDicomSeries(const LoadRequest& request);
 
    private:
-    std::vector<std::unique_ptr<VNE::Image::IImageLoader>> image_loaders_;
-    std::vector<std::unique_ptr<VNE::Mesh::IMeshLoader>> mesh_loaders_;
-    std::vector<std::unique_ptr<VNE::Image::IVolumeLoader>> volume_loaders_;
-    std::vector<std::unique_ptr<VNE::DICOM::IDicomLoader>> dicom_loaders_;
+    std::vector<std::unique_ptr<vne::Image::IImageLoader>> image_loaders_;
+    std::vector<std::unique_ptr<vne::Mesh::IMeshLoader>> mesh_loaders_;
+    std::vector<std::unique_ptr<vne::Image::IVolumeLoader>> volume_loaders_;
+    std::vector<std::unique_ptr<vne::DICOM::IDicomLoader>> dicom_loaders_;
 };
 
-}  // namespace IO
-}  // namespace VNE
+}  // namespace io
+}  // namespace vne

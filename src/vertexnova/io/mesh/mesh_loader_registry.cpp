@@ -10,7 +10,7 @@
 #include "vertexnova/io/mesh/mesh_loader_registry.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
 
-namespace VNE {
+namespace vne {
 namespace Mesh {
 
 std::unique_ptr<IMeshLoader> MeshLoaderRegistry::getLoaderFor(const std::string& path) {
@@ -22,4 +22,4 @@ std::unique_ptr<IMeshLoader> MeshLoaderRegistry::getLoaderFor(const std::string&
 }
 
 }  // namespace Mesh
-}  // namespace VNE
+}  // namespace vne

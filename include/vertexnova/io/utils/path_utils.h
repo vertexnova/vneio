@@ -12,9 +12,9 @@
 
 #include <string>
 
-namespace VNE {
-namespace IO {
-namespace Utils {
+namespace vne {
+namespace io {
+namespace utils {
 
 /**
  * @brief Returns the absolute path of the VneIo testdata resources root.
@@ -36,6 +36,6 @@ std::string getTestdataRoot();
  */
 std::string getTestdataPath(const std::string& subpath);
 
-}  // namespace Utils
-}  // namespace IO
-}  // namespace VNE
+}  // namespace utils
+}  // namespace io
+}  // namespace vne

@@ -14,7 +14,7 @@
 #include <vector>
 #include <cstdint>
 
-namespace VNE::Mesh {
+namespace vne::Mesh {
 
 /**
  * @brief Vertex structure with Position, Normal, Tangent, Bitangent, UV and Barycentric coordinates
@@ -75,4 +75,4 @@ struct Mesh {
 /** @brief Canonical CPU mesh type alias (for AssetIO / upload documentation). */
 using MeshAsset = Mesh;
 
-}  // namespace VNE::Mesh
+}  // namespace vne::Mesh

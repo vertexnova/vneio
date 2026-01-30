@@ -12,8 +12,8 @@
 #include <string>
 #include <utility>
 
-namespace VNE {
-namespace IO {
+namespace vne {
+namespace io {
 
 enum class ErrorCode : int {
     eOk = 0,
@@ -58,12 +58,12 @@ struct Status {
 };
 
 template<typename T>
-struct ResultT {
+struct Result {
     T value{};
     Status status{};
     [[nodiscard]] constexpr bool ok() const noexcept { return status.ok(); }
     explicit constexpr operator bool() const noexcept { return ok(); }
 };
 
-}  // namespace IO
-}  // namespace VNE
+}  // namespace io
+}  // namespace vne

@@ -11,13 +11,13 @@
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/image/volume.h"
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 /**
  * @brief Interface for loading volumes (NRRD, MHD, etc.)
  */
-class IVolumeLoader : public VNE::IO::IAssetLoader {
+class IVolumeLoader : public vne::io::IAssetLoader {
    public:
     ~IVolumeLoader() override = default;
 
@@ -26,8 +26,8 @@ class IVolumeLoader : public VNE::IO::IAssetLoader {
      * @param request Load request (uri = file path, hint_format optional)
      * @return Load result with Volume on success, Status on failure
      */
-    virtual VNE::IO::LoadResult<Volume> loadVolume(const VNE::IO::LoadRequest& request) = 0;
+    virtual vne::io::LoadResult<Volume> loadVolume(const vne::io::LoadRequest& request) = 0;
 };
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

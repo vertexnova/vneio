@@ -14,7 +14,7 @@
 #include <vector>
 #include <cstdint>
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 /**
@@ -175,4 +175,4 @@ bool saveImage(const std::string& file_path,
 }  // namespace ImageUtils
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

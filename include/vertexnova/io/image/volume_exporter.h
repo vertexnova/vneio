@@ -6,7 +6,7 @@
  * Volume export utilities (NRRD, MHD/MHA).
  *
  * These exporters are designed for deterministic test assets and tools.
- * They are not intended to replace full-featured medical IO libraries.
+ * They are not intended to replace full-featured medical io libraries.
  * ----------------------------------------------------------------------
  */
 
@@ -14,7 +14,7 @@
 
 #include "vertexnova/io/image/volume.h"
 
-namespace VNE::Image {
+namespace vne::Image {
 
 struct NrrdExportOptions {
     bool detached_data = false;      // if true: writes .nhdr + separate .raw
@@ -35,4 +35,4 @@ bool ExportMhd(const std::string& mhd_or_mha_path,
                const MhdExportOptions& opts = {},
                std::string* out_error = nullptr);
 
-}  // namespace VNE::Image
+}  // namespace vne::Image

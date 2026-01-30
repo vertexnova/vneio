@@ -32,7 +32,7 @@
 #include <cstring>
 #include <mutex>
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 Image::Image()
@@ -260,4 +260,4 @@ bool saveImage(
 }  // namespace ImageUtils
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

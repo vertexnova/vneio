@@ -16,7 +16,7 @@
 #include <string>
 #include "mesh_loader.h"
 
-namespace VNE {
+namespace vne {
 namespace Mesh {
 
 /**
@@ -38,4 +38,4 @@ class MeshLoaderRegistry {
 };
 
 }  // namespace Mesh
-}  // namespace VNE
+}  // namespace vne

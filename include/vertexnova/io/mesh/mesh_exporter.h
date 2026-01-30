@@ -18,7 +18,7 @@
 
 #include "vertexnova/io/mesh/mesh.h"
 
-namespace VNE::Mesh {
+namespace vne::Mesh {
 
 struct ObjExportOptions {
     bool write_mtl = true;
@@ -40,4 +40,4 @@ bool exportObj(const std::string& obj_path,
                const ObjExportOptions& opts = {},
                std::string* out_error = nullptr);
 
-}  // namespace VNE::Mesh
+}  // namespace vne::Mesh

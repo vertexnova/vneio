@@ -17,7 +17,7 @@
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/mesh/mesh.h"
 
-namespace VNE {
+namespace vne {
 namespace Mesh {
 
 /**
@@ -26,18 +26,18 @@ namespace Mesh {
  * Implementations (e.g. AssimpLoader) load supported formats into Mesh.
  * Use MeshLoaderRegistry to obtain a loader by file extension.
  */
-class IMeshLoader : public VNE::IO::IAssetLoader {
+class IMeshLoader : public vne::io::IAssetLoader {
    public:
     ~IMeshLoader() override = default;
 
-    bool canLoad(const VNE::IO::LoadRequest& request) const override;
+    bool canLoad(const vne::io::LoadRequest& request) const override;
 
     /**
      * @brief Load a mesh from the given request (AssetIO registry API)
      * @param request Load request (uri = file path, hint_format optional)
      * @return Load result with Mesh on success, Status on failure
      */
-    virtual VNE::IO::LoadResult<Mesh> loadMesh(const VNE::IO::LoadRequest& request) = 0;
+    virtual vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) = 0;
 
     /**
      * @brief Load a mesh from file (legacy API, unchanged)
@@ -60,9 +60,9 @@ class IMeshLoader : public VNE::IO::IAssetLoader {
     virtual const std::string& getLastError() const = 0;
 };
 
-inline bool IMeshLoader::canLoad(const VNE::IO::LoadRequest& request) const {
-    return request.asset_type == VNE::IO::AssetType::eMesh && isExtensionSupported(request.uri);
+inline bool IMeshLoader::canLoad(const vne::io::LoadRequest& request) const {
+    return request.asset_type == vne::io::AssetType::eMesh && isExtensionSupported(request.uri);
 }
 
 }  // namespace Mesh
-}  // namespace VNE
+}  // namespace vne

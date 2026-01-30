@@ -16,7 +16,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 /**
@@ -109,4 +109,4 @@ struct Volume {
 using VolumeAsset = Volume;
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

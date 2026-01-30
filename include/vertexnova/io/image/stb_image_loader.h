@@ -13,7 +13,7 @@
 #include "vertexnova/io/image/image_loader.h"
 #include "vertexnova/io/load_request.h"
 
-namespace VNE {
+namespace vne {
 namespace Image {
 
 /**
@@ -23,8 +23,8 @@ class StbImageLoader : public IImageLoader {
    public:
     StbImageLoader() = default;
 
-    bool canLoad(const VNE::IO::LoadRequest& request) const override;
-    VNE::IO::LoadResult<Image> loadImage(const VNE::IO::LoadRequest& request) override;
+    bool canLoad(const vne::io::LoadRequest& request) const override;
+    vne::io::LoadResult<Image> loadImage(const vne::io::LoadRequest& request) override;
 
     /**
      * @brief Check if the given path has a supported image extension
@@ -36,4 +36,4 @@ class StbImageLoader : public IImageLoader {
 };
 
 }  // namespace Image
-}  // namespace VNE
+}  // namespace vne

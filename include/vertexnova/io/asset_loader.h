@@ -9,8 +9,8 @@
 
 #include "vertexnova/io/load_request.h"
 
-namespace VNE {
-namespace IO {
+namespace vne {
+namespace io {
 
 /**
  * @brief Base interface for asset loaders
@@ -27,5 +27,5 @@ class IAssetLoader {
     [[nodiscard]] virtual bool canLoad(const LoadRequest& request) const = 0;
 };
 
-}  // namespace IO
-}  // namespace VNE
+}  // namespace io
+}  // namespace vne
