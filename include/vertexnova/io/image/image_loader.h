@@ -24,7 +24,7 @@ class IImageLoader : public VNE::IO::IAssetLoader {
     /**
      * @brief Load an image from the given request
      * @param request Load request (uri = file path, hint_format optional)
-     * @return Load result with Image on success, Status_C on failure
+     * @return Load result with Image on success, Status on failure
      */
     virtual VNE::IO::LoadResult<Image> loadImage(const VNE::IO::LoadRequest& request) = 0;
 };

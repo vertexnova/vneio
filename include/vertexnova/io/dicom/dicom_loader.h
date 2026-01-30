@@ -32,7 +32,7 @@ class IDicomLoader : public VNE::IO::IAssetLoader {
     /**
      * @brief Load a DICOM series from the given request (AssetIO registry API)
      * @param request Load request (uri = directory path, hint_format optional)
-     * @return Load result with DicomSeries_C on success, Status_C on failure
+     * @return Load result with DicomSeries_C on success, Status on failure
      */
     virtual VNE::IO::LoadResult<DicomSeries_C> loadDicomSeries(const VNE::IO::LoadRequest& request) = 0;
 

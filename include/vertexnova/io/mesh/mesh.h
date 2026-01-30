@@ -64,12 +64,12 @@ struct Mesh {
     float aabb_min[3] = {0, 0, 0};  //!< Axis-aligned bounding box minimum
     float aabb_max[3] = {0, 0, 0};  //!< Axis-aligned bounding box maximum
 
-    bool hasTexcoords() const { return has_uv0; }
-    size_t getVertexCount() const { return vertices.size(); }
-    size_t getIndexCount() const { return indices.size(); }
-    size_t getSubmeshCount() const { return parts.size(); }
-    size_t getMaterialCount() const { return materials.size(); }
-    bool isEmpty() const { return vertices.empty() || indices.empty(); }
+    [[nodiscard]] bool hasTexcoords() const { return has_uv0; }
+    [[nodiscard]] size_t getVertexCount() const { return vertices.size(); }
+    [[nodiscard]] size_t getIndexCount() const { return indices.size(); }
+    [[nodiscard]] size_t getSubmeshCount() const { return parts.size(); }
+    [[nodiscard]] size_t getMaterialCount() const { return materials.size(); }
+    [[nodiscard]] bool isEmpty() const { return vertices.empty() || indices.empty(); }
 };
 
 /** @brief Canonical CPU mesh type alias (for AssetIO / upload documentation). */

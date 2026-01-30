@@ -102,10 +102,10 @@ VNE::IO::LoadResult<VNE::Image::Volume> MhdLoader::loadVolume(const VNE::IO::Loa
     VNE::IO::LoadResult<VNE::Image::Volume> result;
     if (!load(request.uri, result.value)) {
         result.status =
-            VNE::IO::Status_C::Make(VNE::IO::ErrorCode_TP::PARSE_ERROR, getLastError(), request.uri, "MhdLoader");
+            VNE::IO::Status::make(VNE::IO::ErrorCode::eParseError, getLastError(), request.uri, "MhdLoader");
         return result;
     }
-    result.status = VNE::IO::Status_C::OkStatus();
+    result.status = VNE::IO::Status::okStatus();
     return result;
 }
 

@@ -24,7 +24,7 @@ class IAssetLoader {
      * @param request Load request (uri, hint_format, asset_type)
      * @return true if this loader can load the asset
      */
-    virtual bool canLoad(const LoadRequest& request) const = 0;
+    [[nodiscard]] virtual bool canLoad(const LoadRequest& request) const = 0;
 };
 
 }  // namespace IO

@@ -31,7 +31,7 @@ TEST(AssetIOTest, LoadVolumeViaRegistry) {
     request.uri = path;
 
     LoadResult<VNE::Image::Volume> result = io.loadVolume(request);
-    ASSERT_TRUE(result.Ok()) << result.status.message;
+    ASSERT_TRUE(result.ok()) << result.status.message;
     EXPECT_FALSE(result.value.isEmpty());
     EXPECT_EQ(result.value.width(), 4);
     EXPECT_EQ(result.value.depth(), 4);
@@ -51,7 +51,7 @@ TEST(AssetIOTest, LoadImageViaRegistry) {
     request.uri = path;
 
     LoadResult<VNE::Image::Image> result = io.loadImage(request);
-    ASSERT_TRUE(result.Ok()) << result.status.message;
+    ASSERT_TRUE(result.ok()) << result.status.message;
     EXPECT_FALSE(result.value.isEmpty());
 }
 
@@ -69,7 +69,7 @@ TEST(AssetIOTest, LoadMeshViaRegistry) {
     request.uri = path;
 
     LoadResult<VNE::Mesh::Mesh> result = io.loadMesh(request);
-    ASSERT_TRUE(result.Ok()) << result.status.message;
+    ASSERT_TRUE(result.ok()) << result.status.message;
     EXPECT_FALSE(result.value.isEmpty());
 }
 
@@ -80,6 +80,6 @@ TEST(AssetIOTest, NoLoaderReturnsError) {
     request.uri = "/nonexistent.nrrd";
 
     LoadResult<VNE::Image::Volume> result = io.loadVolume(request);
-    EXPECT_FALSE(result.Ok());
+    EXPECT_FALSE(result.ok());
     EXPECT_FALSE(result.status.message.empty());
 }

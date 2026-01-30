@@ -35,7 +35,7 @@ struct ObjExportOptions {
  * @param opts     Export options
  * @param out_error If non-null, receives error description on failure
  */
-bool ExportObj(const std::string& obj_path,
+bool exportObj(const std::string& obj_path,
                const Mesh& mesh,
                const ObjExportOptions& opts = {},
                std::string* out_error = nullptr);

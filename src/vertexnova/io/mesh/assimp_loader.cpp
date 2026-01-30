@@ -97,10 +97,10 @@ VNE::IO::LoadResult<Mesh> AssimpLoader::loadMesh(const VNE::IO::LoadRequest& req
     VNE::IO::LoadResult<Mesh> result;
     if (!loadFile(request.uri, result.value)) {
         result.status =
-            VNE::IO::Status_C::Make(VNE::IO::ErrorCode_TP::PARSE_ERROR, getLastError(), request.uri, "AssimpLoader");
+            VNE::IO::Status::make(VNE::IO::ErrorCode::eParseError, getLastError(), request.uri, "AssimpLoader");
         return result;
     }
-    result.status = VNE::IO::Status_C::OkStatus();
+    result.status = VNE::IO::Status::okStatus();
     return result;
 }
 

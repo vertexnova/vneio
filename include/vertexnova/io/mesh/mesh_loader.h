@@ -35,7 +35,7 @@ class IMeshLoader : public VNE::IO::IAssetLoader {
     /**
      * @brief Load a mesh from the given request (AssetIO registry API)
      * @param request Load request (uri = file path, hint_format optional)
-     * @return Load result with Mesh on success, Status_C on failure
+     * @return Load result with Mesh on success, Status on failure
      */
     virtual VNE::IO::LoadResult<Mesh> loadMesh(const VNE::IO::LoadRequest& request) = 0;
 

@@ -15,40 +15,40 @@
 namespace VNE {
 namespace IO {
 
-enum class ErrorCode_TP : int {
-    OK = 0,
-    UNKNOWN,
-    INVALID_ARGUMENT,
-    NOT_IMPLEMENTED,
-    OUT_OF_MEMORY,
-    FILE_NOT_FOUND,
-    FILE_OPEN_FAILED,
-    FILE_READ_FAILED,
-    FILE_WRITE_FAILED,
-    PATH_INVALID,
-    UNSUPPORTED_FORMAT,
-    UNSUPPORTED_FEATURE,
-    PARSE_ERROR,
-    DATA_CORRUPT,
-    DATA_TRUNCATED,
-    INVALID_DIMENSIONS,
-    INVALID_PIXEL_TYPE,
-    THIRD_PARTY_ERROR,
+enum class ErrorCode : int {
+    eOk = 0,
+    eUnknown,
+    eInvalidArgument,
+    eNotImplemented,
+    eOutOfMemory,
+    eFileNotFound,
+    eFileOpenFailed,
+    eFileReadFailed,
+    eFileWriteFailed,
+    ePathInvalid,
+    eUnsupportedFormat,
+    eUnsupportedFeature,
+    eParseError,
+    eDataCorrupt,
+    eDataTruncated,
+    eInvalidDimensions,
+    eInvalidPixelType,
+    eThirdPartyError,
 };
 
-struct Status_C {
-    ErrorCode_TP code = ErrorCode_TP::OK;
+struct Status {
+    ErrorCode code = ErrorCode::eOk;
     std::string message;
     std::string path;
     std::string subsystem;
 
-    constexpr bool Ok() const noexcept { return code == ErrorCode_TP::OK; }
-    explicit constexpr operator bool() const noexcept { return Ok(); }
+    [[nodiscard]] constexpr bool ok() const noexcept { return code == ErrorCode::eOk; }
+    explicit constexpr operator bool() const noexcept { return ok(); }
 
-    static Status_C OkStatus() { return {}; }
+    static Status okStatus() { return {}; }
 
-    static Status_C Make(ErrorCode_TP c, std::string msg, std::string p = {}, std::string sub = {}) {
-        Status_C s;
+    static Status make(ErrorCode c, std::string msg, std::string p = {}, std::string sub = {}) {
+        Status s;
         s.code = c;
         s.message = std::move(msg);
         s.path = std::move(p);
@@ -58,11 +58,11 @@ struct Status_C {
 };
 
 template<typename T>
-struct Result_T {
+struct ResultT {
     T value{};
-    Status_C status{};
-    constexpr bool Ok() const noexcept { return status.Ok(); }
-    explicit constexpr operator bool() const noexcept { return Ok(); }
+    Status status{};
+    [[nodiscard]] constexpr bool ok() const noexcept { return status.ok(); }
+    explicit constexpr operator bool() const noexcept { return ok(); }
 };
 
 }  // namespace IO

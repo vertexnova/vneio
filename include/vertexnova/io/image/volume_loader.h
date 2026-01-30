@@ -24,7 +24,7 @@ class IVolumeLoader : public VNE::IO::IAssetLoader {
     /**
      * @brief Load a volume from the given request
      * @param request Load request (uri = file path, hint_format optional)
-     * @return Load result with Volume on success, Status_C on failure
+     * @return Load result with Volume on success, Status on failure
      */
     virtual VNE::IO::LoadResult<Volume> loadVolume(const VNE::IO::LoadRequest& request) = 0;
 };

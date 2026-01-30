@@ -39,16 +39,16 @@ LoadResult<VNE::Image::Image> AssetIO::loadImage(const LoadRequest& request) {
     for (const auto& loader : image_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadImage(request);
-            if (result.Ok()) {
+            if (result.ok()) {
                 return result;
             }
         }
     }
-    if (!result.status.Ok()) {
+    if (!result.status.ok()) {
         return result;
     }
-    result.status = Status_C::Make(ErrorCode_TP::UNSUPPORTED_FORMAT,
-                                   "No image loader could load: " + request.uri,
+    result.status = Status::make(ErrorCode::eUnsupportedFormat,
+                                  "No image loader could load: " + request.uri,
                                    request.uri,
                                    "AssetIO");
     return result;
@@ -59,16 +59,16 @@ LoadResult<VNE::Mesh::Mesh> AssetIO::loadMesh(const LoadRequest& request) {
     for (const auto& loader : mesh_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadMesh(request);
-            if (result.Ok()) {
+            if (result.ok()) {
                 return result;
             }
         }
     }
-    if (!result.status.Ok()) {
+    if (!result.status.ok()) {
         return result;
     }
-    result.status = Status_C::Make(ErrorCode_TP::UNSUPPORTED_FORMAT,
-                                   "No mesh loader could load: " + request.uri,
+    result.status = Status::make(ErrorCode::eUnsupportedFormat,
+                                  "No mesh loader could load: " + request.uri,
                                    request.uri,
                                    "AssetIO");
     return result;
@@ -79,16 +79,16 @@ LoadResult<VNE::Image::Volume> AssetIO::loadVolume(const LoadRequest& request) {
     for (const auto& loader : volume_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadVolume(request);
-            if (result.Ok()) {
+            if (result.ok()) {
                 return result;
             }
         }
     }
-    if (!result.status.Ok()) {
+    if (!result.status.ok()) {
         return result;
     }
-    result.status = Status_C::Make(ErrorCode_TP::UNSUPPORTED_FORMAT,
-                                   "No volume loader could load: " + request.uri,
+    result.status = Status::make(ErrorCode::eUnsupportedFormat,
+                                  "No volume loader could load: " + request.uri,
                                    request.uri,
                                    "AssetIO");
     return result;
@@ -99,16 +99,16 @@ LoadResult<VNE::DICOM::DicomSeries_C> AssetIO::loadDicomSeries(const LoadRequest
     for (const auto& loader : dicom_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadDicomSeries(request);
-            if (result.Ok()) {
+            if (result.ok()) {
                 return result;
             }
         }
     }
-    if (!result.status.Ok()) {
+    if (!result.status.ok()) {
         return result;
     }
-    result.status = Status_C::Make(ErrorCode_TP::UNSUPPORTED_FORMAT,
-                                   "No DICOM loader could load: " + request.uri,
+    result.status = Status::make(ErrorCode::eUnsupportedFormat,
+                                 "No DICOM loader could load: " + request.uri,
                                    request.uri,
                                    "AssetIO");
     return result;

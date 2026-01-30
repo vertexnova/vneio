@@ -20,41 +20,41 @@ namespace VNE {
 namespace IO {
 namespace BinaryIO {
 
-inline Status_C ReadFile(const std::string& path, std::vector<uint8_t>& out) {
+inline Status ReadFile(const std::string& path, std::vector<uint8_t>& out) {
     out.clear();
     std::ifstream f(path, std::ios::binary);
     if (!f) {
-        return Status_C::Make(ErrorCode_TP::FILE_OPEN_FAILED, "Cannot open file", path, "BinaryIO");
+        return Status::make(ErrorCode::eFileOpenFailed, "Cannot open file", path, "BinaryIO");
     }
     f.seekg(0, std::ios::end);
     const std::streamoff size = f.tellg();
     if (size < 0) {
-        return Status_C::Make(ErrorCode_TP::FILE_READ_FAILED, "Failed to determine file size", path, "BinaryIO");
+        return Status::make(ErrorCode::eFileReadFailed, "Failed to determine file size", path, "BinaryIO");
     }
     f.seekg(0, std::ios::beg);
     out.resize(static_cast<size_t>(size));
     if (!out.empty() && !f.read(reinterpret_cast<char*>(out.data()), size)) {
         out.clear();
-        return Status_C::Make(ErrorCode_TP::FILE_READ_FAILED, "Failed to read file", path, "BinaryIO");
+        return Status::make(ErrorCode::eFileReadFailed, "Failed to read file", path, "BinaryIO");
     }
-    return Status_C::OkStatus();
+    return Status::okStatus();
 }
 
-inline Status_C WriteFile(const std::string& path, const void* data, size_t size) {
+inline Status WriteFile(const std::string& path, const void* data, size_t size) {
     if (size > 0 && data == nullptr) {
-        return Status_C::Make(ErrorCode_TP::INVALID_ARGUMENT, "WriteFile: data is null", path, "BinaryIO");
+        return Status::make(ErrorCode::eInvalidArgument, "WriteFile: data is null", path, "BinaryIO");
     }
     std::ofstream f(path, std::ios::binary);
     if (!f) {
-        return Status_C::Make(ErrorCode_TP::FILE_OPEN_FAILED, "Cannot open file for writing", path, "BinaryIO");
+        return Status::make(ErrorCode::eFileOpenFailed, "Cannot open file for writing", path, "BinaryIO");
     }
     if (size > 0) {
         f.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
         if (!f) {
-            return Status_C::Make(ErrorCode_TP::FILE_WRITE_FAILED, "Failed to write file", path, "BinaryIO");
+            return Status::make(ErrorCode::eFileWriteFailed, "Failed to write file", path, "BinaryIO");
         }
     }
-    return Status_C::OkStatus();
+    return Status::okStatus();
 }
 
 /**
@@ -62,14 +62,14 @@ inline Status_C WriteFile(const std::string& path, const void* data, size_t size
  * header_text includes all header bytes up to and including the blank line.
  * data_offset is the absolute offset in file where the binary payload starts.
  */
-inline Status_C ReadHeaderUntilBlankLine(std::ifstream& f, std::string& header_text, std::streamoff& data_offset) {
+inline Status ReadHeaderUntilBlankLine(std::ifstream& f, std::string& header_text, std::streamoff& data_offset) {
     header_text.clear();
     data_offset = 0;
     if (!f) {
-        return Status_C::Make(ErrorCode_TP::FILE_READ_FAILED,
-                              "ReadHeaderUntilBlankLine: invalid stream",
-                              {},
-                              "BinaryIO");
+        return Status::make(ErrorCode::eFileReadFailed,
+                             "ReadHeaderUntilBlankLine: invalid stream",
+                             {},
+                             "BinaryIO");
     }
     std::string line;
     while (std::getline(f, line)) {
@@ -80,10 +80,10 @@ inline Status_C ReadHeaderUntilBlankLine(std::ifstream& f, std::string& header_t
             if (data_offset < 0) {
                 data_offset = 0;
             }
-            return Status_C::OkStatus();
+            return Status::okStatus();
         }
     }
-    return Status_C::Make(ErrorCode_TP::DATA_TRUNCATED, "Header not terminated with blank line", {}, "BinaryIO");
+    return Status::make(ErrorCode::eDataTruncated, "Header not terminated with blank line", {}, "BinaryIO");
 }
 
 inline void ByteSwapInPlace(uint8_t* bytes, int elem_size) {

@@ -34,7 +34,7 @@ void SetError(std::string* out_error, const std::string& msg) {
 
 }  // namespace
 
-bool ExportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOptions& opts, std::string* out_error) {
+bool exportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOptions& opts, std::string* out_error) {
     if (mesh.vertices.empty() || mesh.indices.empty()) {
         SetError(out_error, "ExportObj: mesh is empty");
         return false;

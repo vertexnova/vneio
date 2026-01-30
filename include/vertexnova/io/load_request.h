@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
  * Load request and result types for asset IO. Used by AssetIO registry
- * and loader interfaces. Reuses Status_C / Result_T from common/status.h.
+ * and loader interfaces. Reuses Status / ResultT from common/status.h.
  * ----------------------------------------------------------------------
  */
 
@@ -38,10 +38,10 @@ struct LoadRequest {
 };
 
 /**
- * @brief Load result: asset + status. Alias to Result_T for consistency with loader APIs.
+ * @brief Load result: asset + status. Alias to ResultT for consistency with loader APIs.
  */
 template<typename T>
-using LoadResult = Result_T<T>;
+using LoadResult = ResultT<T>;
 
 }  // namespace IO
 }  // namespace VNE
