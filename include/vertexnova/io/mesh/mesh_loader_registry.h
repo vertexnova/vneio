@@ -19,12 +19,17 @@ namespace vne {
 namespace mesh {
 
 /**
- * @brief Factory for mesh loaders by file path
+ * @file mesh_loader_registry.h
+ * @brief Factory for mesh loaders by file path (extension).
+ */
+
+/**
+ * @class MeshLoaderRegistry
+ * @brief Factory for mesh loaders by file path.
  *
  * getLoaderFor(path) returns a loader that supports the file extension,
  * or nullptr if none is available. The default build registers Assimp
- * for common formats (e.g. .obj, .stl, .fbx, .gltf). Ownership of the
- * returned loader is transferred to the caller.
+ * for common formats (e.g. .obj, .stl, .fbx, .gltf). Caller owns the returned loader.
  */
 class MeshLoaderRegistry {
    public:

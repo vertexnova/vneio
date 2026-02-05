@@ -18,12 +18,16 @@ namespace vne {
 namespace image {
 
 /**
- * @brief Image class for loading, manipulating and saving images
+ * @file image.h
+ * @brief Image class and utilities for loading, manipulating and saving 2D images.
+ */
+
+/**
+ * @class Image
+ * @brief Image class for loading, manipulating and saving images.
  *
- * This class provides a simple interface for working with images,
- * supporting various formats through stb_image. It works across
- * all supported platforms including desktop (Windows, Linux, macOS)
- * and mobile (Android, iOS) platforms.
+ * Simple interface for 2D images; supports various formats through stb_image
+ * across desktop and mobile platforms.
  */
 class Image {
    public:

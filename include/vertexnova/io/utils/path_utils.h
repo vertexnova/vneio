@@ -17,6 +17,11 @@ namespace io {
 namespace utils {
 
 /**
+ * @file path_utils.h
+ * @brief Path utilities for testdata and project paths (requires config.h when built with CMake).
+ */
+
+/**
  * @brief Returns the absolute path of the VneIo testdata resources root.
  *
  * When built with CMake, this is the testdata root (typically testdata/). Tests use

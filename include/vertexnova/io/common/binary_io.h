@@ -22,6 +22,17 @@ namespace vne {
 namespace io {
 namespace binaryio {
 
+/**
+ * @file binary_io.h
+ * @brief Small IO helpers: read/write full buffers, read header until blank line, byte swap.
+ */
+
+/**
+ * @brief Read entire file into a byte vector.
+ * @param path File path.
+ * @param out Output vector (cleared and filled).
+ * @return Status (eOk on success).
+ */
 [[nodiscard]] inline Status readFile(const std::string& path, std::vector<uint8_t>& out) {
     out.clear();
     std::ifstream f(path, std::ios::binary);
@@ -42,6 +53,13 @@ namespace binaryio {
     return Status::okStatus();
 }
 
+/**
+ * @brief Write a buffer to a file.
+ * @param path File path.
+ * @param data Pointer to data (may be nullptr only if size is 0).
+ * @param size Number of bytes to write.
+ * @return Status (eOk on success).
+ */
 [[nodiscard]] inline Status writeFile(const std::string& path, const void* data, size_t size) {
     if (size > 0 && data == nullptr) {
         return Status::make(ErrorCode::eInvalidArgument, "writeFile: data is null", path, "BinaryIO");
@@ -60,9 +78,11 @@ namespace binaryio {
 }
 
 /**
- * Reads a text header terminated by the first blank line.
- * header_text includes all header bytes up to and including the blank line.
- * data_offset is the absolute offset in file where the binary payload starts.
+ * @brief Read a text header terminated by the first blank line.
+ * @param f Open input stream (positioned at start of header).
+ * @param header_text Output: all header bytes up to and including the blank line.
+ * @param data_offset Output: absolute offset in file where the binary payload starts.
+ * @return Status (eOk when blank line found, eDataTruncated if EOF before blank line).
  */
 [[nodiscard]] inline Status readHeaderUntilBlankLine(std::ifstream& f, std::string& header_text, std::streamoff& data_offset) {
     header_text.clear();
@@ -85,6 +105,11 @@ namespace binaryio {
     return Status::make(ErrorCode::eDataTruncated, "Header not terminated with blank line", {}, "BinaryIO");
 }
 
+/**
+ * @brief Byte-swap a single element in place (e.g. for big-endian data).
+ * @param bytes Pointer to element bytes.
+ * @param elem_size Element size in bytes (e.g. 2 for uint16).
+ */
 inline void byteSwapInPlace(uint8_t* bytes, int elem_size) {
     for (int j = 0; j < elem_size / 2; ++j) {
         const int k = elem_size - 1 - j;
@@ -92,6 +117,11 @@ inline void byteSwapInPlace(uint8_t* bytes, int elem_size) {
     }
 }
 
+/**
+ * @brief Byte-swap all elements in a buffer in place.
+ * @param buf Buffer of contiguous elements.
+ * @param elem_size Size of each element in bytes.
+ */
 inline void byteSwapBufferInPlace(std::vector<uint8_t>& buf, int elem_size) {
     if (elem_size <= 1) {
         return;

@@ -18,7 +18,13 @@ namespace vne {
 namespace image {
 
 /**
- * @brief Interface for loading 2D images (PNG, JPG, etc.)
+ * @file image_loader.h
+ * @brief Interface for loading 2D images (PNG, JPG, BMP, TGA, etc.).
+ */
+
+/**
+ * @class IImageLoader
+ * @brief Interface for loading 2D images.
  */
 class IImageLoader : public vne::io::IAssetLoader {
    public:

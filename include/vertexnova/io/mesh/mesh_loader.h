@@ -20,10 +20,16 @@ namespace vne {
 namespace mesh {
 
 /**
- * @brief Interface for loading 3D meshes from file
+ * @file mesh_loader.h
+ * @brief Interface for loading 3D meshes from file; use MeshLoaderRegistry by extension.
+ */
+
+/**
+ * @class IMeshLoader
+ * @brief Interface for loading 3D meshes from file.
  *
  * Implementations (e.g. AssimpLoader) load supported formats into Mesh.
- * Use MeshLoaderRegistry to obtain a loader by file extension.
+ * Use MeshLoaderRegistry::getLoaderFor(path) to obtain a loader by file extension.
  */
 class IMeshLoader : public vne::io::IAssetLoader {
    public:

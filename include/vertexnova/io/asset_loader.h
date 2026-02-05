@@ -16,7 +16,16 @@ namespace vne {
 namespace io {
 
 /**
- * @brief Base interface for asset loaders
+ * @file asset_loader.h
+ * @brief Base interface for asset loaders (mesh, image, volume, DICOM).
+ */
+
+/**
+ * @class IAssetLoader
+ * @brief Base interface for asset loaders.
+ *
+ * Loader implementations (e.g. AssimpLoader, NrrdLoader) implement canLoad()
+ * and the type-specific load method. Used by AssetIO registry.
  */
 class IAssetLoader {
    public:

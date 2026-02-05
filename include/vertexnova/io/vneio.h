@@ -10,6 +10,11 @@
  * ----------------------------------------------------------------------
  */
 
+/**
+ * @file vneio.h
+ * @brief Umbrella header for VneIo: mesh, image, volume, DICOM, and asset IO.
+ */
+
 // Common (Status, BinaryIO)
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/common/binary_io.h"

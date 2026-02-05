@@ -18,18 +18,24 @@ namespace vne {
 namespace image {
 
 /**
- * @brief Scalar pixel/voxel type for volumes
+ * @file volume.h
+ * @brief 3D volume type for medical/imaging data (dimensions, spacing, origin, pixel type, buffer).
+ */
+
+/**
+ * @enum VolumePixelType
+ * @brief Scalar pixel/voxel type for volumes.
  */
 enum class VolumePixelType : int {
-    eUnknown = -1,
-    eUint8 = 0,
-    eInt8,
-    eUint16,
-    eInt16,
-    eUint32,
-    eInt32,
-    eFloat32,
-    eFloat64,
+    eUnknown = -1,  //!< Unknown or unsupported type.
+    eUint8 = 0,     //!< 8-bit unsigned.
+    eInt8,          //!< 8-bit signed.
+    eUint16,        //!< 16-bit unsigned.
+    eInt16,         //!< 16-bit signed.
+    eUint32,        //!< 32-bit unsigned.
+    eInt32,         //!< 32-bit signed.
+    eFloat32,       //!< 32-bit float.
+    eFloat64,       //!< 64-bit float.
 };
 
 /** Number of elements in a 3x3 direction matrix (row-major). */
@@ -39,7 +45,9 @@ constexpr int kVolumeDirectionMatrixElements = 9;
 constexpr int kBytesPerFloat64 = 8;
 
 /**
- * @brief Bytes per voxel for each VolumePixelType
+ * @brief Bytes per voxel for the given VolumePixelType.
+ * @param t Pixel type.
+ * @return Byte count (0 for eUnknown).
  */
 [[nodiscard]] inline int bytesPerVoxel(VolumePixelType t) {
     switch (t) {
@@ -66,16 +74,17 @@ constexpr int kBytesPerFloat64 = 8;
 }
 
 /**
- * @brief 3D volume for medical/imaging data
+ * @struct Volume
+ * @brief 3D volume for medical/imaging data.
  *
  * Dimensions (width, height, depth), spacing (mm or physical units),
- * origin, pixel type, and contiguous raw buffer. Enables multiplanar
+ * origin, pixel type, and contiguous raw buffer. Used for multiplanar
  * reformats and window/level in viewers.
  */
 struct Volume {
-    int dims[3] = {0, 0, 0};  // width (x), height (y), depth (z)
-    float spacing[3] = {1.0f, 1.0f, 1.0f};
-    float origin[3] = {0.0f, 0.0f, 0.0f};
+    int dims[3] = {0, 0, 0};   //!< Width (x), height (y), depth (z).
+    float spacing[3] = {1.0f, 1.0f, 1.0f};  //!< Voxel spacing (e.g. mm).
+    float origin[3] = {0.0f, 0.0f, 0.0f};   //!< World-space origin.
     float direction[kVolumeDirectionMatrixElements] = {
         1.0f,
         0.0f,
@@ -87,9 +96,9 @@ struct Volume {
         0.0f,
         1.0f,
     };
-    VolumePixelType pixel_type = VolumePixelType::eUint8;
-    int components = 1;
-    std::vector<uint8_t> data;
+    VolumePixelType pixel_type = VolumePixelType::eUint8;  //!< Scalar type of voxels.
+    int components = 1;   //!< Components per voxel (1 for scalar).
+    std::vector<uint8_t> data;  //!< Contiguous voxel data.
 
     [[nodiscard]] int width() const { return dims[0]; }
     [[nodiscard]] int height() const { return dims[1]; }

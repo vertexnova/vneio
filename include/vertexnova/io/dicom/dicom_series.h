@@ -17,13 +17,22 @@
 
 namespace vne::dicom {
 
+/**
+ * @file dicom_series.h
+ * @brief DICOM series container: reconstructed volume plus common metadata.
+ */
+
+/**
+ * @struct DicomSeries
+ * @brief Lightweight DICOM series result: volume plus common tags as strings.
+ */
 struct DicomSeries {
-    vne::image::Volume volume;
-    std::unordered_map<std::string, std::string> meta;
-    std::string series_uid;
-    std::string study_uid;
-    std::string patient_id;
-    std::string modality;
+    vne::image::Volume volume;                        //!< Reconstructed 3D volume.
+    std::unordered_map<std::string, std::string> meta; //!< Additional tags (e.g. for UI).
+    std::string series_uid;   //!< Series Instance UID.
+    std::string study_uid;    //!< Study Instance UID.
+    std::string patient_id;   //!< Patient ID.
+    std::string modality;    //!< Modality (e.g. CT, MR).
 };
 
 }  // namespace vne::dicom

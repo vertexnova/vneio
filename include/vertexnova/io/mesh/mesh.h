@@ -17,7 +17,13 @@
 namespace vne::mesh {
 
 /**
- * @brief Vertex structure with Position, Normal, Tangent, Bitangent, UV and Barycentric coordinates
+ * @file mesh.h
+ * @brief Mesh data structures for 3D geometry (vertices, indices, materials, submeshes).
+ */
+
+/**
+ * @struct VertexAttributes
+ * @brief Vertex structure with position, normal, tangent, bitangent, UV and optional barycentric coordinates.
  */
 struct VertexAttributes {
     float position[3];     //!< 3D position coordinates
@@ -29,7 +35,8 @@ struct VertexAttributes {
 };
 
 /**
- * @brief Material slot containing material properties and textures
+ * @struct Material
+ * @brief Material slot containing name, base color, and optional texture path.
  */
 struct Material {
     std::string name;                    //!< Material name
@@ -38,7 +45,8 @@ struct Material {
 };
 
 /**
- * @brief Submesh structure defining a range of indices and material
+ * @struct Submesh
+ * @brief Submesh defining a range of indices and material index.
  */
 struct Submesh {
     uint32_t first_index = 0;     //!< First index in the index buffer
@@ -47,7 +55,8 @@ struct Submesh {
 };
 
 /**
- * @brief Mesh for loading and managing 3D meshes
+ * @struct Mesh
+ * @brief Mesh for loading and managing 3D meshes.
  *
  * Supports multi-material meshes with vertex attributes for modern rendering pipelines.
  */

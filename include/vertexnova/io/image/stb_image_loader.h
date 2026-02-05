@@ -20,7 +20,13 @@ namespace vne {
 namespace image {
 
 /**
- * @brief Loader for 2D images (PNG, JPG, BMP, TGA, etc.) using stb_image
+ * @file stb_image_loader.h
+ * @brief Loader for 2D images (PNG, JPG, BMP, TGA, etc.) using stb_image.
+ */
+
+/**
+ * @class StbImageLoader
+ * @brief Loader for 2D images using stb_image (implements IImageLoader).
  */
 class StbImageLoader : public IImageLoader {
    public:
@@ -30,7 +36,9 @@ class StbImageLoader : public IImageLoader {
     [[nodiscard]] vne::io::LoadResult<Image> loadImage(const vne::io::LoadRequest& request) override;
 
     /**
-     * @brief Check if the given path has a supported image extension
+     * @brief Check if the given path has a supported image extension.
+     * @param path File path or filename.
+     * @return true if the extension is supported.
      */
     [[nodiscard]] static bool isExtensionSupported(const std::string& path);
 

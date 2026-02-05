@@ -18,27 +18,34 @@
 namespace vne {
 namespace mesh {
 
+/**
+ * @file assimp_loader.h
+ * @brief Loader for 3D meshes using Assimp (implements IMeshLoader).
+ */
+
 /** Default fill ratio when normalizing mesh to unit sphere (slightly inside 1.0 to avoid clipping). */
 constexpr float kAssimpNormalizeFillDefault = 0.999f;
 
 /**
- * @brief Options for Assimp mesh loading
+ * @struct AssimpLoaderOptions
+ * @brief Options for Assimp mesh loading (UV flip, tangents, triangulation, etc.).
  */
 struct AssimpLoaderOptions {
-    bool flip_uvs = true;
-    bool gen_tangents = true;
-    bool triangulate = true;
-    bool calc_normals_if_missing = false;
-    bool pre_transform_vertices = true;
-    bool ensure_ccw_winding = true;
-    bool normalize_to_unit_sphere = false;
-    float normalize_target_radius = 1.0f;
-    float normalize_fill = kAssimpNormalizeFillDefault;
-    bool generate_barycentrics = false;
+    bool flip_uvs = true;                  //!< Flip texture V coordinate.
+    bool gen_tangents = true;              //!< Generate tangent/bitangent for normal mapping.
+    bool triangulate = true;              //!< Convert to triangles.
+    bool calc_normals_if_missing = false; //!< Compute normals if absent.
+    bool pre_transform_vertices = true;   //!< Apply node transforms to vertices.
+    bool ensure_ccw_winding = true;       //!< Ensure counter-clockwise winding.
+    bool normalize_to_unit_sphere = false;//!< Scale mesh to fit unit sphere.
+    float normalize_target_radius = 1.0f; //!< Target radius when normalizing.
+    float normalize_fill = kAssimpNormalizeFillDefault; //!< Fill ratio when normalizing.
+    bool generate_barycentrics = false;   //!< Generate barycentric coordinates (e.g. for wireframe).
 };
 
 /**
- * @brief Loader for 3D meshes using Assimp (implements IMeshLoader)
+ * @class AssimpLoader
+ * @brief Loader for 3D meshes using Assimp (implements IMeshLoader).
  */
 class AssimpLoader : public IMeshLoader {
    public:
@@ -47,6 +54,13 @@ class AssimpLoader : public IMeshLoader {
 
     [[nodiscard]] vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) override;
     [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh) override;
+    /**
+     * @brief Load a mesh from file with options.
+     * @param path Path to the mesh file.
+     * @param out_mesh Mesh to fill.
+     * @param opts Loader options (UV flip, tangents, triangulation, etc.).
+     * @return true on success, false otherwise (see getLastError()).
+     */
     [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts);
     [[nodiscard]] bool isExtensionSupported(const std::string& path) const override;
     [[nodiscard]] const std::string& getLastError() const override { return last_error_; }

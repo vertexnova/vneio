@@ -18,7 +18,13 @@ namespace vne {
 namespace image {
 
 /**
- * @brief Interface for loading volumes (NRRD, MHD, etc.)
+ * @file volume_loader.h
+ * @brief Interface for loading 3D volumes (NRRD, MHD, etc.).
+ */
+
+/**
+ * @class IVolumeLoader
+ * @brief Interface for loading 3D volumes.
  */
 class IVolumeLoader : public vne::io::IAssetLoader {
    public:
