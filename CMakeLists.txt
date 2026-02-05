@@ -42,7 +42,6 @@ list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake")
 option(VNEIO_BUILD_TESTS "Build VneIo tests" OFF)
 option(VNEIO_BUILD_EXAMPLES "Build VneIo examples" OFF)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
-option(VNEIO_USE_LOGGING "Use vnelogging when available" ON)
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
 option(VNEIO_BUILD_IMAGE "Build image component" ON)
 option(VNEIO_USE_STB_IMAGE_RESIZE "Enable stb_image_resize for higher-quality resizing" OFF)
@@ -98,10 +97,10 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 endif()
 
 #-----------------------------------------------------------------------------
-# Optional: vnelogging (when VNEIO_USE_LOGGING and deps/internal present)
+# vnelogging (from deps/internal when present)
 #-----------------------------------------------------------------------------
 set(VNEIO_DEPS_INTERNAL_DIR ${VNEIO_ROOT}/deps/internal)
-if(VNEIO_USE_LOGGING AND EXISTS "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/CMakeLists.txt")
+if(EXISTS "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/CMakeLists.txt")
     if(NOT TARGET vne::common AND EXISTS "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/CMakeLists.txt")
         set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
         set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -116,10 +115,6 @@ if(VNEIO_USE_LOGGING AND EXISTS "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/CMakeList
     endif()
     set(VNEIO_HAS_LOGGING ON)
     message(STATUS "VneIo: using vnelogging from deps/internal/vnelogging")
-else()
-    set(VNEIO_HAS_LOGGING OFF)
-    add_compile_definitions(VNEIO_NO_LOGGING)
-    message(STATUS "VneIo: building without vnelogging (no-op logging)")
 endif()
 
 #-----------------------------------------------------------------------------

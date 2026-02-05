@@ -55,7 +55,6 @@ cmake --build .
 - **VNEIO_BUILD_MESH** – build mesh component (default ON; needs Assimp).
 - **VNEIO_BUILD_IMAGE** – build image component (default ON; stb fetched if needed).
 - **VNEIO_USE_NRRDIO** – use Teem nrrdio for NRRD loading (default ON). Falls back to built-in parser if nrrdio not found. Disable with `-DVNEIO_USE_NRRDIO=OFF` to always use built-in parser.
-- **VNEIO_USE_LOGGING** – use vnelogging when available (default ON). If OFF or deps/internal not present, mesh uses no-op logging.
 - **VNEIO_BUILD_TESTS** – build tests (default OFF). Enable with `-DVNEIO_BUILD_TESTS=ON`.
 - **VNEIO_BUILD_EXAMPLES** – build examples (default OFF). Enable with `-DVNEIO_BUILD_EXAMPLES=ON`.
 - **ENABLE_COVERAGE** – enable code coverage (default OFF). Use with Debug + GCC/Clang and lcov for reports.
@@ -103,7 +102,7 @@ if (!img.isEmpty()) {
 - `include/vertexnova/io/` – public headers (mesh/, image/, vneio.h)
 - `src/vertexnova/io/` – implementation (mesh/, image/)
 - `cmake/vnecmake/` – shared CMake modules (submodule)
-- `deps/internal/vnecommon/`, `deps/internal/vnelogging/` – submodules used when `VNEIO_USE_LOGGING` is ON
+- `deps/internal/vnecommon/`, `deps/internal/vnelogging/` – submodules used for logging (when present)
 - `deps/external/assimp`, `deps/external/stb_image` – mesh/image dependencies (assimp is submodule, stb_image is a copy)
 - `tests/`, `examples/` – optional
 
