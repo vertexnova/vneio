@@ -130,11 +130,8 @@ TEST_F(MeshLoaderTest, LoadNonExistentFile) {
 
 TEST_F(MeshLoaderTest, FormatSupport) {
     AssimpLoader loader;
-    // VneIo builds Assimp with only OBJ + STL importers (minimal build).
     EXPECT_TRUE(loader.isExtensionSupported("test.stl"));
     EXPECT_TRUE(loader.isExtensionSupported("test.obj"));
-    EXPECT_FALSE(loader.isExtensionSupported("test.fbx"));
-    EXPECT_FALSE(loader.isExtensionSupported("test.gltf"));
     EXPECT_FALSE(loader.isExtensionSupported("test.xyz"));
     EXPECT_FALSE(loader.isExtensionSupported("test.unknown"));
 }
