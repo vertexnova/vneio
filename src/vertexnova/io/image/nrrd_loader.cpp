@@ -113,7 +113,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 
     // Extract dimensions (axis[0] fastest, axis[2] slowest); pad with 1 for 1D/2D
     int sizes[3] = {1, 1, 1};
-    for (int i = 0; i < nin->dim && i < 3; ++i) {
+    for (unsigned int i = 0; i < nin->dim && i < 3u; ++i) {
         sizes[i] = static_cast<int>(nin->axis[i].size);
     }
     if (sizes[0] <= 0 || sizes[1] <= 0 || sizes[2] <= 0) {
@@ -128,7 +128,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     out_volume.pixel_type = pixel_type;
 
     // Extract spacing (if available); only set for present axes
-    for (int i = 0; i < nin->dim && i < 3; ++i) {
+    for (unsigned int i = 0; i < nin->dim && i < 3u; ++i) {
         if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
             out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
         }
@@ -136,7 +136,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 
     // Extract origin (if space information is available)
     if (nin->spaceDim > 0 && nin->spaceDim <= 3) {
-        for (int i = 0; i < nin->spaceDim; ++i) {
+        for (unsigned int i = 0; i < nin->spaceDim; ++i) {
             out_volume.origin[i] = static_cast<float>(nin->spaceOrigin[i]);
         }
     }
