@@ -9,7 +9,6 @@
 #include "vertexnova/io/image/volume_exporter.h"
 
 #include <fstream>
-#include <sstream>
 #include <filesystem>
 
 #include "vertexnova/io/common/binary_io.h"
