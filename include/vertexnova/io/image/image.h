@@ -59,7 +59,7 @@ class Image {
      * (default = true)
      * @return True if loading succeeded, false otherwise
      */
-    bool loadFromFile(const std::string& file_path, bool flip_vertically = true);
+    [[nodiscard]] bool loadFromFile(const std::string& file_path, bool flip_vertically = true);
 
     /**
      * @brief Save the image to a file
@@ -67,31 +67,31 @@ class Image {
      * @param format Format to save as (jpg, png, bmp, tga)
      * @return True if saving succeeded, false otherwise
      */
-    bool saveToFile(const std::string& file_path, const std::string& format = "png");
+    [[nodiscard]] bool saveToFile(const std::string& file_path, const std::string& format = "png");
 
     /**
      * @brief Get the raw pixel data
      * @return Pointer to the pixel data
      */
-    const uint8_t* getData() const;
+    [[nodiscard]] const uint8_t* getData() const;
 
     /**
      * @brief Get the width of the image
      * @return Image width in pixels
      */
-    int getWidth() const;
+    [[nodiscard]] int getWidth() const;
 
     /**
      * @brief Get the height of the image
      * @return Image height in pixels
      */
-    int getHeight() const;
+    [[nodiscard]] int getHeight() const;
 
     /**
      * @brief Get the number of color channels
      * @return Number of channels (1=grayscale, 3=RGB, 4=RGBA)
      */
-    int getChannels() const;
+    [[nodiscard]] int getChannels() const;
 
     /**
      * @brief Resize the image
@@ -99,7 +99,7 @@ class Image {
      * @param new_height New height in pixels
      * @return True if resizing succeeded, false otherwise
      */
-    bool resize(int new_width, int new_height);
+    [[nodiscard]] bool resize(int new_width, int new_height);
 
     /**
      * @brief Flip the image vertically
@@ -110,7 +110,7 @@ class Image {
      * @brief Check if the image is empty
      * @return True if the image has no data
      */
-    bool isEmpty() const;
+    [[nodiscard]] bool isEmpty() const;
 
    private:
     /**
@@ -143,7 +143,7 @@ namespace image_utils {
  * (default = true)
  * @return Pointer to image data, or nullptr if loading failed
  */
-uint8_t* loadImage(const std::string& file_path,
+[[nodiscard]] uint8_t* loadImage(const std::string& file_path,
                    int* width,
                    int* height,
                    int* channels,
@@ -166,7 +166,7 @@ void freeImage(uint8_t* data);
  * @param format Format to save as (jpg, png, bmp, tga)
  * @return True if saving succeeded, false otherwise
  */
-bool saveImage(const std::string& file_path,
+[[nodiscard]] bool saveImage(const std::string& file_path,
                const uint8_t* data,
                int width,
                int height,

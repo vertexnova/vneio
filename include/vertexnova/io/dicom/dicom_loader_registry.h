@@ -22,7 +22,7 @@ namespace vne::dicom {
 
 class DicomLoaderRegistry {
    public:
-    static std::unique_ptr<IDicomLoader> Create();
+    [[nodiscard]] static std::unique_ptr<IDicomLoader> create();
 };
 
 }  // namespace vne::dicom

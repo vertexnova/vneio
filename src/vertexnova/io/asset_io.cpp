@@ -94,8 +94,8 @@ LoadResult<vne::image::Volume> AssetIO::loadVolume(const LoadRequest& request) {
     return result;
 }
 
-LoadResult<vne::dicom::DicomSeries_C> AssetIO::loadDicomSeries(const LoadRequest& request) {
-    LoadResult<vne::dicom::DicomSeries_C> result;
+LoadResult<vne::dicom::DicomSeries> AssetIO::loadDicomSeries(const LoadRequest& request) {
+    LoadResult<vne::dicom::DicomSeries> result;
     for (const auto& loader : dicom_loaders_) {
         if (loader->canLoad(request)) {
             result = loader->loadDicomSeries(request);

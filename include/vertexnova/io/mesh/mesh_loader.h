@@ -30,14 +30,14 @@ class IMeshLoader : public vne::io::IAssetLoader {
    public:
     ~IMeshLoader() override = default;
 
-    bool canLoad(const vne::io::LoadRequest& request) const override;
+    [[nodiscard]] bool canLoad(const vne::io::LoadRequest& request) const override;
 
     /**
      * @brief Load a mesh from the given request (AssetIO registry API)
      * @param request Load request (uri = file path, hint_format optional)
      * @return Load result with Mesh on success, Status on failure
      */
-    virtual vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) = 0;
+    [[nodiscard]] virtual vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) = 0;
 
     /**
      * @brief Load a mesh from file (legacy API, unchanged)
@@ -45,19 +45,19 @@ class IMeshLoader : public vne::io::IAssetLoader {
      * @param out_mesh Mesh to fill
      * @return true if loading succeeded, false otherwise (see getLastError())
      */
-    virtual bool loadFile(const std::string& path, Mesh& out_mesh) = 0;
+    [[nodiscard]] virtual bool loadFile(const std::string& path, Mesh& out_mesh) = 0;
 
     /**
      * @brief Check if this loader supports the given file (by extension)
      * @param path File path or filename
      * @return true if the extension is supported
      */
-    virtual bool isExtensionSupported(const std::string& path) const = 0;
+    [[nodiscard]] virtual bool isExtensionSupported(const std::string& path) const = 0;
 
     /**
      * @brief Last error message after a failed load
      */
-    virtual const std::string& getLastError() const = 0;
+    [[nodiscard]] virtual const std::string& getLastError() const = 0;
 };
 
 inline bool IMeshLoader::canLoad(const vne::io::LoadRequest& request) const {

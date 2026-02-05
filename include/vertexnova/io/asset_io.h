@@ -42,7 +42,7 @@ class AssetIO {
     LoadResult<vne::image::Image> loadImage(const LoadRequest& request);
     LoadResult<vne::mesh::Mesh> loadMesh(const LoadRequest& request);
     LoadResult<vne::image::Volume> loadVolume(const LoadRequest& request);
-    LoadResult<vne::dicom::DicomSeries_C> loadDicomSeries(const LoadRequest& request);
+    LoadResult<vne::dicom::DicomSeries> loadDicomSeries(const LoadRequest& request);
 
    private:
     std::vector<std::unique_ptr<vne::image::IImageLoader>> image_loaders_;

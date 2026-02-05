@@ -22,7 +22,7 @@
 
 namespace vne::dicom {
 
-struct DicomSeries_C {
+struct DicomSeries {
     vne::image::Volume volume;
     std::unordered_map<std::string, std::string> meta;
     std::string series_uid;

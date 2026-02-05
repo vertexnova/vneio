@@ -44,7 +44,7 @@ Image::Image(const std::string& file_path)
     : width_(0)
     , height_(0)
     , channels_(0) {
-    loadFromFile(file_path);
+    (void)loadFromFile(file_path);
 }
 
 Image::Image(const uint8_t* data, int width, int height, int channels)

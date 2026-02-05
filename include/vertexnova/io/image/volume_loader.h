@@ -26,7 +26,7 @@ class IVolumeLoader : public vne::io::IAssetLoader {
      * @param request Load request (uri = file path, hint_format optional)
      * @return Load result with Volume on success, Status on failure
      */
-    virtual vne::io::LoadResult<Volume> loadVolume(const vne::io::LoadRequest& request) = 0;
+    [[nodiscard]] virtual vne::io::LoadResult<Volume> loadVolume(const vne::io::LoadRequest& request) = 0;
 };
 
 }  // namespace image

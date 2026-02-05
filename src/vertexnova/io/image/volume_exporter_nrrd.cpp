@@ -60,21 +60,21 @@ std::string Filename(const std::string& p) {
 
 }  // namespace
 
-bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
-                const Volume& vol,
-                const NrrdExportOptions& opts,
-                std::string* out_error) {
+bool exportNrrd(const std::string& nrrd_or_nhdr_path,
+               const Volume& vol,
+               const NrrdExportOptions& opts,
+               std::string* out_error) {
     if (vol.isEmpty()) {
-        SetError(out_error, "ExportNrrd: volume is empty");
+        SetError(out_error, "exportNrrd: volume is empty");
         return false;
     }
     if (vol.components != 1) {
-        SetError(out_error, "ExportNrrd: only scalar volumes (components==1) are supported");
+        SetError(out_error, "exportNrrd: only scalar volumes (components==1) are supported");
         return false;
     }
     const std::string type = PixelTypeToNrrd(vol.pixel_type);
     if (type == "unknown") {
-        SetError(out_error, "ExportNrrd: unsupported pixel type");
+        SetError(out_error, "exportNrrd: unsupported pixel type");
         return false;
     }
 
@@ -93,7 +93,7 @@ bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
     // Write header
     std::ofstream h(nrrd_or_nhdr_path, std::ios::binary | std::ios::trunc);
     if (!h) {
-        SetError(out_error, "ExportNrrd: cannot open header for writing");
+        SetError(out_error, "exportNrrd: cannot open header for writing");
         return false;
     }
     h << "NRRD0005\n";
@@ -118,15 +118,15 @@ bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
 
     h << "\n";  // blank line terminator
     if (!h) {
-        SetError(out_error, "ExportNrrd: failed while writing header");
+        SetError(out_error, "exportNrrd: failed while writing header");
         return false;
     }
 
     const size_t bytes = vol.byteCount();
     if (detached || writing_nhdr) {
-        auto st = vne::io::binaryio::WriteFile(raw_path, vol.data.data(), bytes);
+        auto st = vne::io::binaryio::writeFile(raw_path, vol.data.data(), bytes);
         if (!st) {
-            SetError(out_error, "ExportNrrd: " + st.message);
+            SetError(out_error, "exportNrrd: " + st.message);
             return false;
         }
         return true;
@@ -135,7 +135,7 @@ bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
     // Attached data: append payload right after header terminator
     h.write(reinterpret_cast<const char*>(vol.data.data()), static_cast<std::streamsize>(bytes));
     if (!h) {
-        SetError(out_error, "ExportNrrd: failed while writing payload");
+        SetError(out_error, "exportNrrd: failed while writing payload");
         return false;
     }
     return true;

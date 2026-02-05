@@ -17,6 +17,9 @@
 namespace vne {
 namespace mesh {
 
+/** Default fill ratio when normalizing mesh to unit sphere (slightly inside 1.0 to avoid clipping). */
+constexpr float kAssimpNormalizeFillDefault = 0.999f;
+
 /**
  * @brief Options for Assimp mesh loading
  */
@@ -29,7 +32,7 @@ struct AssimpLoaderOptions {
     bool ensure_ccw_winding = true;
     bool normalize_to_unit_sphere = false;
     float normalize_target_radius = 1.0f;
-    float normalize_fill = 0.999f;
+    float normalize_fill = kAssimpNormalizeFillDefault;
     bool generate_barycentrics = false;
 };
 
@@ -41,11 +44,11 @@ class AssimpLoader : public IMeshLoader {
     AssimpLoader() = default;
     ~AssimpLoader() override = default;
 
-    vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) override;
-    bool loadFile(const std::string& path, Mesh& out_mesh) override;
-    bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts);
-    bool isExtensionSupported(const std::string& path) const override;
-    const std::string& getLastError() const override { return last_error_; }
+    [[nodiscard]] vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) override;
+    [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh) override;
+    [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts);
+    [[nodiscard]] bool isExtensionSupported(const std::string& path) const override;
+    [[nodiscard]] const std::string& getLastError() const override { return last_error_; }
 
    private:
     std::string last_error_;

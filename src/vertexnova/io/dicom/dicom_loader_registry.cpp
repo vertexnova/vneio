@@ -3,7 +3,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
  * DICOM loader registry: stub only. No GDCM/DCMTK backend is implemented.
- * Create() always returns a loader that fails with a clear error message.
+ * create() always returns a loader that fails with a clear error message.
  * ----------------------------------------------------------------------
  */
 
@@ -16,8 +16,8 @@ namespace vne::dicom {
 namespace {
 class NullDicomLoader final : public IDicomLoader {
    public:
-    vne::io::LoadResult<DicomSeries_C> loadDicomSeries(const vne::io::LoadRequest& request) override {
-        vne::io::LoadResult<DicomSeries_C> result;
+    vne::io::LoadResult<DicomSeries> loadDicomSeries(const vne::io::LoadRequest& request) override {
+        vne::io::LoadResult<DicomSeries> result;
         if (!loadDirectory(request.uri, result.value)) {
             result.status =
                 vne::io::Status::make(vne::io::ErrorCode::eNotImplemented, getLastError(), request.uri, "DicomLoader");
@@ -27,7 +27,7 @@ class NullDicomLoader final : public IDicomLoader {
         return result;
     }
 
-    bool loadDirectory(const std::string& directory_path, DicomSeries_C& out_series) override {
+    bool loadDirectory(const std::string& directory_path, DicomSeries& out_series) override {
         (void)directory_path;
         out_series = {};
         last_error_ =
@@ -42,7 +42,7 @@ class NullDicomLoader final : public IDicomLoader {
 };
 }  // namespace
 
-std::unique_ptr<IDicomLoader> DicomLoaderRegistry::Create() {
+std::unique_ptr<IDicomLoader> DicomLoaderRegistry::create() {
     return std::make_unique<NullDicomLoader>();
 }
 

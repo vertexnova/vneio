@@ -55,21 +55,21 @@ std::string Dirname(const std::string& p) {
 
 }  // namespace
 
-bool ExportMhd(const std::string& mhd_or_mha_path,
+bool exportMhd(const std::string& mhd_or_mha_path,
                const Volume& vol,
                const MhdExportOptions& opts,
                std::string* out_error) {
     if (vol.isEmpty()) {
-        SetError(out_error, "ExportMhd: volume is empty");
+        SetError(out_error, "exportMhd: volume is empty");
         return false;
     }
     if (vol.components != 1) {
-        SetError(out_error, "ExportMhd: only scalar volumes (components==1) are supported");
+        SetError(out_error, "exportMhd: only scalar volumes (components==1) are supported");
         return false;
     }
     const std::string et = PixelTypeToMet(vol.pixel_type);
     if (et == "MET_UNKNOWN") {
-        SetError(out_error, "ExportMhd: unsupported pixel type");
+        SetError(out_error, "exportMhd: unsupported pixel type");
         return false;
     }
 
@@ -85,7 +85,7 @@ bool ExportMhd(const std::string& mhd_or_mha_path,
 
     std::ofstream h(mhd_or_mha_path, std::ios::binary | std::ios::trunc);
     if (!h) {
-        SetError(out_error, "ExportMhd: cannot open header for writing");
+        SetError(out_error, "exportMhd: cannot open header for writing");
         return false;
     }
 
@@ -102,7 +102,7 @@ bool ExportMhd(const std::string& mhd_or_mha_path,
         const size_t bytes = vol.byteCount();
         h.write(reinterpret_cast<const char*>(vol.data.data()), static_cast<std::streamsize>(bytes));
         if (!h) {
-            SetError(out_error, "ExportMhd: failed while writing inline payload");
+            SetError(out_error, "exportMhd: failed while writing inline payload");
             return false;
         }
         return true;
@@ -110,14 +110,14 @@ bool ExportMhd(const std::string& mhd_or_mha_path,
 
     h << "ElementDataFile = " << raw_name << "\n\n";
     if (!h) {
-        SetError(out_error, "ExportMhd: failed while writing header");
+        SetError(out_error, "exportMhd: failed while writing header");
         return false;
     }
 
     const size_t bytes = vol.byteCount();
-    auto st = vne::io::binaryio::WriteFile(raw_path, vol.data.data(), bytes);
+    auto st = vne::io::binaryio::writeFile(raw_path, vol.data.data(), bytes);
     if (!st) {
-        SetError(out_error, "ExportMhd: " + st.message);
+        SetError(out_error, "exportMhd: " + st.message);
         return false;
     }
     return true;

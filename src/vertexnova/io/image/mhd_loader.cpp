@@ -146,7 +146,7 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     std::string header;
     {
         std::streamoff off = 0;
-        auto st = vne::io::binaryio::ReadHeaderUntilBlankLine(f, header, off);
+        auto st = vne::io::binaryio::readHeaderUntilBlankLine(f, header, off);
         if (!st) {
             last_error_ = "MhdLoader: " + st.message;
             return false;

@@ -20,7 +20,7 @@ namespace vne {
 namespace io {
 namespace binaryio {
 
-inline Status ReadFile(const std::string& path, std::vector<uint8_t>& out) {
+[[nodiscard]] inline Status readFile(const std::string& path, std::vector<uint8_t>& out) {
     out.clear();
     std::ifstream f(path, std::ios::binary);
     if (!f) {
@@ -40,9 +40,9 @@ inline Status ReadFile(const std::string& path, std::vector<uint8_t>& out) {
     return Status::okStatus();
 }
 
-inline Status WriteFile(const std::string& path, const void* data, size_t size) {
+[[nodiscard]] inline Status writeFile(const std::string& path, const void* data, size_t size) {
     if (size > 0 && data == nullptr) {
-        return Status::make(ErrorCode::eInvalidArgument, "WriteFile: data is null", path, "BinaryIO");
+        return Status::make(ErrorCode::eInvalidArgument, "writeFile: data is null", path, "BinaryIO");
     }
     std::ofstream f(path, std::ios::binary);
     if (!f) {
@@ -62,11 +62,11 @@ inline Status WriteFile(const std::string& path, const void* data, size_t size) 
  * header_text includes all header bytes up to and including the blank line.
  * data_offset is the absolute offset in file where the binary payload starts.
  */
-inline Status ReadHeaderUntilBlankLine(std::ifstream& f, std::string& header_text, std::streamoff& data_offset) {
+[[nodiscard]] inline Status readHeaderUntilBlankLine(std::ifstream& f, std::string& header_text, std::streamoff& data_offset) {
     header_text.clear();
     data_offset = 0;
     if (!f) {
-        return Status::make(ErrorCode::eFileReadFailed, "ReadHeaderUntilBlankLine: invalid stream", {}, "BinaryIO");
+        return Status::make(ErrorCode::eFileReadFailed, "readHeaderUntilBlankLine: invalid stream", {}, "BinaryIO");
     }
     std::string line;
     while (std::getline(f, line)) {
@@ -83,20 +83,20 @@ inline Status ReadHeaderUntilBlankLine(std::ifstream& f, std::string& header_tex
     return Status::make(ErrorCode::eDataTruncated, "Header not terminated with blank line", {}, "BinaryIO");
 }
 
-inline void ByteSwapInPlace(uint8_t* bytes, int elem_size) {
+inline void byteSwapInPlace(uint8_t* bytes, int elem_size) {
     for (int j = 0; j < elem_size / 2; ++j) {
         const int k = elem_size - 1 - j;
         std::swap(bytes[j], bytes[k]);
     }
 }
 
-inline void ByteSwapBufferInPlace(std::vector<uint8_t>& buf, int elem_size) {
+inline void byteSwapBufferInPlace(std::vector<uint8_t>& buf, int elem_size) {
     if (elem_size <= 1) {
         return;
     }
     const size_t n = buf.size() / static_cast<size_t>(elem_size);
     for (size_t i = 0; i < n; ++i) {
-        ByteSwapInPlace(buf.data() + i * static_cast<size_t>(elem_size), elem_size);
+        byteSwapInPlace(buf.data() + i * static_cast<size_t>(elem_size), elem_size);
     }
 }
 

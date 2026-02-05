@@ -26,13 +26,13 @@ struct MhdExportOptions {
     std::string raw_data_name;  // used when inline_data==false
 };
 
-bool ExportNrrd(const std::string& nrrd_or_nhdr_path,
-                const Volume& vol,
-                const NrrdExportOptions& opts = {},
-                std::string* out_error = nullptr);
-bool ExportMhd(const std::string& mhd_or_mha_path,
-               const Volume& vol,
-               const MhdExportOptions& opts = {},
-               std::string* out_error = nullptr);
+[[nodiscard]] bool exportNrrd(const std::string& nrrd_or_nhdr_path,
+                              const Volume& vol,
+                              const NrrdExportOptions& opts = {},
+                              std::string* out_error = nullptr);
+[[nodiscard]] bool exportMhd(const std::string& mhd_or_mha_path,
+                             const Volume& vol,
+                             const MhdExportOptions& opts = {},
+                             std::string* out_error = nullptr);
 
 }  // namespace vne::image

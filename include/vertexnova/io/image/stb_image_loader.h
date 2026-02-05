@@ -23,13 +23,13 @@ class StbImageLoader : public IImageLoader {
    public:
     StbImageLoader() = default;
 
-    bool canLoad(const vne::io::LoadRequest& request) const override;
-    vne::io::LoadResult<Image> loadImage(const vne::io::LoadRequest& request) override;
+    [[nodiscard]] bool canLoad(const vne::io::LoadRequest& request) const override;
+    [[nodiscard]] vne::io::LoadResult<Image> loadImage(const vne::io::LoadRequest& request) override;
 
     /**
      * @brief Check if the given path has a supported image extension
      */
-    static bool isExtensionSupported(const std::string& path);
+    [[nodiscard]] static bool isExtensionSupported(const std::string& path);
 
    private:
     std::string last_error_;

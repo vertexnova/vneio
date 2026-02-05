@@ -30,12 +30,12 @@ class MhdLoader : public IVolumeLoader {
    public:
     MhdLoader() = default;
 
-    bool canLoad(const vne::io::LoadRequest& request) const override;
-    vne::io::LoadResult<Volume> loadVolume(const vne::io::LoadRequest& request) override;
+    [[nodiscard]] bool canLoad(const vne::io::LoadRequest& request) const override;
+    [[nodiscard]] vne::io::LoadResult<Volume> loadVolume(const vne::io::LoadRequest& request) override;
 
-    bool load(const std::string& path, Volume& out_volume);
-    bool isExtensionSupported(const std::string& path) const;
-    const std::string& getLastError() const { return last_error_; }
+    [[nodiscard]] bool load(const std::string& path, Volume& out_volume);
+    [[nodiscard]] bool isExtensionSupported(const std::string& path) const;
+    [[nodiscard]] const std::string& getLastError() const { return last_error_; }
 
    private:
     std::string last_error_;
