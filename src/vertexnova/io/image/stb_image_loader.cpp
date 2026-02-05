@@ -48,10 +48,8 @@ vne::io::LoadResult<Image> StbImageLoader::loadImage(const vne::io::LoadRequest&
     last_error_.clear();
     if (!result.value.loadFromFile(request.uri)) {
         last_error_ = "StbImageLoader: failed to load image: " + request.uri;
-        result.status = vne::io::Status::make(vne::io::ErrorCode::eFileReadFailed,
-                                               last_error_,
-                                               request.uri,
-                                               "StbImageLoader");
+        result.status =
+            vne::io::Status::make(vne::io::ErrorCode::eFileReadFailed, last_error_, request.uri, "StbImageLoader");
         return result;
     }
     result.status = vne::io::Status::okStatus();

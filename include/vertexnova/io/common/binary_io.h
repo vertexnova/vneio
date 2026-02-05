@@ -66,10 +66,7 @@ inline Status ReadHeaderUntilBlankLine(std::ifstream& f, std::string& header_tex
     header_text.clear();
     data_offset = 0;
     if (!f) {
-        return Status::make(ErrorCode::eFileReadFailed,
-                             "ReadHeaderUntilBlankLine: invalid stream",
-                             {},
-                             "BinaryIO");
+        return Status::make(ErrorCode::eFileReadFailed, "ReadHeaderUntilBlankLine: invalid stream", {}, "BinaryIO");
     }
     std::string line;
     while (std::getline(f, line)) {

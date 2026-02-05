@@ -48,9 +48,9 @@ LoadResult<vne::image::Image> AssetIO::loadImage(const LoadRequest& request) {
         return result;
     }
     result.status = Status::make(ErrorCode::eUnsupportedFormat,
-                                  "No image loader could load: " + request.uri,
-                                   request.uri,
-                                   "AssetIO");
+                                 "No image loader could load: " + request.uri,
+                                 request.uri,
+                                 "AssetIO");
     return result;
 }
 
@@ -68,9 +68,9 @@ LoadResult<vne::mesh::Mesh> AssetIO::loadMesh(const LoadRequest& request) {
         return result;
     }
     result.status = Status::make(ErrorCode::eUnsupportedFormat,
-                                  "No mesh loader could load: " + request.uri,
-                                   request.uri,
-                                   "AssetIO");
+                                 "No mesh loader could load: " + request.uri,
+                                 request.uri,
+                                 "AssetIO");
     return result;
 }
 
@@ -88,9 +88,9 @@ LoadResult<vne::image::Volume> AssetIO::loadVolume(const LoadRequest& request) {
         return result;
     }
     result.status = Status::make(ErrorCode::eUnsupportedFormat,
-                                  "No volume loader could load: " + request.uri,
-                                   request.uri,
-                                   "AssetIO");
+                                 "No volume loader could load: " + request.uri,
+                                 request.uri,
+                                 "AssetIO");
     return result;
 }
 
@@ -109,8 +109,8 @@ LoadResult<vne::dicom::DicomSeries_C> AssetIO::loadDicomSeries(const LoadRequest
     }
     result.status = Status::make(ErrorCode::eUnsupportedFormat,
                                  "No DICOM loader could load: " + request.uri,
-                                   request.uri,
-                                   "AssetIO");
+                                 request.uri,
+                                 "AssetIO");
     return result;
 }
 

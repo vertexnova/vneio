@@ -19,10 +19,8 @@ class NullDicomLoader final : public IDicomLoader {
     vne::io::LoadResult<DicomSeries_C> loadDicomSeries(const vne::io::LoadRequest& request) override {
         vne::io::LoadResult<DicomSeries_C> result;
         if (!loadDirectory(request.uri, result.value)) {
-            result.status = vne::io::Status::make(vne::io::ErrorCode::eNotImplemented,
-                                                   getLastError(),
-                                                   request.uri,
-                                                   "DicomLoader");
+            result.status =
+                vne::io::Status::make(vne::io::ErrorCode::eNotImplemented, getLastError(), request.uri, "DicomLoader");
             return result;
         }
         result.status = vne::io::Status::okStatus();

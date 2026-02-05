@@ -91,8 +91,7 @@ TEST(VolumeTest, NrrdLoaderLoadTestdataVolume) {
     // Use a small 1D NRRD from testdata (loader supports 1D, 2D, 3D)
     std::string path = getTestdataPath("volumes/an-hist.nrrd");
     if (!std::filesystem::exists(path)) {
-        GTEST_SKIP() << "Test volume not found: " << path
-                     << " (run from project root with testdata/volumes present)";
+        GTEST_SKIP() << "Test volume not found: " << path << " (run from project root with testdata/volumes present)";
     }
 
     NrrdLoader loader;
@@ -111,8 +110,7 @@ TEST(VolumeTest, NrrdLoaderLoadFoolNrrd) {
     // 2D NRRD from testdata (fool.nrrd), loaded as 3D with depth padded to 1
     std::string path = getTestdataPath("volumes/fool.nrrd");
     if (!std::filesystem::exists(path)) {
-        GTEST_SKIP() << "Test volume not found: " << path
-                     << " (run from project root with testdata/volumes present)";
+        GTEST_SKIP() << "Test volume not found: " << path << " (run from project root with testdata/volumes present)";
     }
 
     NrrdLoader loader;
@@ -125,8 +123,8 @@ TEST(VolumeTest, NrrdLoaderLoadFoolNrrd) {
     EXPECT_GT(vol.voxelCount(), 0u);
     EXPECT_GT(vol.byteCount(), 0u);
     EXPECT_NE(vol.getData(), nullptr);
-    EXPECT_EQ(vol.voxelCount(), static_cast<size_t>(vol.width()) * static_cast<size_t>(vol.height())
-                                      * static_cast<size_t>(vol.depth()));
+    EXPECT_EQ(vol.voxelCount(),
+              static_cast<size_t>(vol.width()) * static_cast<size_t>(vol.height()) * static_cast<size_t>(vol.depth()));
     EXPECT_EQ(vol.byteCount(), vol.voxelCount() * static_cast<size_t>(bytesPerVoxel(vol.pixel_type)));
 }
 
@@ -134,8 +132,7 @@ TEST(VolumeTest, NrrdLoaderLoadSmall3dNrrd) {
     // 3D NRRD from testdata (small3d.nrrd), Teem-style: 4x4x4 uchar raw
     std::string path = getTestdataPath("volumes/small3d.nrrd");
     if (!std::filesystem::exists(path)) {
-        GTEST_SKIP() << "Test volume not found: " << path
-                     << " (run from project root with testdata/volumes present)";
+        GTEST_SKIP() << "Test volume not found: " << path << " (run from project root with testdata/volumes present)";
     }
 
     NrrdLoader loader;
