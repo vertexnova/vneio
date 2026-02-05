@@ -24,6 +24,10 @@
 #include <cmath>
 
 namespace {
+
+/** Minimum radius threshold for normalize-to-unit-sphere (avoids division by near-zero). */
+constexpr float kMinNormalizeRadius = 1e-6f;
+
 CREATE_VNE_LOGGER_CATEGORY("vne.core.mesh.assimp");
 
 /**
@@ -314,10 +318,10 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
         const float dz = (max_z - min_z);
         const float radius = 0.5f * std::sqrt(dx * dx + dy * dy + dz * dz);
 
-        if (radius > 1e-6f && std::isfinite(radius)) {
+        if (radius > kMinNormalizeRadius && std::isfinite(radius)) {
             const float fill =
                 (opts.normalize_fill > 0.0f && opts.normalize_fill <= 1.0f) ? opts.normalize_fill : 0.999f;
-            const float target_r = std::max(1e-6f, opts.normalize_target_radius);
+            const float target_r = std::max(kMinNormalizeRadius, opts.normalize_target_radius);
             const float scale = (target_r * fill) / radius;
 
             out_mesh.aabb_min[0] = out_mesh.aabb_min[1] = out_mesh.aabb_min[2] = std::numeric_limits<float>::infinity();
