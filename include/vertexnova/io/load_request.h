@@ -12,6 +12,7 @@
 
 #include "vertexnova/io/common/status.h"
 
+#include <cstdint>
 #include <string>
 
 namespace vne {
