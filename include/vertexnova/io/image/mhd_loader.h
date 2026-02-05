@@ -5,9 +5,6 @@
  *
  * Author:    Ajeet Singh Yadav
  * Created:   January 2026
- *
- * Loader for MetaImage (MHD/MHA) 3D volumes. Reads header and
- * separate or embedded raw data. Supports MET_UCHAR, MET_USHORT, MET_FLOAT.
  * ----------------------------------------------------------------------
  */
 

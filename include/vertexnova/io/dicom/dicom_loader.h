@@ -3,15 +3,8 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
- * DICOM loader interface.
- *
- * Product philosophy:
- *  - vneio provides a stable interface and data model
- *  - implementation is provided by optional backends:
- *      * GDCM (common OSS choice)
- *      * DCMTK
- *
- * If neither is compiled in, the default loader returns an error.
+ * Author:    Ajeet Singh Yadav
+ * Created:   January 2026
  * ----------------------------------------------------------------------
  */
 

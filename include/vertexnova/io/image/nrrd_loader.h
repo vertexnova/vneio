@@ -5,10 +5,6 @@
  *
  * Author:    Ajeet Singh Yadav
  * Created:   January 2026
- *
- * Loader for NRRD (.nrrd, .nhdr) 3D volumes. Uses Teem nrrdio library
- * when available (supports compressed/advanced formats), otherwise falls
- * back to built-in parser (raw encoding only).
  * ----------------------------------------------------------------------
  */
 
@@ -17,19 +13,6 @@
 #include "vertexnova/io/load_request.h"
 
 #include <string>
-
-#ifdef VNEIO_USE_NRRDIO
-// nrrdio headers (path may vary: nrrdio.h, NrrdIO.h, or nrrdio/nrrdio.h)
-#if __has_include(<nrrdio.h>)
-#include <nrrdio.h>
-#elif __has_include(<NrrdIO.h>)
-#include <NrrdIO.h>
-#elif __has_include(<nrrdio/nrrdio.h>)
-#include <nrrdio/nrrdio.h>
-#else
-#error "nrrdio header not found. Check include path."
-#endif
-#endif
 
 namespace vne {
 namespace image {

@@ -3,8 +3,8 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
- * Small io helpers (no third-party deps).
- * Read header until blank line; read/write full buffers; byte swap.
+ * Author:    Ajeet Singh Yadav
+ * Created:   January 2026
  * ----------------------------------------------------------------------
  */
 

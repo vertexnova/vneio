@@ -5,8 +5,6 @@
  *
  * Author:    Ajeet Singh Yadav
  * Created:   January 2026
- *
- * Path utilities for testdata and project paths (requires config.h when built with CMake).
  * ----------------------------------------------------------------------
  */
 

@@ -5,9 +5,6 @@
  *
  * Author:    Ajeet Singh Yadav
  * Created:   January 2026
- *
- * Interface for mesh loaders. Implementations (e.g. AssimpLoader) fill
- * Mesh from file paths. Enables pluggable loaders for multibackend engines.
  * ----------------------------------------------------------------------
  */
 

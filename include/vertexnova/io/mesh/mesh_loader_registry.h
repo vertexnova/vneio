@@ -5,10 +5,6 @@
  *
  * Author:    Ajeet Singh Yadav
  * Created:   January 2026
- *
- * Registry/factory for mesh loaders. Returns an appropriate loader for
- * a given file path (by extension). Enables multibackend engines to
- * load meshes without coupling to a specific implementation.
  * ----------------------------------------------------------------------
  */
 

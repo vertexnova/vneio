@@ -5,10 +5,6 @@
  *
  * Author:    Ajeet Singh Yadav
  * Created:   January 2026
- *
- * 3D volume type for medical/imaging data. Holds dimensions, spacing,
- * origin, pixel type, and raw buffer. Used by NRRD, MHD, and optionally
- * DICOM loaders.
  * ----------------------------------------------------------------------
  */
 

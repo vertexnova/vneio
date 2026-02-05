@@ -3,8 +3,8 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
- * Unified asset IO registry. Registers loaders per asset kind and
- * dispatches load requests. CPU-only; no GPU handles.
+ * Author:    Ajeet Singh Yadav
+ * Created:   January 2026
  * ----------------------------------------------------------------------
  */
 

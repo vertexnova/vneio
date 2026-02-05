@@ -3,9 +3,8 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
- * Strong, product-ready error model for vneio.
- * Stable error codes + message + optional path/subsystem.
- * Dependency-free; usable across all platforms.
+ * Author:    Ajeet Singh Yadav
+ * Created:   January 2026
  * ----------------------------------------------------------------------
  */
 

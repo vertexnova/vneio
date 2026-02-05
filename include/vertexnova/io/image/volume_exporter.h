@@ -3,10 +3,8 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License").
  *
- * Volume export utilities (NRRD, MHD/MHA).
- *
- * These exporters are designed for deterministic test assets and tools.
- * They are not intended to replace full-featured medical io libraries.
+ * Author:    Ajeet Singh Yadav
+ * Created:   January 2026
  * ----------------------------------------------------------------------
  */
 
