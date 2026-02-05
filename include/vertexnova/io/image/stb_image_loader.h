@@ -5,6 +5,8 @@
  *
  * Author:    Ajeet Singh Yadav
  * Created:   January 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
  */
 
