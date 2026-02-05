@@ -15,7 +15,7 @@ Mesh and Image library extracted from VertexNova core, structured like **vneeven
 
 - **Mesh** – Load 3D meshes (Assimp), with vertex attributes, materials, submeshes, optional normalization and barycentrics.
 - **Image** – Load/save images (stb_image), resize, flip, raw pixel access.
-- **Volume** – Load 3D volumes (NRRD, MHD), with spacing, origin, direction matrix. Uses Teem nrrdio when available (supports compressed formats), otherwise built-in parser (raw only).
+- **Volume** – Load 3D volumes (NRRD, MHD), with spacing, origin, direction matrix. NRRD loading uses Teem nrrdio (required; supports compressed and advanced formats).
 
 Namespaces: `vne::Mesh`, `vne::Image`. Includes live under `vertexnova/io/`.
 
@@ -25,7 +25,7 @@ Namespaces: `vne::Mesh`, `vne::Image`. Includes live under `vertexnova/io/`.
 - CMake 3.16+
 - **Mesh:** [Assimp](https://github.com/assimp/assimp) (optional; add under `3rd_party/assimp` or use `find_package(assimp)`)
 - **Image:** [stb](https://github.com/nothings/stb) (fetched automatically if `3rd_party/stb_image` is not present)
-- **Volume (NRRD):** [Teem nrrdio](https://teem.sourceforge.net/nrrd/lib.html) (optional; add under `deps/external/nrrdio/` or `3rd_party/nrrdio/`). Falls back to built-in parser if not found.
+- **Volume (NRRD):** [Teem nrrdio](https://teem.sourceforge.net/nrrd/lib.html) (required for image component; add under `deps/external/nrrdio/` or `3rd_party/nrrdio/` or use `find_package(nrrdio)`).
 - **Logging (optional):** [vnelogging](https://github.com/vertexnova/vnelogging) and [vnecommon](https://github.com/vertexnova/vnecommon) under `deps/internal/` for mesh load logging
 
 ## Build
@@ -54,7 +54,6 @@ cmake --build .
 
 - **VNEIO_BUILD_MESH** – build mesh component (default ON; needs Assimp).
 - **VNEIO_BUILD_IMAGE** – build image component (default ON; stb fetched if needed).
-- **VNEIO_USE_NRRDIO** – use Teem nrrdio for NRRD loading (default ON). Falls back to built-in parser if nrrdio not found. Disable with `-DVNEIO_USE_NRRDIO=OFF` to always use built-in parser.
 - **VNEIO_BUILD_TESTS** – build tests (default OFF). Enable with `-DVNEIO_BUILD_TESTS=ON`.
 - **VNEIO_BUILD_EXAMPLES** – build examples (default OFF). Enable with `-DVNEIO_BUILD_EXAMPLES=ON`.
 - **ENABLE_COVERAGE** – enable code coverage (default OFF). Use with Debug + GCC/Clang and lcov for reports.
