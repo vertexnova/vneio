@@ -187,6 +187,7 @@ endif()
 #-----------------------------------------------------------------------------
 # External / third-party: nrrdio (required for NRRD volume loading)
 # Prefer deps/external/nrrdio, then 3rd_party/nrrdio, then find_package
+# NrrdIO optionally links ZLIB for gzip-compressed NRRD; disable if ZLIB not found (e.g. Windows CI).
 #-----------------------------------------------------------------------------
 if(VNEIO_BUILD_IMAGE)
     set(VNEIO_NRRDIO_TARGET "")
@@ -194,6 +195,11 @@ if(VNEIO_BUILD_IMAGE)
     set(VNEIO_NRRDIO_FOUND OFF)
 
     if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt" OR EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
+        find_package(ZLIB QUIET)
+        if(NOT ZLIB_FOUND)
+            set(NRRDIO_USE_ZLIB OFF CACHE BOOL "Disable ZLIB in NrrdIO when ZLIB not found" FORCE)
+            message(STATUS "VneIo: ZLIB not found; building NrrdIO without gzip support")
+        endif()
         # Try nrrdio subdirectory first (if cloned as teem-nrrdio-nrrdio.git)
         if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
             add_subdirectory(deps/external/nrrdio/nrrdio deps/external/nrrdio/nrrdio EXCLUDE_FROM_ALL)
@@ -324,6 +330,7 @@ if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
     add_library(vneio_dicom STATIC
         src/vertexnova/io/dicom/dicom_loader_registry.cpp
     )
+    set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
     target_include_directories(vneio_dicom
         PUBLIC
             $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
@@ -347,6 +354,7 @@ else()
     add_library(vneio_dicom STATIC
         src/vertexnova/io/dicom/dicom_loader_registry.cpp
     )
+    set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
     target_include_directories(vneio_dicom
         PUBLIC
             $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
