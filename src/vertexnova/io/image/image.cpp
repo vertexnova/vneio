@@ -128,8 +128,8 @@ bool Image::resize(int new_width, int new_height) {
     }
 #else
     // Bilinear resize (uint8). Good enough when stb_image_resize isn't available.
-    const float sx = static_cast<float>(width_) / static_cast<float>(new_width);
-    const float sy = static_cast<float>(height_) / static_cast<float>(new_height);
+    const auto sx = static_cast<float>(width_) / static_cast<float>(new_width);
+    const auto sy = static_cast<float>(height_) / static_cast<float>(new_height);
     for (int y = 0; y < new_height; ++y) {
         const float fy = (static_cast<float>(y) + 0.5f) * sy - 0.5f;
         const int y0 = std::max(0, std::min(height_ - 1, static_cast<int>(fy)));
@@ -158,10 +158,10 @@ bool Image::resize(int new_width, int new_height) {
                            + (static_cast<size_t>(y) * static_cast<size_t>(new_width) + static_cast<size_t>(x))
                                  * static_cast<size_t>(channels_);
             for (int c = 0; c < channels_; ++c) {
-                const float v00 = static_cast<float>(p00[c]);
-                const float v10 = static_cast<float>(p10[c]);
-                const float v01 = static_cast<float>(p01[c]);
-                const float v11 = static_cast<float>(p11[c]);
+                const auto v00 = static_cast<float>(p00[c]);
+                const auto v10 = static_cast<float>(p10[c]);
+                const auto v01 = static_cast<float>(p01[c]);
+                const auto v11 = static_cast<float>(p11[c]);
                 const float v0 = v00 + (v10 - v00) * tx;
                 const float v1 = v01 + (v11 - v01) * tx;
                 const float v = v0 + (v1 - v0) * ty;

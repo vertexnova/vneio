@@ -429,7 +429,7 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
 }
 
 namespace {
-bool AssimpIsExtensionSupported(const std::string& path) {
+bool assimpIsExtensionSupported(const std::string& path) {
     const auto pos = path.find_last_of('.');
     if (pos == std::string::npos) {
         return false;
@@ -440,7 +440,7 @@ bool AssimpIsExtensionSupported(const std::string& path) {
 }  // namespace
 
 bool AssimpLoader::isExtensionSupported(const std::string& path) const {
-    return AssimpIsExtensionSupported(path);
+    return assimpIsExtensionSupported(path);
 }
 
 }  // namespace mesh

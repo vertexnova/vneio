@@ -16,17 +16,17 @@ namespace vne::mesh {
 
 namespace {
 
-std::string Dirname(const std::string& p) {
+std::string dirname(const std::string& p) {
     std::filesystem::path pp(p);
     return pp.parent_path().string();
 }
 
-std::string Stem(const std::string& p) {
+std::string stem(const std::string& p) {
     std::filesystem::path pp(p);
     return pp.stem().string();
 }
 
-void SetError(std::string* out_error, const std::string& msg) {
+void setError(std::string* out_error, const std::string& msg) {
     if (out_error) {
         *out_error = msg;
     }
@@ -36,17 +36,17 @@ void SetError(std::string* out_error, const std::string& msg) {
 
 bool exportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOptions& opts, std::string* out_error) {
     if (mesh.vertices.empty() || mesh.indices.empty()) {
-        SetError(out_error, "ExportObj: mesh is empty");
+        setError(out_error, "ExportObj: mesh is empty");
         return false;
     }
 
     std::ofstream f(obj_path, std::ios::out | std::ios::trunc);
     if (!f) {
-        SetError(out_error, "ExportObj: cannot open output file");
+        setError(out_error, "ExportObj: cannot open output file");
         return false;
     }
 
-    const std::string base = Stem(obj_path);
+    const std::string base = stem(obj_path);
     const std::string mtl_name = base + ".mtl";
 
     f << "# Exported by vneio\n";
@@ -123,16 +123,16 @@ bool exportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOpt
     }
 
     if (!f) {
-        SetError(out_error, "ExportObj: failed while writing");
+        setError(out_error, "ExportObj: failed while writing");
         return false;
     }
 
     // MTL file
     if (opts.write_mtl) {
-        const std::string mtl_path = (Dirname(obj_path).empty() ? mtl_name : (Dirname(obj_path) + "/" + mtl_name));
+        const std::string mtl_path = (dirname(obj_path).empty() ? mtl_name : (dirname(obj_path) + "/" + mtl_name));
         std::ofstream m(mtl_path, std::ios::out | std::ios::trunc);
         if (!m) {
-            SetError(out_error, "ExportObj: cannot open MTL output file");
+            setError(out_error, "ExportObj: cannot open MTL output file");
             return false;
         }
         m << "# Exported by vneio\n";
@@ -149,7 +149,7 @@ bool exportObj(const std::string& obj_path, const Mesh& mesh, const ObjExportOpt
             m << "\n";
         }
         if (!m) {
-            SetError(out_error, "ExportObj: failed while writing MTL");
+            setError(out_error, "ExportObj: failed while writing MTL");
             return false;
         }
     }

@@ -18,13 +18,13 @@ namespace vne::image {
 
 namespace {
 
-void SetError(std::string* out_error, const std::string& msg) {
+void setError(std::string* out_error, const std::string& msg) {
     if (out_error) {
         *out_error = msg;
     }
 }
 
-std::string PixelTypeToNrrd(VolumePixelType t) {
+std::string pixelTypeToNrrd(VolumePixelType t) {
     switch (t) {
         case VolumePixelType::eUint8:
             return "uint8";
@@ -48,14 +48,9 @@ std::string PixelTypeToNrrd(VolumePixelType t) {
     return "unknown";
 }
 
-std::string Dirname(const std::string& p) {
+std::string dirname(const std::string& p) {
     std::filesystem::path pp(p);
     return pp.parent_path().string();
-}
-
-std::string Filename(const std::string& p) {
-    std::filesystem::path pp(p);
-    return pp.filename().string();
 }
 
 }  // namespace
@@ -65,16 +60,16 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
                const NrrdExportOptions& opts,
                std::string* out_error) {
     if (vol.isEmpty()) {
-        SetError(out_error, "exportNrrd: volume is empty");
+        setError(out_error, "exportNrrd: volume is empty");
         return false;
     }
     if (vol.components != 1) {
-        SetError(out_error, "exportNrrd: only scalar volumes (components==1) are supported");
+        setError(out_error, "exportNrrd: only scalar volumes (components==1) are supported");
         return false;
     }
-    const std::string type = PixelTypeToNrrd(vol.pixel_type);
+    const std::string type = pixelTypeToNrrd(vol.pixel_type);
     if (type == "unknown") {
-        SetError(out_error, "exportNrrd: unsupported pixel type");
+        setError(out_error, "exportNrrd: unsupported pixel type");
         return false;
     }
 
@@ -88,12 +83,12 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
         raw_name = std::filesystem::path(nrrd_or_nhdr_path).stem().string() + ".raw";
     }
     const std::string raw_path =
-        (Dirname(nrrd_or_nhdr_path).empty() ? raw_name : (Dirname(nrrd_or_nhdr_path) + "/" + raw_name));
+        (dirname(nrrd_or_nhdr_path).empty() ? raw_name : (dirname(nrrd_or_nhdr_path) + "/" + raw_name));
 
     // Write header
     std::ofstream h(nrrd_or_nhdr_path, std::ios::binary | std::ios::trunc);
     if (!h) {
-        SetError(out_error, "exportNrrd: cannot open header for writing");
+        setError(out_error, "exportNrrd: cannot open header for writing");
         return false;
     }
     h << "NRRD0005\n";
@@ -118,7 +113,7 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
 
     h << "\n";  // blank line terminator
     if (!h) {
-        SetError(out_error, "exportNrrd: failed while writing header");
+        setError(out_error, "exportNrrd: failed while writing header");
         return false;
     }
 
@@ -126,7 +121,7 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
     if (detached || writing_nhdr) {
         auto st = vne::io::binaryio::writeFile(raw_path, vol.data.data(), bytes);
         if (!st) {
-            SetError(out_error, "exportNrrd: " + st.message);
+            setError(out_error, "exportNrrd: " + st.message);
             return false;
         }
         return true;
@@ -135,7 +130,7 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
     // Attached data: append payload right after header terminator
     h.write(reinterpret_cast<const char*>(vol.data.data()), static_cast<std::streamsize>(bytes));
     if (!h) {
-        SetError(out_error, "exportNrrd: failed while writing payload");
+        setError(out_error, "exportNrrd: failed while writing payload");
         return false;
     }
     return true;

@@ -18,13 +18,13 @@ namespace vne::image {
 
 namespace {
 
-void SetError(std::string* out_error, const std::string& msg) {
+void setError(std::string* out_error, const std::string& msg) {
     if (out_error) {
         *out_error = msg;
     }
 }
 
-std::string PixelTypeToMet(VolumePixelType t) {
+std::string pixelTypeToMet(VolumePixelType t) {
     switch (t) {
         case VolumePixelType::eUint8:
             return "MET_UCHAR";
@@ -48,7 +48,7 @@ std::string PixelTypeToMet(VolumePixelType t) {
     return "MET_UNKNOWN";
 }
 
-std::string Dirname(const std::string& p) {
+std::string dirname(const std::string& p) {
     std::filesystem::path pp(p);
     return pp.parent_path().string();
 }
@@ -60,16 +60,16 @@ bool exportMhd(const std::string& mhd_or_mha_path,
                const MhdExportOptions& opts,
                std::string* out_error) {
     if (vol.isEmpty()) {
-        SetError(out_error, "exportMhd: volume is empty");
+        setError(out_error, "exportMhd: volume is empty");
         return false;
     }
     if (vol.components != 1) {
-        SetError(out_error, "exportMhd: only scalar volumes (components==1) are supported");
+        setError(out_error, "exportMhd: only scalar volumes (components==1) are supported");
         return false;
     }
-    const std::string et = PixelTypeToMet(vol.pixel_type);
+    const std::string et = pixelTypeToMet(vol.pixel_type);
     if (et == "MET_UNKNOWN") {
-        SetError(out_error, "exportMhd: unsupported pixel type");
+        setError(out_error, "exportMhd: unsupported pixel type");
         return false;
     }
 
@@ -81,11 +81,11 @@ bool exportMhd(const std::string& mhd_or_mha_path,
         raw_name = std::filesystem::path(mhd_or_mha_path).stem().string() + ".raw";
     }
     const std::string raw_path =
-        (Dirname(mhd_or_mha_path).empty() ? raw_name : (Dirname(mhd_or_mha_path) + "/" + raw_name));
+        (dirname(mhd_or_mha_path).empty() ? raw_name : (dirname(mhd_or_mha_path) + "/" + raw_name));
 
     std::ofstream h(mhd_or_mha_path, std::ios::binary | std::ios::trunc);
     if (!h) {
-        SetError(out_error, "exportMhd: cannot open header for writing");
+        setError(out_error, "exportMhd: cannot open header for writing");
         return false;
     }
 
@@ -102,7 +102,7 @@ bool exportMhd(const std::string& mhd_or_mha_path,
         const size_t bytes = vol.byteCount();
         h.write(reinterpret_cast<const char*>(vol.data.data()), static_cast<std::streamsize>(bytes));
         if (!h) {
-            SetError(out_error, "exportMhd: failed while writing inline payload");
+            setError(out_error, "exportMhd: failed while writing inline payload");
             return false;
         }
         return true;
@@ -110,14 +110,14 @@ bool exportMhd(const std::string& mhd_or_mha_path,
 
     h << "ElementDataFile = " << raw_name << "\n\n";
     if (!h) {
-        SetError(out_error, "exportMhd: failed while writing header");
+        setError(out_error, "exportMhd: failed while writing header");
         return false;
     }
 
     const size_t bytes = vol.byteCount();
     auto st = vne::io::binaryio::writeFile(raw_path, vol.data.data(), bytes);
     if (!st) {
-        SetError(out_error, "exportMhd: " + st.message);
+        setError(out_error, "exportMhd: " + st.message);
         return false;
     }
     return true;
