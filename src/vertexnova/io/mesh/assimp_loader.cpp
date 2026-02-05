@@ -12,27 +12,7 @@
 #include "vertexnova/io/mesh/assimp_loader.h"
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/load_request.h"
-
-#ifdef VNEIO_NO_LOGGING
-#include <iostream>
-namespace vne {
-struct NullStream {
-    template<typename T>
-    NullStream& operator<<(const T&) {
-        return *this;
-    }
-    NullStream& operator<<(std::ostream& (*)(std::ostream&)) { return *this; }
-};
-inline NullStream null_stream;
-}  // namespace vne
-#define CREATE_VNE_LOGGER_CATEGORY(name)
-#define VNE_LOG_INFO vne::null_stream
-#define VNE_LOG_DEBUG vne::null_stream
-#define VNE_LOG_WARN vne::null_stream
-#define VNE_LOG_ERROR vne::null_stream
-#else
 #include <vertexnova/logging/logging.h>
-#endif
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
