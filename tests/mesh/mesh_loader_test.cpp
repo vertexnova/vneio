@@ -9,8 +9,6 @@
  * ----------------------------------------------------------------------
  */
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
@@ -18,6 +16,9 @@
 #include "vertexnova/io/utils/path_utils.h"
 
 #include <filesystem>
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 using namespace vne::mesh;
 using vne::io::utils::getTestdataPath;

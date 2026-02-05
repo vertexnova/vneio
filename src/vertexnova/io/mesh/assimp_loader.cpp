@@ -12,16 +12,17 @@
 #include "vertexnova/io/mesh/assimp_loader.h"
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/load_request.h"
-#include <vertexnova/logging/logging.h>
+#include "vertexnova/logging/logging.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/version.h>
 #include <assimp/material.h>
-#include <limits>
+
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace {
 

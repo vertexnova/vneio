@@ -15,11 +15,11 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/load_request.h"
+
+#include <string>
 
 namespace vne::dicom {
 

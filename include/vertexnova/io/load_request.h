@@ -8,9 +8,9 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/common/status.h"
+
+#include <string>
 
 namespace vne {
 namespace io {

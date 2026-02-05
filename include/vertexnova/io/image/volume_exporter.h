@@ -10,9 +10,9 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/image/volume.h"
+
+#include <string>
 
 namespace vne::image {
 

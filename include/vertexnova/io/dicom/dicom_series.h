@@ -15,10 +15,10 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/image/volume.h"
+
 #include <string>
 #include <unordered_map>
-
-#include "vertexnova/io/image/volume.h"
 
 namespace vne::dicom {
 

@@ -12,9 +12,10 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/mesh/mesh_loader.h"
+
 #include <memory>
 #include <string>
-#include "mesh_loader.h"
 
 namespace vne {
 namespace mesh {

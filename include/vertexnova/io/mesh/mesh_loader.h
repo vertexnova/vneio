@@ -11,11 +11,11 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/mesh/mesh.h"
+
+#include <string>
 
 namespace vne {
 namespace mesh {

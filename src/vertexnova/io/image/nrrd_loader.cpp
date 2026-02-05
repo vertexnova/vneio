@@ -10,12 +10,13 @@
 #include "vertexnova/io/image/nrrd_loader.h"
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/load_request.h"
-#include <NrrdIO.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <string>
+
+#include <NrrdIO.h>
 
 namespace vne {
 namespace image {

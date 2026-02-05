@@ -4,14 +4,16 @@
  * ----------------------------------------------------------------------
  */
 
-#include <gtest/gtest.h>
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/nrrd_loader.h"
 #include "vertexnova/io/image/mhd_loader.h"
 #include "vertexnova/io/utils/path_utils.h"
+
 #include <filesystem>
 #include <fstream>
 #include <cstdint>
+
+#include <gtest/gtest.h>
 
 using namespace vne::image;
 using vne::io::utils::getTestdataPath;

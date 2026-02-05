@@ -8,9 +8,6 @@
  * ----------------------------------------------------------------------
  */
 
-#include <memory>
-#include <vector>
-
 #include "vertexnova/io/dicom/dicom_loader.h"
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/image/image.h"
@@ -20,6 +17,9 @@
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
+
+#include <memory>
+#include <vector>
 
 namespace vne {
 namespace io {

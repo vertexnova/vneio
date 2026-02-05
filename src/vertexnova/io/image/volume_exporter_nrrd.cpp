@@ -7,11 +7,10 @@
  */
 
 #include "vertexnova/io/image/volume_exporter.h"
+#include "vertexnova/io/common/binary_io.h"
 
 #include <fstream>
 #include <filesystem>
-
-#include "vertexnova/io/common/binary_io.h"
 
 namespace vne::image {
 

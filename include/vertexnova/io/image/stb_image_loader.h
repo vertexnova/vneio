@@ -7,11 +7,11 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/image/image.h"
 #include "vertexnova/io/image/image_loader.h"
 #include "vertexnova/io/load_request.h"
+
+#include <string>
 
 namespace vne {
 namespace image {

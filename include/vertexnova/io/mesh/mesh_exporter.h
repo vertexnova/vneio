@@ -14,9 +14,9 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/mesh/mesh.h"
+
+#include <string>
 
 namespace vne::mesh {
 

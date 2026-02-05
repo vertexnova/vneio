@@ -4,14 +4,16 @@
  * ----------------------------------------------------------------------
  */
 
-#include <gtest/gtest.h>
 #include "vertexnova/io/asset_io.h"
 #include "vertexnova/io/image/nrrd_loader.h"
 #include "vertexnova/io/image/mhd_loader.h"
 #include "vertexnova/io/image/stb_image_loader.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
 #include "vertexnova/io/utils/path_utils.h"
+
 #include <filesystem>
+
+#include <gtest/gtest.h>
 
 using namespace vne::io;
 using vne::io::utils::getTestdataPath;

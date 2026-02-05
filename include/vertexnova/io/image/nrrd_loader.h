@@ -12,11 +12,11 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/volume_loader.h"
 #include "vertexnova/io/load_request.h"
+
+#include <string>
 
 #ifdef VNEIO_USE_NRRDIO
 // nrrdio headers (path may vary: nrrdio.h, NrrdIO.h, or nrrdio/nrrdio.h)

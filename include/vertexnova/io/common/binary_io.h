@@ -8,13 +8,13 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/common/status.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <string>
 #include <vector>
-
-#include "vertexnova/io/common/status.h"
 
 namespace vne {
 namespace io {

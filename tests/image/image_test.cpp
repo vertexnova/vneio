@@ -9,13 +9,14 @@
  * ----------------------------------------------------------------------
  */
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include "vertexnova/io/image/image.h"
 #include "vertexnova/io/utils/path_utils.h"
 
 #include <filesystem>
 #include <cstring>
+
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 using namespace vne::image;
 using vne::io::utils::getTestdataPath;

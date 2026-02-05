@@ -11,11 +11,11 @@
  * ----------------------------------------------------------------------
  */
 
-#include <string>
-
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/volume_loader.h"
 #include "vertexnova/io/load_request.h"
+
+#include <string>
 
 namespace vne {
 namespace image {

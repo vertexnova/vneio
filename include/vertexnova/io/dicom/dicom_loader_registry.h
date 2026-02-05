@@ -14,9 +14,9 @@
  * ----------------------------------------------------------------------
  */
 
-#include <memory>
-
 #include "vertexnova/io/dicom/dicom_loader.h"
+
+#include <memory>
 
 namespace vne::dicom {
 

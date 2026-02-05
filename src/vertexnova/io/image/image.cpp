@@ -11,6 +11,10 @@
 
 #include "vertexnova/io/image/image.h"
 
+#include <algorithm>
+#include <cstring>
+#include <mutex>
+
 /* When using external/stb_image we link to the library; when using FetchContent stb we embed the impl */
 #ifdef VNEIO_STB_HEADER_ONLY
 #define STB_IMAGE_IMPLEMENTATION
@@ -20,17 +24,12 @@
 #include "stb_image_write.h"
 
 // Optional (better) resize. Enable by defining VNEIO_USE_STB_IMAGE_RESIZE.
-// If your build uses stb as header-only, also enable impl below.
 #if defined(VNEIO_USE_STB_IMAGE_RESIZE)
 #ifdef VNEIO_STB_HEADER_ONLY
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #endif
 #include "stb_image_resize.h"
 #endif
-
-#include <algorithm>
-#include <cstring>
-#include <mutex>
 
 namespace vne {
 namespace image {
