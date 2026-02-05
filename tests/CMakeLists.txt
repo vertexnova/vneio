@@ -81,19 +81,13 @@ if(GTEST_INCLUDE_DIRS)
     target_include_directories(TestVneIo SYSTEM PUBLIC ${GTEST_INCLUDE_DIRS})
 endif()
 
-# Link mesh, image, and asset_io libs when built
+# Link asset_io (it PUBLIC-depends on vneio_mesh and vneio_image, so no need to list them again)
 set(VNEIO_TEST_LIBS "")
-if(TARGET vneio_mesh)
-    list(APPEND VNEIO_TEST_LIBS vneio_mesh)
-endif()
-if(TARGET vneio_image)
-    list(APPEND VNEIO_TEST_LIBS vneio_image)
+if(TARGET vneio_asset_io)
+    list(APPEND VNEIO_TEST_LIBS vneio_asset_io)
 endif()
 if(VNEIO_NRRDIO_TARGET)
     list(APPEND VNEIO_TEST_LIBS ${VNEIO_NRRDIO_TARGET})
-endif()
-if(TARGET vneio_asset_io)
-    list(APPEND VNEIO_TEST_LIBS vneio_asset_io)
 endif()
 
 target_link_libraries(TestVneIo
