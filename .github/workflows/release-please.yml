@@ -225,21 +225,21 @@ jobs:
           done
           case "${{ matrix.platform }}" in
             web-emscripten)
-              if ! find "$INSTALL" -type f \( -name '*.wasm' -o -name '*.a' -o -name '*.js' \) | head -1 | grep -q .; then
+              if [ -z "$(find "$INSTALL" -type f \( -name '*.wasm' -o -name '*.a' -o -name '*.js' \) -print -quit)" ]; then
                 echo "::error::Web install: expected some of .wasm / .a / .js under install/"
                 find "$INSTALL" -type f | sort
                 exit 1
               fi
               ;;
             ios-static)
-              if ! find "$INSTALL" -type f -name '*.a' | head -1 | grep -q .; then
+              if [ -z "$(find "$INSTALL" -type f -name '*.a' -print -quit)" ]; then
                 echo "::error::iOS install: expected at least one .a under install/"
                 find "$INSTALL" -type f | sort
                 exit 1
               fi
               ;;
             *)
-              if ! find "$INSTALL" -type f \( -iname '*vneio*' -o -iname '*VneIo*' \) | head -1 | grep -q .; then
+              if [ -z "$(find "$INSTALL" -type f \( -iname '*vneio*' -o -iname '*VneIo*' \) -print -quit)" ]; then
                 echo "::error::No VneIo library artifacts found under install/"
                 find "$INSTALL" -type f | sort
                 exit 1
