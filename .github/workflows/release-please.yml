@@ -62,8 +62,13 @@ jobs:
 
   # --------------------------------------------------------------------
   # Build and publish install-tree tarballs when release-please creates a release.
-  # Contents: CMake install prefix (lib/, include/vertexnova/, cmake/) for VneIo
-  # component libraries (mesh, image, asset_io, optional dicom) + interface target.
+  # Archive layout (CMake --install prefix), typical:
+  #   include/vertexnova/   — public headers
+  #   lib/                  — static/shared libs + cmake/VneIo/*.cmake
+  #   bin/                  — Windows: DLLs when RUNTIME goes to bin (MSVC)
+  #   LICENSE, CHANGELOG.md — repo root files (installed via CMake DESTINATION .)
+  # CI (ci.yml + build-reusable.yml) is unchanged; this job only runs when
+  # release-please creates a GitHub Release after the release PR merge.
   # --------------------------------------------------------------------
   publish:
     name: "Release / publish (${{ matrix.platform }})"
@@ -163,6 +168,12 @@ jobs:
             find "${{ github.workspace }}/install" -type f | sort
             exit 1
           fi
+          for f in LICENSE CHANGELOG.md; do
+            if [[ ! -f "${{ github.workspace }}/install/$f" ]]; then
+              echo "::error::Expected install/$f missing — add install(FILES) in CMakeLists or ensure file exists at repo root."
+              exit 1
+            fi
+          done
 
       - name: Package artifact
         shell: bash

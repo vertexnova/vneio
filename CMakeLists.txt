@@ -530,3 +530,11 @@ install(TARGETS ${VNEIO_INSTALL_TARGETS} vneio
 )
 install(DIRECTORY include/vertexnova/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova FILES_MATCHING PATTERN "*.h")
 install(EXPORT VneIoTargets FILE VneIoTargets.cmake NAMESPACE vne:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/VneIo)
+
+# Ship alongside include/ lib/ in release tarballs (cmake --install prefix).
+if(EXISTS "${VNEIO_ROOT}/LICENSE")
+    install(FILES "${VNEIO_ROOT}/LICENSE" DESTINATION .)
+endif()
+if(EXISTS "${VNEIO_ROOT}/CHANGELOG.md")
+    install(FILES "${VNEIO_ROOT}/CHANGELOG.md" DESTINATION .)
+endif()
