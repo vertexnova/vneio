@@ -39,6 +39,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ "$LIB_TYPE" != "static" && "$LIB_TYPE" != "shared" ]]; then
+  echo "Invalid -l/--lib-type: '$LIB_TYPE' (expected static or shared)"
+  exit 1
+fi
+
 command -v xcodebuild &>/dev/null || { echo "Xcode not found"; exit 1; }
 COMPILER_VERSION=$(clang --version 2>/dev/null | head -n1 | awk '{print $4}' | sed 's/(.*)//')
 [[ -z "$COMPILER_VERSION" ]] && COMPILER_VERSION=$(clang --version 2>/dev/null | head -n1 | awk '{print $3}')

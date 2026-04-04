@@ -26,7 +26,7 @@ namespace vne::image {
  * @struct NrrdExportOptions
  * @brief Options for NRRD export (detached vs attached data file).
  */
-struct NrrdExportOptions {
+struct VNEIO_API NrrdExportOptions {
     bool detached_data = false;      //!< If true, write .nhdr + separate .raw file.
     std::string detached_data_name;  //!< Override name for the raw file (optional).
 };
@@ -35,7 +35,7 @@ struct NrrdExportOptions {
  * @struct MhdExportOptions
  * @brief Options for MHD/MHA export (inline vs separate raw file).
  */
-struct MhdExportOptions {
+struct VNEIO_API MhdExportOptions {
     bool inline_data = false;   //!< If true, write .mha (ElementDataFile = LOCAL).
     std::string raw_data_name;  //!< Name for raw file when inline_data is false.
 };

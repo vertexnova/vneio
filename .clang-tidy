@@ -28,8 +28,8 @@ Checks: >
 
 WarningsAsErrors: ''
 
-# Only analyze project sources under src/ (headers under include/ are not matched).
-HeaderFilterRegex: 'src/vertexnova/.*'
+# Project sources and public headers under vertexnova/.
+HeaderFilterRegex: '(src/vertexnova/.*|include/vertexnova/.*)'
 
 CheckOptions:
   # Classes/Structs: PascalCase (no suffix)

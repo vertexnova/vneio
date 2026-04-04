@@ -180,13 +180,13 @@ TEST_F(ImageTest, FlipVertically) {
     const int width = 4;
     const int height = 4;
     const int channels = 3;
-    std::vector<uint8_t> data(static_cast<size_t>(width * height * channels));
+    const size_t total = static_cast<size_t>(width * height * channels);
+    const size_t lastRowStart = static_cast<size_t>((height - 1) * width * channels);
+    std::vector<uint8_t> data(total);
     for (size_t i = 0; i < static_cast<size_t>(width * channels); ++i) {
         data[i] = 255;
     }
-    for (size_t i = static_cast<size_t>((height - 1) * width * channels);
-         i < static_cast<size_t>(height * width * channels);
-         ++i) {
+    for (size_t i = lastRowStart; i < total; ++i) {
         data[i] = 0;
     }
 

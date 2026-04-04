@@ -30,6 +30,7 @@ log_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 check_prerequisites() {
+    local skip_cmake_check="${1:-false}"
     log_info "Checking prerequisites..."
 
     if [[ ! -f "$PROJECT_ROOT/CMakeLists.txt" ]]; then
@@ -37,9 +38,11 @@ check_prerequisites() {
         exit 1
     fi
 
-    if ! command -v cmake &> /dev/null; then
-        log_error "CMake not found."
-        exit 1
+    if [[ "$skip_cmake_check" != "true" ]]; then
+        if ! command -v cmake &> /dev/null; then
+            log_error "CMake not found."
+            exit 1
+        fi
     fi
 
     if ! command -v doxygen &> /dev/null; then
@@ -60,14 +63,24 @@ check_prerequisites() {
 }
 
 generate_api_docs() {
+    local strict="${1:-0}"
+
     if [[ ! -f "$DOXYFILE_IN" ]]; then
+        if [[ "$strict" == "1" ]]; then
+            log_error "API docs requested but $DOXYFILE_IN is missing."
+            return 1
+        fi
         log_warning "Skipping API docs (no $DOXYFILE_IN). Add Doxygen + ENABLE_DOXYGEN in CMake when ready."
-        return
+        return 0
     fi
 
     if [[ "$DOXYGEN_AVAILABLE" == "false" ]]; then
+        if [[ "$strict" == "1" ]]; then
+            log_error "API docs requested but Doxygen is not installed."
+            return 1
+        fi
         log_warning "Skipping API documentation (Doxygen not installed)"
-        return
+        return 0
     fi
 
     log_info "Generating API documentation (CMake + Doxygen)..."
@@ -84,8 +97,12 @@ generate_api_docs() {
     elif cmake --build "$BUILD_DIR" --target help 2>/dev/null | grep -q doc_doxygen; then
         target="doc_doxygen"
     else
+        if [[ "$strict" == "1" ]]; then
+            log_error "No vneio_doc_doxygen or doc_doxygen CMake target (add Doxygen to the project)."
+            return 1
+        fi
         log_warning "No vneio_doc_doxygen target found; skipping build step"
-        return
+        return 0
     fi
 
     cmake --build "$BUILD_DIR" --target "$target"
@@ -93,8 +110,13 @@ generate_api_docs() {
     if [[ -f "$DOXYGEN_HTML/index.html" ]]; then
         log_success "API documentation: $DOXYGEN_HTML/index.html"
     else
+        if [[ "$strict" == "1" ]]; then
+            log_error "Expected HTML not found at $DOXYGEN_HTML/index.html"
+            return 1
+        fi
         log_warning "Expected HTML not found at $DOXYGEN_HTML/index.html"
     fi
+    return 0
 }
 
 validate_links() {
@@ -172,8 +194,8 @@ show_help() {
 
 main() {
     log_info "VneIo documentation..."
-    check_prerequisites
-    generate_api_docs
+    check_prerequisites false
+    generate_api_docs 0
     if [[ -d "$DOCS_DIR" ]] || [[ -f "$PROJECT_ROOT/README.md" ]]; then
         validate_links
     fi
@@ -187,11 +209,11 @@ case "${1:-}" in
         exit 0
         ;;
     --api-only)
-        check_prerequisites
-        generate_api_docs
+        check_prerequisites false
+        generate_api_docs 1 || exit 1
         ;;
     --validate)
-        check_prerequisites
+        check_prerequisites true
         validate_links
         generate_coverage_report
         ;;

@@ -76,9 +76,34 @@ echo "$PLATFORM :: $COMPILER-${COMPILER_VERSION}"
 PROJECT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 BUILD_DIR="$PROJECT_ROOT/build/${LIB_TYPE}/${BUILD_TYPE}/build-windows-$COMPILER-${COMPILER_VERSION}"
 
+# Prefer VS year from install dirs (Git Bash paths); else Ninja + cl.
+pick_cmake_generator() {
+  if [ -d "/c/Program Files/Microsoft Visual Studio/2022" ]; then
+    echo "vs2022"
+  elif [ -d "/c/Program Files/Microsoft Visual Studio/2019" ]; then
+    echo "vs2019"
+  else
+    echo "ninja"
+  fi
+}
+
+CMAKE_BACKEND=$(pick_cmake_generator)
+
 build_cmake_command() {
-  cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DVNEIO_LIB_TYPE="$LIB_TYPE" \
-    -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DVNEIO_BUILD_TESTS=ON "$PROJECT_ROOT"
+  case "$CMAKE_BACKEND" in
+    vs2022)
+      cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DVNEIO_LIB_TYPE="$LIB_TYPE" \
+        -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DVNEIO_BUILD_TESTS=ON "$PROJECT_ROOT"
+      ;;
+    vs2019)
+      cmake -G "Visual Studio 16 2019" -A x64 -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DVNEIO_LIB_TYPE="$LIB_TYPE" \
+        -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DVNEIO_BUILD_TESTS=ON "$PROJECT_ROOT"
+      ;;
+    *)
+      cmake -G "Ninja" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DVNEIO_LIB_TYPE="$LIB_TYPE" \
+        -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DVNEIO_BUILD_TESTS=ON "$PROJECT_ROOT"
+      ;;
+  esac
 }
 
 BUILD_COMMAND="cmake --build . --config $BUILD_TYPE --parallel $JOBS"

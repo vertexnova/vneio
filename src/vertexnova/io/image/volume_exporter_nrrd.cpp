@@ -16,11 +16,10 @@ namespace vne::image {
 
 namespace {
 
-// Row-major 3x3 direction matrix: indices for second row (col 2) and third row (cols 0–2).
-constexpr int kDirR1C2 = 5;
-constexpr int kDirR2C0 = 6;
-constexpr int kDirR2C1 = 7;
-constexpr int kDirR2C2 = 8;
+// Row-major 3x3 direction matrix: dirIdx(row, col) with 0-based row/col.
+constexpr int dirIdx(int row, int col) {
+    return row * 3 + col;
+}
 
 void setError(std::string* out_error, const std::string& msg) {
     if (out_error) {
@@ -104,12 +103,12 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
     h << "spacings: " << vol.spacing[0] << " " << vol.spacing[1] << " " << vol.spacing[2] << "\n";
     h << "space origin: (" << vol.origin[0] << "," << vol.origin[1] << "," << vol.origin[2] << ")\n";
     // direction cosines (optional)
-    h << "space directions: (" << vol.direction[0] * vol.spacing[0] << "," << vol.direction[1] * vol.spacing[0] << ","
-      << vol.direction[2] * vol.spacing[0] << ") "
-      << "(" << vol.direction[3] * vol.spacing[1] << "," << vol.direction[4] * vol.spacing[1] << ","
-      << vol.direction[kDirR1C2] * vol.spacing[1] << ") "
-      << "(" << vol.direction[kDirR2C0] * vol.spacing[2] << "," << vol.direction[kDirR2C1] * vol.spacing[2] << ","
-      << vol.direction[kDirR2C2] * vol.spacing[2] << ")\n";
+    h << "space directions: (" << vol.direction[dirIdx(0, 0)] * vol.spacing[0] << ","
+      << vol.direction[dirIdx(0, 1)] * vol.spacing[0] << "," << vol.direction[dirIdx(0, 2)] * vol.spacing[0] << ") "
+      << "(" << vol.direction[dirIdx(1, 0)] * vol.spacing[1] << ","
+      << vol.direction[dirIdx(1, 1)] * vol.spacing[1] << "," << vol.direction[dirIdx(1, 2)] * vol.spacing[1] << ") "
+      << "(" << vol.direction[dirIdx(2, 0)] * vol.spacing[2] << ","
+      << vol.direction[dirIdx(2, 1)] * vol.spacing[2] << "," << vol.direction[dirIdx(2, 2)] * vol.spacing[2] << ")\n";
 
     if (detached || writing_nhdr) {
         h << "data file: " << raw_name << "\n";

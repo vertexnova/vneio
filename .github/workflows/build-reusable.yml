@@ -70,7 +70,7 @@ permissions:
 
 jobs:
   build-and-test:
-    name: "Build + Test (${{ inputs.platform }}, ${{ inputs.build_type }}${{ inputs.lib_type && format(', {0}', inputs.lib_type) || '' }})"
+    name: "Build + Test (${{ inputs.platform }}, ${{ inputs.build_type }}${{ format(', {0}', inputs.lib_type || 'shared') }})"
     runs-on: ${{ inputs.runner }}
 
     steps:
@@ -81,8 +81,7 @@ jobs:
         with:
           submodules: recursive
 
-      # Build tree: build/<shared|static>/<Release|Debug>/... (Unix Makefiles/Ninja).
-      # Windows keeps build/<shared|static>/ so Visual Studio multi-config can own Debug/Release inside.
+      # Build tree: build/<shared|static>/<Release|Debug>/... (all platforms; isolates cache per config).
       - name: Set effective build type and cache key
         shell: bash
         env:
@@ -105,11 +104,7 @@ jobs:
               exit 1
           fi
           echo "CACHE_LIB_TYPE=$EFFECTIVE_LIB_TYPE" >> "$GITHUB_ENV"
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-              echo "BUILD_DIR=build/$EFFECTIVE_LIB_TYPE" >> "$GITHUB_ENV"
-          else
-              echo "BUILD_DIR=build/$EFFECTIVE_LIB_TYPE/$BUILD_TYPE" >> "$GITHUB_ENV"
-          fi
+          echo "BUILD_DIR=build/$EFFECTIVE_LIB_TYPE/$BUILD_TYPE" >> "$GITHUB_ENV"
 
       - name: Cache CMake build
         if: ${{ !inputs.enable_coverage }}
@@ -166,7 +161,14 @@ jobs:
 
           COMPILER_FLAGS=""
           if [[ -n "$C_COMPILER" ]]; then
-              COMPILER_FLAGS="-DCMAKE_C_COMPILER=$C_COMPILER -DCMAKE_CXX_COMPILER=$CPP_COMPILER"
+              COMPILER_FLAGS="-DCMAKE_C_COMPILER=$C_COMPILER"
+          fi
+          if [[ -n "$CPP_COMPILER" ]]; then
+              if [[ -n "$COMPILER_FLAGS" ]]; then
+                  COMPILER_FLAGS+=" -DCMAKE_CXX_COMPILER=$CPP_COMPILER"
+              else
+                  COMPILER_FLAGS="-DCMAKE_CXX_COMPILER=$CPP_COMPILER"
+              fi
           fi
 
           if [[ "$CACHE_LIB_TYPE" == "static" ]]; then
@@ -241,14 +243,14 @@ jobs:
         if: always()
         with:
           report_paths: "${{ env.BUILD_DIR }}/test-results.xml"
-          check_name: "Tests (${{ inputs.platform }}, ${{ env.EFFECTIVE_BUILD_TYPE }}${{ inputs.lib_type && format(', {0}', inputs.lib_type) || '' }})"
+          check_name: "Tests (${{ inputs.platform }}, ${{ env.EFFECTIVE_BUILD_TYPE }}${{ format(', {0}', inputs.lib_type || 'shared') }})"
           fail_on_failure: true
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results-${{ inputs.platform }}-${{ env.EFFECTIVE_BUILD_TYPE }}${{ inputs.lib_type && format('-{0}', inputs.lib_type) || '' }}
+          name: test-results-${{ inputs.platform }}-${{ env.EFFECTIVE_BUILD_TYPE }}-${{ inputs.lib_type || 'shared' }}
           path: ${{ env.BUILD_DIR }}/test-results.xml
           retention-days: 7
 

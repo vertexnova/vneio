@@ -3,8 +3,8 @@
 Clang formatter for C/C++. Same scope as CI (src, include, tests; examples if present).
 
 Usage:
-    python scripts/clang_formatter.py all --dry-run
-    python scripts/clang_formatter.py src
+    python scripts/clang_formatter.py --folder all --dry-run
+    python scripts/clang_formatter.py --folder src
     python scripts/clang_formatter.py --file path/to/file.cpp
 """
 
@@ -115,11 +115,13 @@ def main():
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
-        "folder",
+        "--folder",
+        metavar="PATH",
         nargs="?",
-        help='Folder to format, or "all" for src, include, examples (if present), tests',
+        const="all",
+        help='Folder to format recursively; omit PATH for CI dirs (src, include, examples if present, tests)',
     )
-    group.add_argument("--file", help="Specific file to format")
+    group.add_argument("--file", metavar="PATH", help="Specific file to format")
 
     parser.add_argument("--dry-run", action="store_true", help="Check only (CI-style)")
     parser.add_argument("--verbose", action="store_true")
@@ -146,7 +148,8 @@ def main():
             sys.exit(1)
         source_files = [str(target_file)]
     else:
-        if (args.folder or "").lower() in ("all", "ci"):
+        folder_arg = args.folder if args.folder is not None else "all"
+        if folder_arg.lower() in ("all", "ci"):
             ci_dirs = ("src", "include", "examples", "tests")
             source_files = []
             for d in ci_dirs:
@@ -156,7 +159,7 @@ def main():
             source_files = sorted(set(source_files))
             print(f"Target: CI dirs — {len(source_files)} files")
         else:
-            target_folder = (project_root / args.folder).resolve()
+            target_folder = (project_root / folder_arg).resolve()
             if not target_folder.is_dir():
                 print(f"Error: Target folder not found at {target_folder}")
                 sys.exit(1)

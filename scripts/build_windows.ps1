@@ -26,9 +26,14 @@ $ProjectRoot = Split-Path -Parent $ScriptDir
 $Generator = ""
 $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (Test-Path $vsWhere) {
-    $vsPath = & $vsWhere -latest -property installationPath 2>$null
-    if ($vsPath) {
-        $Generator = "-G `"Visual Studio 17 2022`" -A x64"
+    $installVer = & $vsWhere -latest -property installationVersion 2>$null
+    if ($installVer -match '^(\d+)\.') {
+        $major = [int]$Matches[1]
+        switch ($major) {
+            17 { $Generator = '-G "Visual Studio 17 2022" -A x64' }
+            16 { $Generator = '-G "Visual Studio 16 2019" -A x64' }
+            default { }
+        }
     }
 }
 if (-not $Generator) {

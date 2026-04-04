@@ -44,21 +44,43 @@ def find_visual_studio() -> Optional[str]:
     return None
 
 
+def vs_install_generation(vs_path: Optional[str]) -> Optional[str]:
+    if not vs_path:
+        return None
+    if "2022" in vs_path:
+        return "2022"
+    if "2019" in vs_path:
+        return "2019"
+    return None
+
+
 def get_compiler_version() -> str:
     try:
-        result = subprocess.run(["cl"], capture_output=True, text=True, stderr=subprocess.STDOUT)
+        result = subprocess.run(
+            ["cl"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
         match = re.search(r"Version (\d+\.\d+\.\d+)", result.stdout or "")
         if match:
             return match.group(1)
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except (subprocess.CalledProcessError, FileNotFoundError, ValueError):
         pass
     vs_path = find_visual_studio()
-    if vs_path:
-        if "2022" in vs_path:
-            return "2022"
-        if "2019" in vs_path:
-            return "2019"
+    gen = vs_install_generation(vs_path)
+    if gen:
+        return gen
     return "unknown"
+
+
+def cmake_generator_args(vs_gen: Optional[str]) -> List[str]:
+    if vs_gen == "2022":
+        return ["-G", "Visual Studio 17 2022", "-A", "x64"]
+    if vs_gen == "2019":
+        return ["-G", "Visual Studio 16 2019", "-A", "x64"]
+    return ["-G", "Ninja", "-DCMAKE_C_COMPILER=cl", "-DCMAKE_CXX_COMPILER=cl"]
 
 
 def check_visual_studio_env() -> bool:
@@ -123,20 +145,13 @@ def interactive_mode(config: BuildConfig):
         sys.exit(0)
 
 
-def build_cmake_command(project_root: Path, build_type: str, lib_type: str) -> List[str]:
-    return [
-        "cmake",
-        "-G",
-        "Visual Studio 17 2022",
-        "-A",
-        "x64",
-        "-DCMAKE_BUILD_TYPE=" + build_type,
-        "-DCMAKE_C_COMPILER=cl",
-        "-DCMAKE_CXX_COMPILER=cl",
-        "-DVNEIO_LIB_TYPE=" + lib_type,
-        "-DVNEIO_BUILD_TESTS=ON",
-        str(project_root),
-    ]
+def build_cmake_command(project_root: Path, build_type: str, lib_type: str, vs_gen: Optional[str]) -> List[str]:
+    args = ["cmake"] + cmake_generator_args(vs_gen)
+    args.append("-DCMAKE_BUILD_TYPE=" + build_type)
+    if vs_gen in ("2022", "2019"):
+        args.extend(["-DCMAKE_C_COMPILER=cl", "-DCMAKE_CXX_COMPILER=cl"])
+    args.extend(["-DVNEIO_LIB_TYPE=" + lib_type, "-DVNEIO_BUILD_TESTS=ON", str(project_root)])
+    return args
 
 
 def clean_build_dir(build_dir: Path):
@@ -149,10 +164,16 @@ def ensure_build_dir(build_dir: Path):
     build_dir.mkdir(parents=True, exist_ok=True)
 
 
-def configure_project(build_dir: Path, project_root: Path, build_type: str, lib_type: str) -> bool:
+def configure_project(
+    build_dir: Path, project_root: Path, build_type: str, lib_type: str, vs_gen: Optional[str]
+) -> bool:
     print("Configuring project...")
     try:
-        subprocess.run(build_cmake_command(project_root, build_type, lib_type), cwd=build_dir, check=True)
+        subprocess.run(
+            build_cmake_command(project_root, build_type, lib_type, vs_gen),
+            cwd=build_dir,
+            check=True,
+        )
         return True
     except subprocess.CalledProcessError:
         print("Error: CMake configuration failed")
@@ -226,6 +247,8 @@ def main():
         print("Error: CMake not found in PATH")
         sys.exit(1)
 
+    vs_path = find_visual_studio()
+    vs_gen = vs_install_generation(vs_path)
     compiler_version = get_compiler_version()
     print(f"{config.platform} :: {config.compiler}-{compiler_version} ({config.build_type}, {config.lib_type})")
 
@@ -245,13 +268,14 @@ def main():
         ensure_build_dir(build_dir)
 
     if config.action in ["configure", "build", "configure_and_build", "test"]:
-        if not configure_project(build_dir, project_root, config.build_type, config.lib_type):
+        if not configure_project(build_dir, project_root, config.build_type, config.lib_type, vs_gen):
             sys.exit(1)
     if config.action in ["build", "configure_and_build", "test"]:
         if not build_project(build_dir, config.build_type, config.jobs):
             sys.exit(1)
     if config.action == "test":
-        run_tests(build_dir, config.build_type)
+        if not run_tests(build_dir, config.build_type):
+            sys.exit(1)
 
     print("\n=== Build completed successfully ===")
     print(f"Build directory: {build_dir}")

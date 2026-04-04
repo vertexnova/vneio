@@ -53,8 +53,7 @@ else()
     set(_VNEIO_LIB_KIND STATIC)
 endif()
 
-# CI and recommended local layout (Ninja/Make/macOS/Linux): cmake -B build/<static|shared>/<Release|Debug>
-# Windows Visual Studio jobs use -B build/<static|shared> (multi-config owns Debug/Release inside).
+# CI and recommended local layout: cmake -B build/<static|shared>/<Release|Debug> (all platforms).
 message(STATUS "VneIo: VNEIO_LIB_TYPE=${VNEIO_LIB_TYPE} — typical -B build/${VNEIO_LIB_TYPE}/Release or .../Debug")
 
 function(vneio_target_apply_shared_export target_name)
@@ -65,6 +64,11 @@ function(vneio_target_apply_shared_export target_name)
         )
         if(MSVC)
             target_compile_options(${target_name} PRIVATE /wd4251 /wd4275)
+        else()
+            set_target_properties(${target_name} PROPERTIES
+                CXX_VISIBILITY_PRESET hidden
+                VISIBILITY_INLINES_HIDDEN ON
+            )
         endif()
     endif()
 endfunction()

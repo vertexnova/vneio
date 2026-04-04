@@ -8,7 +8,7 @@ Platform scripts use CMake binary directories under **`build/<lib_type>/<build_t
 
 `build/shared/Release/build-linux-gcc-14.2.0/`
 
-Windows (Visual Studio multi-config) uses **`build/<lib_type>/`** from the PowerShell script’s perspective, with **Debug/Release** inside that tree from the generator.
+**Windows paths:** CI and **`build_windows.sh`** / **`build_windows.py`** use the same pattern: **`build/<lib_type>/<build_type>/…`** (for example `build/shared/Release/build-windows-cl-…`). **`build_windows.ps1`** also uses **`build\<lib_type>\<BuildType>\build-windows-msvc`**; with a Visual Studio generator, CMake still places per-configuration outputs under the usual **`Release`/`Debug`** subfolders inside that binary directory. Prefer separate **`build_type`** directories for cache and artifact isolation.
 
 ### Linux (`build_linux.sh`)
 
@@ -83,12 +83,12 @@ Defaults: **`lib_type=static`**, **`build/static/<type>/…`**, **`VNEIO_BUILD_T
 Uses **`clang-format-17`** when available (same as CI), else `clang-format`. **`--dry-run`** exits non-zero if anything would change.
 
 ```bash
-python3 scripts/clang_formatter.py all --dry-run
-python3 scripts/clang_formatter.py src include tests
+python3 scripts/clang_formatter.py --folder all --dry-run
+python3 scripts/clang_formatter.py --folder src
 python3 scripts/clang_formatter.py --file src/vertexnova/io/asset_io.cpp
 ```
 
-`all` scans **`src`**, **`include`**, **`examples`** (if present), **`tests`**.
+**`--folder`** with no path (or **`--folder all`**) scans **`src`**, **`include`**, **`examples`** (if present), **`tests`**.
 
 ## Documentation (`generate-docs.sh`)
 

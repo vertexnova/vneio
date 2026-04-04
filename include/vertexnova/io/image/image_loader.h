@@ -36,7 +36,7 @@ class VNEIO_API IImageLoader : public vne::io::IAssetLoader {
      * @param request Load request (uri = file path, hint_format optional)
      * @return Load result with Image on success, Status on failure
      */
-    virtual vne::io::LoadResult<Image> loadImage(const vne::io::LoadRequest& request) = 0;
+    [[nodiscard]] virtual vne::io::LoadResult<Image> loadImage(const vne::io::LoadRequest& request) = 0;
 };
 
 }  // namespace image

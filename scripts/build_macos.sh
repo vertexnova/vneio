@@ -40,6 +40,85 @@ usage() {
   exit 1
 }
 
+interactive_mode() {
+  echo "=== VneIo macOS Interactive Build Configuration ==="
+  echo ""
+  echo "Detected Platform: $PLATFORM (Clang)"
+  echo ""
+  echo "Select Build Type:"
+  echo "1) Debug (default)"
+  echo "2) Release"
+  echo "3) RelWithDebInfo"
+  echo "4) MinSizeRel"
+  read -r -p "Enter choice (1-4) [1]: " build_choice
+  case $build_choice in
+    2) BUILD_TYPE="Release" ;;
+    3) BUILD_TYPE="RelWithDebInfo" ;;
+    4) BUILD_TYPE="MinSizeRel" ;;
+    *) BUILD_TYPE="Debug" ;;
+  esac
+
+  echo ""
+  echo "Select library type:"
+  echo "1) shared (default)"
+  echo "2) static"
+  read -r -p "Enter choice (1-2) [1]: " lib_choice
+  case $lib_choice in
+    2) LIB_TYPE="static" ;;
+    *) LIB_TYPE="shared" ;;
+  esac
+
+  echo ""
+  echo "Select Xcode integration:"
+  echo "1) Unix Makefiles only (default)"
+  echo "2) Also generate Xcode (-xcode)"
+  echo "3) Xcode only (-xcode-only)"
+  read -r -p "Enter choice (1-3) [1]: " xcode_choice
+  case $xcode_choice in
+    2) GENERATE_XCODE=true; XCODE_ONLY=false ;;
+    3) GENERATE_XCODE=true; XCODE_ONLY=true ;;
+    *) GENERATE_XCODE=false; XCODE_ONLY=false ;;
+  esac
+
+  echo ""
+  echo "Select Action:"
+  echo "1) Configure only"
+  echo "2) Configure and build (default)"
+  echo "3) Configure, build, and test"
+  read -r -p "Enter choice (1-3) [2]: " action_choice
+  case $action_choice in
+    1) ACTION="configure" ;;
+    3) ACTION="test" ;;
+    *) ACTION="configure_and_build" ;;
+  esac
+
+  echo ""
+  read -r -p "Clean build directory before starting? (y/N): " clean_choice
+  if [[ $clean_choice =~ ^[Yy]$ ]]; then
+    CLEAN_BUILD=true
+  fi
+
+  read -r -p "Parallel jobs [$JOBS]: " jobs_choice
+  if [[ -n "$jobs_choice" && "$jobs_choice" =~ ^[0-9]+$ ]]; then
+    JOBS="$jobs_choice"
+  fi
+
+  echo ""
+  echo "=== Configuration Summary ==="
+  echo "Build Type: $BUILD_TYPE"
+  echo "Library Type: $LIB_TYPE"
+  echo "Xcode: GENERATE_XCODE=$GENERATE_XCODE XCODE_ONLY=$XCODE_ONLY"
+  echo "Action: $ACTION"
+  echo "Clean Build: $CLEAN_BUILD"
+  echo "Jobs: $JOBS"
+  echo ""
+  read -r -p "Proceed with this configuration? (Y/n): " proceed
+  if [[ $proceed =~ ^[Nn]$ ]]; then
+    echo "Build cancelled."
+    exit 0
+  fi
+}
+
 BUILD_TYPE="Debug"
 ACTION="configure_and_build"
 LIB_TYPE="shared"
@@ -62,6 +141,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [ "$INTERACTIVE_MODE" = true ]; then
+  interactive_mode
+fi
+
 [ "$XCODE_ONLY" = true ] && ACTION="xcode"
 [ "$GENERATE_XCODE" = true ] && [ "$ACTION" = "configure_and_build" ] && ACTION="xcode_build"
 { [ "$ACTION" = "xcode" ] || [ "$ACTION" = "xcode_build" ]; } && GENERATE_XCODE=true
@@ -81,25 +164,31 @@ fi
 COMMON_FLAGS="-DCMAKE_BUILD_TYPE=$BUILD_TYPE -DVNEIO_LIB_TYPE=$LIB_TYPE -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DVNEIO_BUILD_TESTS=ON -DVNEIO_BUILD_EXAMPLES=OFF -DENABLE_IPO=OFF"
 
 if [ "$GENERATE_XCODE" = true ]; then
-  CONFIGURE_CMD="cmake -G Xcode $COMMON_FLAGS $PROJECT_ROOT"
   BUILD_CMD="xcodebuild -project vneio.xcodeproj -configuration $BUILD_TYPE -parallelizeTargets -jobs $JOBS"
   TEST_CMD="xcodebuild -project vneio.xcodeproj -configuration $BUILD_TYPE -target RUN_TESTS"
 else
-  CONFIGURE_CMD="cmake $COMMON_FLAGS $PROJECT_ROOT"
   BUILD_CMD="make -j$JOBS"
   TEST_CMD="ctest --output-on-failure"
 fi
+
+run_configure() {
+  if [ "$GENERATE_XCODE" = true ]; then
+    cmake -G Xcode $COMMON_FLAGS "$PROJECT_ROOT"
+  else
+    cmake $COMMON_FLAGS "$PROJECT_ROOT"
+  fi
+}
 
 clean_build() { rm -rf "$BUILD_DIR"; mkdir -p "$BUILD_DIR"; cd "$BUILD_DIR" || exit; }
 ensure_build_dir() { [ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"; cd "$BUILD_DIR" || exit; }
 
 case $ACTION in
-  configure) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval "$CONFIGURE_CMD" ;;
-  build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval "$CONFIGURE_CMD"; eval "$BUILD_CMD" ;;
-  configure_and_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval "$CONFIGURE_CMD"; eval "$BUILD_CMD" ;;
-  test) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval "$CONFIGURE_CMD"; eval "$BUILD_CMD"; eval "$TEST_CMD" ;;
-  xcode) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval "$CONFIGURE_CMD"; echo "Xcode project: $BUILD_DIR (vneio.xcodeproj)" ;;
-  xcode_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; eval "$CONFIGURE_CMD"; eval "$BUILD_CMD"; echo "Xcode build done: $BUILD_DIR" ;;
+  configure) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure ;;
+  build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; eval "$BUILD_CMD" ;;
+  configure_and_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; eval "$BUILD_CMD" ;;
+  test) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; eval "$BUILD_CMD"; eval "$TEST_CMD" ;;
+  xcode) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; echo "Xcode project: $BUILD_DIR (vneio.xcodeproj)" ;;
+  xcode_build) [ "$CLEAN_BUILD" = true ] && clean_build || ensure_build_dir; run_configure; eval "$BUILD_CMD"; echo "Xcode build done: $BUILD_DIR" ;;
   *) usage ;;
 esac
 
