@@ -10,6 +10,8 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
+
 #include <cstdint>
 #include <cstddef>
 #include <vector>
@@ -81,8 +83,8 @@ constexpr int kBytesPerFloat64 = 8;
  * origin, pixel type, and contiguous raw buffer. Used for multiplanar
  * reformats and window/level in viewers.
  */
-struct Volume {
-    int dims[3] = {0, 0, 0};   //!< Width (x), height (y), depth (z).
+struct VNEIO_API Volume {
+    int dims[3] = {0, 0, 0};                //!< Width (x), height (y), depth (z).
     float spacing[3] = {1.0f, 1.0f, 1.0f};  //!< Voxel spacing (e.g. mm).
     float origin[3] = {0.0f, 0.0f, 0.0f};   //!< World-space origin.
     float direction[kVolumeDirectionMatrixElements] = {
@@ -97,8 +99,8 @@ struct Volume {
         1.0f,
     };
     VolumePixelType pixel_type = VolumePixelType::eUint8;  //!< Scalar type of voxels.
-    int components = 1;   //!< Components per voxel (1 for scalar).
-    std::vector<uint8_t> data;  //!< Contiguous voxel data.
+    int components = 1;                                    //!< Components per voxel (1 for scalar).
+    std::vector<uint8_t> data;                             //!< Contiguous voxel data.
 
     [[nodiscard]] int width() const { return dims[0]; }
     [[nodiscard]] int height() const { return dims[1]; }
@@ -112,7 +114,9 @@ struct Volume {
         return voxelCount() * static_cast<size_t>(components) * static_cast<size_t>(bytesPerVoxel(pixel_type));
     }
 
-    [[nodiscard]] bool isEmpty() const { return dims[0] <= 0 || dims[1] <= 0 || dims[2] <= 0 || data.size() < byteCount(); }
+    [[nodiscard]] bool isEmpty() const {
+        return dims[0] <= 0 || dims[1] <= 0 || dims[2] <= 0 || data.size() < byteCount();
+    }
 
     [[nodiscard]] const uint8_t* getData() const { return data.data(); }
     [[nodiscard]] uint8_t* getData() { return data.data(); }

@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/volume_loader.h"
 #include "vertexnova/io/load_request.h"
@@ -31,7 +32,7 @@ namespace image {
  * Reads NDims, DimSize, ElementType, ElementSpacing, ElementDataFile
  * (or inline data in MHA). ElementType: MET_UCHAR, MET_USHORT, MET_FLOAT.
  */
-class MhdLoader : public IVolumeLoader {
+class VNEIO_API MhdLoader : public IVolumeLoader {
    public:
     MhdLoader() = default;
 

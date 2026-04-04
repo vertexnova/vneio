@@ -10,6 +10,8 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
+
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -25,7 +27,7 @@ namespace vne::mesh {
  * @struct VertexAttributes
  * @brief Vertex structure with position, normal, tangent, bitangent, UV and optional barycentric coordinates.
  */
-struct VertexAttributes {
+struct VNEIO_API VertexAttributes {
     float position[3];     //!< 3D position coordinates
     float normal[3];       //!< Normal vector
     float tangent[3];      //!< Tangent vector for normal mapping
@@ -38,7 +40,7 @@ struct VertexAttributes {
  * @struct Material
  * @brief Material slot containing name, base color, and optional texture path.
  */
-struct Material {
+struct VNEIO_API Material {
     std::string name;                    //!< Material name
     std::string base_color_tex;          //!< Base color texture file path (optional)
     float base_color[4] = {1, 1, 1, 1};  //!< Base color RGBA values
@@ -48,7 +50,7 @@ struct Material {
  * @struct Submesh
  * @brief Submesh defining a range of indices and material index.
  */
-struct Submesh {
+struct VNEIO_API Submesh {
     uint32_t first_index = 0;     //!< First index in the index buffer
     uint32_t index_count = 0;     //!< Number of indices for this submesh
     uint32_t material_index = 0;  //!< Index into the materials array
@@ -60,7 +62,7 @@ struct Submesh {
  *
  * Supports multi-material meshes with vertex attributes for modern rendering pipelines.
  */
-struct Mesh {
+struct VNEIO_API Mesh {
     std::string name;                        //!< Mesh name/path
     std::vector<VertexAttributes> vertices;  //!< Vertex data
     std::vector<uint32_t> indices;           //!< Index data (32-bit)

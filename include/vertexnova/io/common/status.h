@@ -10,6 +10,8 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
+
 #include <string>
 #include <utility>
 
@@ -26,31 +28,31 @@ namespace io {
  * @brief Stable error codes for load and export operations.
  */
 enum class ErrorCode : int {
-    eOk = 0,            //!< Success.
-    eUnknown,           //!< Unknown error.
-    eInvalidArgument,   //!< Invalid parameter.
-    eNotImplemented,    //!< Feature not implemented.
-    eOutOfMemory,       //!< Allocation failed.
-    eFileNotFound,      //!< File does not exist.
-    eFileOpenFailed,    //!< Failed to open file.
-    eFileReadFailed,    //!< Read error.
-    eFileWriteFailed,   //!< Write error.
-    ePathInvalid,       //!< Invalid path.
-    eUnsupportedFormat, //!< Format not supported.
-    eUnsupportedFeature,//!< Feature not supported.
-    eParseError,        //!< Parse failed.
-    eDataCorrupt,       //!< Corrupt data.
-    eDataTruncated,     //!< Truncated or incomplete data.
-    eInvalidDimensions, //!< Invalid dimensions.
-    eInvalidPixelType,  //!< Unsupported pixel type.
-    eThirdPartyError,   //!< Error from third-party library.
+    eOk = 0,              //!< Success.
+    eUnknown,             //!< Unknown error.
+    eInvalidArgument,     //!< Invalid parameter.
+    eNotImplemented,      //!< Feature not implemented.
+    eOutOfMemory,         //!< Allocation failed.
+    eFileNotFound,        //!< File does not exist.
+    eFileOpenFailed,      //!< Failed to open file.
+    eFileReadFailed,      //!< Read error.
+    eFileWriteFailed,     //!< Write error.
+    ePathInvalid,         //!< Invalid path.
+    eUnsupportedFormat,   //!< Format not supported.
+    eUnsupportedFeature,  //!< Feature not supported.
+    eParseError,          //!< Parse failed.
+    eDataCorrupt,         //!< Corrupt data.
+    eDataTruncated,       //!< Truncated or incomplete data.
+    eInvalidDimensions,   //!< Invalid dimensions.
+    eInvalidPixelType,    //!< Unsupported pixel type.
+    eThirdPartyError,     //!< Error from third-party library.
 };
 
 /**
  * @struct Status
  * @brief Result of an operation: error code plus optional message, path, subsystem.
  */
-struct Status {
+struct VNEIO_API Status {
     ErrorCode code = ErrorCode::eOk;  //!< Error code.
     std::string message;              //!< Human-readable message.
     std::string path;                 //!< Optional file or resource path.
@@ -87,8 +89,8 @@ struct Status {
  */
 template<typename T>
 struct Result {
-    T value{};       //!< The loaded or computed value.
-    Status status{}; //!< Status of the operation.
+    T value{};        //!< The loaded or computed value.
+    Status status{};  //!< Status of the operation.
     /** @brief Returns true if the operation succeeded. */
     [[nodiscard]] constexpr bool ok() const noexcept { return status.ok(); }
     explicit constexpr operator bool() const noexcept { return ok(); }

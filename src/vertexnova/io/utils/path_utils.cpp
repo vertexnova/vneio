@@ -19,9 +19,9 @@ namespace utils {
 
 std::string getTestdataRoot() {
 #ifdef VNEIO_TESTDATA_DIR
-    return std::string(VNEIO_TESTDATA_DIR);
+    return {std::string(VNEIO_TESTDATA_DIR)};
 #else
-    return std::string();
+    return {};
 #endif
 }
 

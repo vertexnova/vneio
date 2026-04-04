@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/image/image.h"
@@ -26,7 +27,7 @@ namespace image {
  * @class IImageLoader
  * @brief Interface for loading 2D images.
  */
-class IImageLoader : public vne::io::IAssetLoader {
+class VNEIO_API IImageLoader : public vne::io::IAssetLoader {
    public:
     ~IImageLoader() override = default;
 

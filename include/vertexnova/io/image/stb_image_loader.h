@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/image/image.h"
 #include "vertexnova/io/image/image_loader.h"
 #include "vertexnova/io/load_request.h"
@@ -28,7 +29,7 @@ namespace image {
  * @class StbImageLoader
  * @brief Loader for 2D images using stb_image (implements IImageLoader).
  */
-class StbImageLoader : public IImageLoader {
+class VNEIO_API StbImageLoader : public IImageLoader {
    public:
     StbImageLoader() = default;
 

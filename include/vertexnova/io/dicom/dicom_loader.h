@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/load_request.h"
@@ -27,7 +28,7 @@ namespace vne::dicom {
  * @class IDicomLoader
  * @brief Interface for loading DICOM series from a directory.
  */
-class IDicomLoader : public vne::io::IAssetLoader {
+class VNEIO_API IDicomLoader : public vne::io::IAssetLoader {
    public:
     ~IDicomLoader() override = default;
 

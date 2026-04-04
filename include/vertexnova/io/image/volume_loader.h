@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/image/volume.h"
@@ -26,7 +27,7 @@ namespace image {
  * @class IVolumeLoader
  * @brief Interface for loading 3D volumes.
  */
-class IVolumeLoader : public vne::io::IAssetLoader {
+class VNEIO_API IVolumeLoader : public vne::io::IAssetLoader {
    public:
     ~IVolumeLoader() override = default;
 

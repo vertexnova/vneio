@@ -37,19 +37,92 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake")
 
 #-----------------------------------------------------------------------------
+# Library type (one per build): static or shared for all VneIo component libs
+#-----------------------------------------------------------------------------
+set(VNEIO_LIB_TYPE "static" CACHE STRING "Library type for VneIo component libs: static or shared (one per build)")
+set_property(CACHE VNEIO_LIB_TYPE PROPERTY STRINGS static shared)
+if(NOT VNEIO_LIB_TYPE STREQUAL "static" AND NOT VNEIO_LIB_TYPE STREQUAL "shared")
+    message(FATAL_ERROR "VNEIO_LIB_TYPE must be 'static' or 'shared'. Got: ${VNEIO_LIB_TYPE}")
+endif()
+if(VNEIO_LIB_TYPE STREQUAL "shared")
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+if(VNEIO_LIB_TYPE STREQUAL "shared")
+    set(_VNEIO_LIB_KIND SHARED)
+else()
+    set(_VNEIO_LIB_KIND STATIC)
+endif()
+
+# CI and recommended local layout (Ninja/Make/macOS/Linux): cmake -B build/<static|shared>/<Release|Debug>
+# Windows Visual Studio jobs use -B build/<static|shared> (multi-config owns Debug/Release inside).
+message(STATUS "VneIo: VNEIO_LIB_TYPE=${VNEIO_LIB_TYPE} — typical -B build/${VNEIO_LIB_TYPE}/Release or .../Debug")
+
+function(vneio_target_apply_shared_export target_name)
+    if(_VNEIO_LIB_KIND STREQUAL "SHARED")
+        target_compile_definitions(${target_name}
+            PRIVATE VNEIO_BUILDING_DLL
+            INTERFACE VNEIO_DLL
+        )
+        if(MSVC)
+            target_compile_options(${target_name} PRIVATE /wd4251 /wd4275)
+        endif()
+    endif()
+endfunction()
+
+#-----------------------------------------------------------------------------
 # Build options
 #-----------------------------------------------------------------------------
+if(CMAKE_PROJECT_NAME STREQUAL "vneio")
+    set(VNEIO_DEV_DEFAULT ON)
+else()
+    set(VNEIO_DEV_DEFAULT OFF)
+endif()
+option(VNEIO_DEV "Dev build: tests/examples defaults for local development" ${VNEIO_DEV_DEFAULT})
+option(VNEIO_CI "CI build: tighten defaults for pipelines (-DVNEIO_CI=ON)" OFF)
 option(VNEIO_BUILD_TESTS "Build VneIo tests" OFF)
 option(VNEIO_BUILD_EXAMPLES "Build VneIo examples" OFF)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
+option(ENABLE_ASAN "Enable AddressSanitizer + UndefinedBehaviorSanitizer (Clang/GCC, Linux/macOS only)" OFF)
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
 option(VNEIO_BUILD_IMAGE "Build image component" ON)
 option(VNEIO_USE_STB_IMAGE_RESIZE "Enable stb_image_resize for higher-quality resizing" OFF)
 option(VNEIO_WITH_GDCM "Enable DICOM support via GDCM" OFF)
 option(VNEIO_WITH_DCMTK "Enable DICOM support via DCMTK" OFF)
 
-# Enable coverage (uses FindCoverage from cmake/vnecmake)
-include(FindCoverage)
+if(VNEIO_CI)
+    set(VNEIO_DEV OFF CACHE BOOL "" FORCE)
+    set(VNEIO_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    message(STATUS "VneIo: CI build -> VNEIO_BUILD_EXAMPLES=OFF (set VNEIO_BUILD_TESTS in CMake args as needed)")
+elseif(VNEIO_DEV)
+    set(VNEIO_BUILD_TESTS ON CACHE BOOL "" FORCE)
+    set(VNEIO_BUILD_EXAMPLES ON CACHE BOOL "" FORCE)
+    message(STATUS "VneIo: DEV build -> VNEIO_BUILD_TESTS=ON, VNEIO_BUILD_EXAMPLES=ON")
+endif()
+
+if(ENABLE_COVERAGE AND ENABLE_ASAN)
+    message(FATAL_ERROR
+        "ENABLE_COVERAGE and ENABLE_ASAN cannot both be ON. "
+        "Reconfigure with -DENABLE_COVERAGE=OFF or -DENABLE_ASAN=OFF.")
+endif()
+
+include(FindCoverage OPTIONAL)
+if(ENABLE_COVERAGE)
+    message(STATUS "Code coverage enabled (gcov/lcov); compile and link flags will add --coverage")
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+    endif()
+endif()
+
+if(ENABLE_ASAN)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT WIN32)
+        add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address,undefined)
+    else()
+        message(WARNING "ENABLE_ASAN is only supported with GCC/Clang on Linux/macOS — ignoring.")
+    endif()
+endif()
 
 #-----------------------------------------------------------------------------
 # Platform detection
@@ -81,10 +154,15 @@ message(STATUS "VneIo: platform ${VNE_TARGET_PLATFORM}")
 # Compiler warnings (interface library)
 #-----------------------------------------------------------------------------
 add_library(VneIoWarnings INTERFACE)
-target_compile_options(VneIoWarnings INTERFACE
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall -Wextra -Wpedantic>
-    $<$<CXX_COMPILER_ID:MSVC>:/W4>
-)
+if(EXISTS "${VNEIO_ROOT}/cmake/vnecmake/modules/ProjectWarnings.cmake")
+    include(ProjectWarnings)
+    set_project_warnings(VneIoWarnings)
+else()
+    target_compile_options(VneIoWarnings INTERFACE
+        $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall -Wextra -Wpedantic>
+        $<$<CXX_COMPILER_ID:MSVC>:/W4>
+    )
+endif()
 add_library(vne::io::Warnings ALIAS VneIoWarnings)
 
 add_library(VneIoBuildSettings INTERFACE)
@@ -253,11 +331,12 @@ endif()
 # Mesh library
 #-----------------------------------------------------------------------------
 if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
-    add_library(vneio_mesh STATIC
+    add_library(vneio_mesh ${_VNEIO_LIB_KIND}
         src/vertexnova/io/mesh/assimp_loader.cpp
         src/vertexnova/io/mesh/mesh_loader_registry.cpp
         src/vertexnova/io/mesh/mesh_exporter_obj.cpp
     )
+    vneio_target_apply_shared_export(vneio_mesh)
     target_include_directories(vneio_mesh
         PUBLIC
             $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
@@ -281,7 +360,7 @@ endif()
 # Image library
 #-----------------------------------------------------------------------------
 if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
-    add_library(vneio_image STATIC
+    add_library(vneio_image ${_VNEIO_LIB_KIND}
         src/vertexnova/io/image/image.cpp
         src/vertexnova/io/image/nrrd_loader.cpp
         src/vertexnova/io/image/mhd_loader.cpp
@@ -289,6 +368,7 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         src/vertexnova/io/image/volume_exporter_nrrd.cpp
         src/vertexnova/io/image/volume_exporter_mhd.cpp
     )
+    vneio_target_apply_shared_export(vneio_image)
     target_include_directories(vneio_image
         PUBLIC
             $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
@@ -320,7 +400,8 @@ endif()
 # AssetIO registry (unified load by request; depends on image + mesh)
 #-----------------------------------------------------------------------------
 if(TARGET vneio_image AND TARGET vneio_mesh)
-    add_library(vneio_asset_io STATIC src/vertexnova/io/asset_io.cpp)
+    add_library(vneio_asset_io ${_VNEIO_LIB_KIND} src/vertexnova/io/asset_io.cpp)
+    vneio_target_apply_shared_export(vneio_asset_io)
     target_include_directories(vneio_asset_io
         PUBLIC
             $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
@@ -338,9 +419,10 @@ endif()
 # DICOM library (optional)
 #-----------------------------------------------------------------------------
 if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
-    add_library(vneio_dicom STATIC
+    add_library(vneio_dicom ${_VNEIO_LIB_KIND}
         src/vertexnova/io/dicom/dicom_loader_registry.cpp
     )
+    vneio_target_apply_shared_export(vneio_dicom)
     set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
     target_include_directories(vneio_dicom
         PUBLIC
@@ -362,9 +444,10 @@ if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
     add_library(vne::io::dicom ALIAS vneio_dicom)
 else()
     # Always build dicom_loader_registry.cpp (null loader) so the interface is available
-    add_library(vneio_dicom STATIC
+    add_library(vneio_dicom ${_VNEIO_LIB_KIND}
         src/vertexnova/io/dicom/dicom_loader_registry.cpp
     )
+    vneio_target_apply_shared_export(vneio_dicom)
     set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
     target_include_directories(vneio_dicom
         PUBLIC

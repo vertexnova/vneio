@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/dicom/dicom_loader.h"
 
 #include <memory>
@@ -28,7 +29,7 @@ namespace vne::dicom {
  * create() returns the configured loader or a stub that fails with a clear message
  * when no backend (VNEIO_WITH_GDCM / VNEIO_WITH_DCMTK) is built.
  */
-class DicomLoaderRegistry {
+class VNEIO_API DicomLoaderRegistry {
    public:
     /**
      * @brief Create a DICOM loader instance (caller owns).

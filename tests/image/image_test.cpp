@@ -95,7 +95,8 @@ TEST_F(ImageTest, DataConstructor) {
     EXPECT_EQ(image.getChannels(), channels);
     ASSERT_NE(image.getData(), nullptr);
     for (int i = 0; i < width * height * channels; ++i) {
-        EXPECT_EQ(image.getData()[i], test_data[i]) << "Mismatch at index " << i;
+        const auto idx = static_cast<size_t>(i);
+        EXPECT_EQ(image.getData()[idx], test_data[idx]) << "Mismatch at index " << i;
     }
 
     Image invalid(test_data.data(), 0, 0, 0);
@@ -179,11 +180,13 @@ TEST_F(ImageTest, FlipVertically) {
     const int width = 4;
     const int height = 4;
     const int channels = 3;
-    std::vector<uint8_t> data(width * height * channels);
-    for (int i = 0; i < width * channels; ++i) {
+    std::vector<uint8_t> data(static_cast<size_t>(width * height * channels));
+    for (size_t i = 0; i < static_cast<size_t>(width * channels); ++i) {
         data[i] = 255;
     }
-    for (int i = (height - 1) * width * channels; i < height * width * channels; ++i) {
+    for (size_t i = static_cast<size_t>((height - 1) * width * channels);
+         i < static_cast<size_t>(height * width * channels);
+         ++i) {
         data[i] = 0;
     }
 

@@ -36,7 +36,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.core.mesh.assimp");
  * @param opts Loading options
  * @return Assimp processing flags
  */
-uint32_t BuildAssimpFlags(const vne::mesh::AssimpLoaderOptions& opts) {
+uint32_t buildAssimpFlags(const vne::mesh::AssimpLoaderOptions& opts) {
     unsigned int flags = 0;
 
     if (opts.triangulate) {
@@ -97,7 +97,7 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
     last_error_.clear();
 
     Assimp::Importer importer;
-    const unsigned int flags = BuildAssimpFlags(opts);
+    const unsigned int flags = buildAssimpFlags(opts);
 
     VNE_LOG_INFO << "Loading mesh from: " << path;
     VNE_LOG_INFO << "Using Assimp version: " << aiGetVersionMajor() << "." << aiGetVersionMinor() << "."
@@ -194,7 +194,7 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
         const uint32_t vcount = am->mNumVertices;
         out_mesh.vertices.reserve(out_mesh.vertices.size() + vcount);
 
-        const uint32_t start_index = static_cast<uint32_t>(out_mesh.indices.size());
+        const auto start_index = static_cast<uint32_t>(out_mesh.indices.size());
         out_mesh.indices.reserve(out_mesh.indices.size() + 3u * am->mNumFaces);
 
         for (uint32_t v = 0; v < vcount; ++v) {
@@ -365,7 +365,7 @@ bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const Assim
             new_parts.reserve(out_mesh.parts.size());
 
             auto emit_tri = [&](uint32_t i0, uint32_t i1, uint32_t i2) {
-                const uint32_t base = static_cast<uint32_t>(new_vertices.size());
+                const auto base = static_cast<uint32_t>(new_vertices.size());
 
                 VertexAttributes v0 = out_mesh.vertices[i0];
                 VertexAttributes v1 = out_mesh.vertices[i1];

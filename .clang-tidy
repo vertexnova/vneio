@@ -1,9 +1,7 @@
-# VertexNova .clang-tidy configuration (VneIo)
-# Enforces naming conventions and modern C++ practices
+# VertexNova vneio — clang-tidy (aligned with vneinteraction)
 
 Checks: >
   -*,
-  readability-braces-around-statements,
   readability-identifier-naming,
   modernize-use-nullptr,
   modernize-use-override,
@@ -30,27 +28,39 @@ Checks: >
 
 WarningsAsErrors: ''
 
-HeaderFilterRegex: '(src/vertexnova/.*|include/vertexnova/.*|examples/.*)'
+# Only analyze project sources under src/ (headers under include/ are not matched).
+HeaderFilterRegex: 'src/vertexnova/.*'
 
 CheckOptions:
+  # Classes/Structs: PascalCase (no suffix)
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
   - key: readability-identifier-naming.StructCase
     value: CamelCase
+
+  # Abstract classes (interfaces): I prefix + PascalCase
   - key: readability-identifier-naming.AbstractClassCase
     value: CamelCase
   - key: readability-identifier-naming.AbstractClassPrefix
     value: 'I'
+
+  # Enums: PascalCase
   - key: readability-identifier-naming.EnumCase
     value: CamelCase
+
+  # Enum values: e prefix + PascalCase
   - key: readability-identifier-naming.EnumConstantCase
     value: CamelCase
   - key: readability-identifier-naming.EnumConstantPrefix
     value: 'e'
+
+  # Type aliases: PascalCase
   - key: readability-identifier-naming.TypeAliasCase
     value: CamelCase
   - key: readability-identifier-naming.TypedefCase
     value: CamelCase
+
+  # Functions/Methods: camelCase
   - key: readability-identifier-naming.FunctionCase
     value: camelBack
   - key: readability-identifier-naming.MethodCase
@@ -63,32 +73,46 @@ CheckOptions:
     value: camelBack
   - key: readability-identifier-naming.VirtualMethodCase
     value: camelBack
+
+  # Local variables and parameters: snake_case
   - key: readability-identifier-naming.VariableCase
     value: lower_case
   - key: readability-identifier-naming.LocalVariableCase
     value: lower_case
   - key: readability-identifier-naming.ParameterCase
     value: lower_case
+
+  # Private members: snake_case with trailing underscore
   - key: readability-identifier-naming.PrivateMemberCase
     value: lower_case
   - key: readability-identifier-naming.PrivateMemberSuffix
     value: '_'
+
+  # Protected members: snake_case with trailing underscore
   - key: readability-identifier-naming.ProtectedMemberCase
     value: lower_case
   - key: readability-identifier-naming.ProtectedMemberSuffix
     value: '_'
+
+  # Public members: snake_case (no suffix)
   - key: readability-identifier-naming.PublicMemberCase
     value: lower_case
+
+  # Static members: s_ prefix
   - key: readability-identifier-naming.ClassMemberCase
     value: lower_case
   - key: readability-identifier-naming.StaticVariableCase
     value: lower_case
   - key: readability-identifier-naming.StaticVariablePrefix
     value: 's_'
+
+  # Global variables: g_ prefix
   - key: readability-identifier-naming.GlobalVariableCase
     value: lower_case
   - key: readability-identifier-naming.GlobalVariablePrefix
     value: 'g_'
+
+  # Constants: k prefix + PascalCase
   - key: readability-identifier-naming.ConstexprVariableCase
     value: CamelCase
   - key: readability-identifier-naming.ConstexprVariablePrefix
@@ -97,16 +121,24 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.StaticConstantPrefix
     value: 'k'
+
+  # Namespaces: lowercase
   - key: readability-identifier-naming.NamespaceCase
     value: lower_case
+
+  # Macros: UPPER_CASE
   - key: readability-identifier-naming.MacroDefinitionCase
     value: UPPER_CASE
+
+  # Template parameters: PascalCase
   - key: readability-identifier-naming.TemplateParameterCase
     value: CamelCase
   - key: readability-identifier-naming.TypeTemplateParameterCase
     value: CamelCase
   - key: readability-identifier-naming.ValueTemplateParameterCase
     value: CamelCase
+
+  # Modernize settings
   - key: modernize-use-auto.MinTypeNameLength
     value: 5
   - key: modernize-use-auto.RemoveStars
@@ -115,5 +147,3 @@ CheckOptions:
     value: reasonable
   - key: modernize-pass-by-value.IncludeStyle
     value: google
-  - key: readability-braces-around-statements.ShortStatementLines
-    value: 0

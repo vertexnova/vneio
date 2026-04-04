@@ -10,6 +10,8 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
+
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -29,7 +31,7 @@ namespace image {
  * Simple interface for 2D images; supports various formats through stb_image
  * across desktop and mobile platforms.
  */
-class Image {
+class VNEIO_API Image {
    public:
     /**
      * @brief Default constructor creates an empty image
@@ -147,18 +149,18 @@ namespace image_utils {
  * (default = true)
  * @return Pointer to image data, or nullptr if loading failed
  */
-[[nodiscard]] uint8_t* loadImage(const std::string& file_path,
-                   int* width,
-                   int* height,
-                   int* channels,
-                   int desired_channels = 0,
-                   bool flip_vertically = true);
+[[nodiscard]] VNEIO_API uint8_t* loadImage(const std::string& file_path,
+                                           int* width,
+                                           int* height,
+                                           int* channels,
+                                           int desired_channels = 0,
+                                           bool flip_vertically = true);
 
 /**
  * @brief Free image data loaded by loadImage
  * @param data Pointer to the image data to free
  */
-void freeImage(uint8_t* data);
+VNEIO_API void freeImage(uint8_t* data);
 
 /**
  * @brief Save raw image data to a file
@@ -170,12 +172,12 @@ void freeImage(uint8_t* data);
  * @param format Format to save as (jpg, png, bmp, tga)
  * @return True if saving succeeded, false otherwise
  */
-[[nodiscard]] bool saveImage(const std::string& file_path,
-               const uint8_t* data,
-               int width,
-               int height,
-               int channels,
-               const std::string& format = "png");
+[[nodiscard]] VNEIO_API bool saveImage(const std::string& file_path,
+                                       const uint8_t* data,
+                                       int width,
+                                       int height,
+                                       int channels,
+                                       const std::string& format = "png");
 }  // namespace image_utils
 
 }  // namespace image

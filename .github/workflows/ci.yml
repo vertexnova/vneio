@@ -1,163 +1,471 @@
 # ----------------------------------------------------------------------
-# Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
+# Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
 # Author:    Ajeet Singh Yadav
-# Created:   January 2026
+# Created:   April 2026
 #
-# CI and coverage for VneIo (mesh + image), structured like vnemath.
+# Description: VneIo CI — staged, gated, concurrency (aligned with vneinteraction).
+# Stage 1 — Pre-checks: clang-format (gate). Commit-lint warnings only.
+# Stage 2+3 — Build+Test: Linux GCC/Clang/static, ASan, macOS, Windows.
+# Stage 4 — Analysis: clang-tidy (Clang build cache).
+# Stage 5 — CI Gate: single required status for branch protection.
+#
+# Autodoc:   yes
 # ----------------------------------------------------------------------
 
 name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.event_name == 'push' && format('ci-push-{0}', github.sha) || format('ci-pr-{0}', github.ref) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
-  linux:
+  detect-release:
+    name: "Pre-checks / detect release commit"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        compiler: [gcc, clang]
-        include:
-          - compiler: gcc
-            c_compiler: gcc
-            cpp_compiler: g++
-          - compiler: clang
-            c_compiler: clang
-            cpp_compiler: clang++
-
+    outputs:
+      is_release: ${{ steps.check.outputs.is_release }}
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 2
+      - id: check
+        env:
+          ACTOR: ${{ github.actor }}
+          EVENT: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          IS_RELEASE=false
+          if [[ "$EVENT" == "pull_request" ]]; then
+            if [[ "$HEAD_REF" == release-please--* ]]; then
+              IS_RELEASE=true
+              echo "Release-please PR detected — skipping builds."
+            fi
+          fi
+          if [[ "$EVENT" == "push" ]]; then
+            ACTOR_MATCH=false
+            if [[ "$ACTOR" == "release-please[bot]" || "$ACTOR" == "github-actions[bot]" ]]; then
+              ACTOR_MATCH=true
+            fi
+            CHANGED="$(git diff --name-only HEAD~1 HEAD 2>/dev/null || true)"
+            echo "Changed files: $CHANGED"
+            NON_RELEASE=$(echo "$CHANGED" | grep -vE '^(CHANGELOG\.md|VERSION|\.release-please-manifest\.json|release-please-config\.json)$' || true)
+            if [[ "$ACTOR_MATCH" == "true" && -z "$NON_RELEASE" && -n "$CHANGED" ]]; then
+              IS_RELEASE=true
+              echo "Release-please merge detected — skipping builds."
+            fi
+          fi
+          echo "is_release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
-    # Use system Assimp to avoid building ~300 sources (prevents timeout / 6hr builds)
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake libassimp-dev
-
-    - name: Remove deps/external/assimp so CMake uses find_package(assimp)
-      run: rm -rf deps/external/assimp
-
-    # Disable LTO for Clang: vnelogging uses LTO by default; Clang+LTO produces bitcode in .a
-    # that GNU ld doesn't recognize ("file format not recognized"). ENABLE_IPO=OFF fixes it.
-    - name: Configure CMake
-      run: |
-        cmake -B build -S . \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
-          -DVNEIO_BUILD_TESTS=ON \
-          -DENABLE_IPO=OFF
-
-    - name: Build
-      run: cmake --build build --config Release --parallel
-
-    - name: Test
-      working-directory: build
-      run: ctest --output-on-failure
-
-  coverage:
+  format-check:
+    name: "Pre-checks / clang-format"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
 
-    # Use system Assimp to avoid building ~300 sources (prevents timeout)
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake lcov libassimp-dev
+      - name: Install clang-format-17
+        run: sudo apt-get update -qq && sudo apt-get install -y clang-format-17
 
-    - name: Remove deps/external/assimp so CMake uses find_package(assimp)
-      run: rm -rf deps/external/assimp
+      - name: Alias clang-format
+        run: sudo ln -sf /usr/bin/clang-format-17 /usr/local/bin/clang-format
 
-    - name: Configure CMake with Coverage
-      run: |
-        cmake -B build -S . \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DCMAKE_C_COMPILER=gcc \
-          -DCMAKE_CXX_COMPILER=g++ \
-          -DVNEIO_BUILD_TESTS=ON \
-          -DENABLE_COVERAGE=ON
+      - name: Check formatting
+        run: |
+          find src include tests \
+            -type f \( -name '*.h' -o -name '*.hpp' -o -name '*.cpp' -o -name '*.c' \) \
+            -print0 \
+          | xargs -0 -r clang-format --dry-run --Werror \
+              --style=file --fallback-style=Google
 
-    - name: Build
-      run: cmake --build build --config Debug --parallel
+  commit-lint:
+    name: "Pre-checks / commit messages"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 0
 
-    - name: Test
-      working-directory: build
-      run: ctest --output-on-failure
+      - name: Validate Conventional Commits format
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .+$'
+          FAILED=0
+          while IFS= read -r msg; do
+            if ! echo "$msg" | grep -qP "$PATTERN"; then
+              echo "::warning::Commit message does not follow Conventional Commits: $msg"
+              FAILED=1
+            fi
+          done < <(git log --format="%s" "${BASE_SHA}..${HEAD_SHA}")
+          if [[ $FAILED -eq 1 ]]; then
+            echo "::warning::One or more commits do not follow Conventional Commits (does not block gate)."
+          fi
 
-    - name: Generate Coverage Report
-      run: |
-        lcov --capture --directory build --output-file coverage.info --ignore-errors mismatch,unused
-        lcov --remove coverage.info '/usr/*' '*/tests/*' '*/deps/*' '*/_deps/*' '*/googletest/*' '*/googlemock/*' --output-file coverage.info --ignore-errors mismatch,unused
-        lcov --list coverage.info --ignore-errors mismatch,unused
+  pre-checks-gate:
+    name: "Pre-checks gate"
+    runs-on: ubuntu-latest
+    needs: [detect-release, format-check]
+    if: always()
+    steps:
+      - name: Verify all pre-checks passed
+        run: |
+          FORMAT="${{ needs.format-check.result }}"
+          if [[ "$FORMAT" != "success" ]]; then
+            echo "::error::format-check did not pass (result: $FORMAT)"
+            exit 1
+          fi
+          echo "All pre-checks passed."
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN_VNE_IO }}
-        slug: vertexnova/vneio
-        files: ./coverage.info
-        fail_ci_if_error: false
-        verbose: true
+  build-linux-gcc:
+    name: "Build+Test / Linux GCC"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    uses: ./.github/workflows/build-reusable.yml
+    with:
+      runner:             ubuntu-latest
+      c_compiler:         gcc
+      cpp_compiler:       g++
+      platform:           linux-gcc
+      build_type:         Release
+      lib_type:           shared
+      enable_coverage:    true
+      warnings_as_errors: true
+    secrets:
+      codecov_token: ${{ secrets.CODECOV_TOKEN_VNE_IO }}
 
-  macos:
+  build-linux-clang:
+    name: "Build+Test / Linux Clang"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    uses: ./.github/workflows/build-reusable.yml
+    with:
+      runner:             ubuntu-latest
+      c_compiler:         clang
+      cpp_compiler:       clang++
+      platform:           linux-clang
+      build_type:         Release
+      enable_coverage:    false
+      warnings_as_errors: true
+      extra_cmake_flags:  "-DENABLE_IPO=OFF"
+    secrets: inherit
+
+  build-linux-clang-static:
+    name: "Build+Test / Linux Clang (static)"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    uses: ./.github/workflows/build-reusable.yml
+    with:
+      runner:             ubuntu-latest
+      c_compiler:         clang
+      cpp_compiler:       clang++
+      platform:           linux-clang
+      build_type:         Release
+      enable_coverage:    false
+      warnings_as_errors: true
+      lib_type:           static
+      extra_cmake_flags:  "-DENABLE_IPO=OFF"
+    secrets: inherit
+
+  build-macos:
+    name: "Build+Test / macOS"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    uses: ./.github/workflows/build-reusable.yml
+    with:
+      runner:             macos-latest
+      c_compiler:         ""
+      cpp_compiler:       ""
+      platform:           macos
+      build_type:         Release
+      enable_coverage:    false
+      warnings_as_errors: true
+    secrets: inherit
+
+  build-windows:
+    name: "Build+Test / Windows"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    uses: ./.github/workflows/build-reusable.yml
+    with:
+      runner:             windows-latest
+      c_compiler:         ""
+      cpp_compiler:       ""
+      platform:           windows
+      build_type:         Release
+      enable_coverage:    false
+      warnings_as_errors: true
+    secrets: inherit
+
+  build-web:
+    name: "Build / Web (Emscripten)"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Use HTTPS for GitHub
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emscripten@v14
+
+      - name: Configure CMake (Emscripten)
+        run: |
+          cmake -B build/shared/Release -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=shared \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DVNEIO_BUILD_MESH=OFF \
+            -DENABLE_IPO=OFF
+
+      - name: Build
+        run: cmake --build build/shared/Release --parallel
+
+  build-ios:
+    name: "Build / iOS"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
     runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Use HTTPS for GitHub
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install Assimp via Homebrew
+        run: brew install assimp
+
+      - name: Use system Assimp on macOS
+        run: rm -rf deps/external/assimp
+
+      - name: Configure CMake (iOS)
+        run: |
+          cmake -B build/static/Release -S . \
+            -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=static \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DENABLE_IPO=OFF
+
+      - name: Build
+        run: cmake --build build/static/Release --config Release --parallel
+
+  build-android:
+    name: "Build / Android (arm64-v8a)"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Use HTTPS for GitHub
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure CMake (Android)
+        run: |
+          NDK="${ANDROID_NDK_ROOT}"
+          if [[ -z "$NDK" && -n "$ANDROID_HOME" ]]; then
+            NDK="$(find "$ANDROID_HOME/ndk" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort -V | tail -1)"
+          fi
+          if [[ -z "$NDK" ]]; then
+            echo "::error::Android NDK not found (set ANDROID_NDK_ROOT or ANDROID_HOME/ndk)"
+            exit 1
+          fi
+          cmake -B build/shared/Release -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-24 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=shared \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DENABLE_IPO=OFF
+
+      - name: Build
+        run: cmake --build build/shared/Release --parallel
+
+  build-linux-asan:
+    name: "Build+Test / Linux ASan+UBSan"
+    needs: [detect-release, pre-checks-gate]
+    if: needs.pre-checks-gate.result == 'success' && needs.detect-release.outputs.is_release != 'true'
+    uses: ./.github/workflows/build-reusable.yml
+    with:
+      runner:             ubuntu-latest
+      c_compiler:         clang
+      cpp_compiler:       clang++
+      platform:           linux-asan
+      build_type:         Debug
+      enable_coverage:    false
+      warnings_as_errors: true
+      extra_cmake_flags:  "-DENABLE_ASAN=ON -DENABLE_IPO=OFF"
+    secrets: inherit
+
+  clang-tidy:
+    name: "Analysis / clang-tidy"
+    runs-on: ubuntu-latest
+    needs: [build-linux-clang]
+    if: needs.build-linux-clang.result == 'success'
+    permissions:
+      contents: read
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
+      - name: Use HTTPS for GitHub
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
 
-    # Use Homebrew Assimp so we don't build ~300 Assimp .cpp files on macOS (avoids ~6hr build)
-    - name: Install Assimp via Homebrew
-      run: brew install assimp
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    - name: Remove deps/external/assimp so CMake uses find_package(assimp)
-      run: rm -rf deps/external/assimp
+      - name: Restore CMake build cache (Clang)
+        uses: actions/cache@v4
+        with:
+          path: build/shared/Release
+          key: build-linux-clang-Release-shared-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('**/CMakeLists.txt') }}-${{ hashFiles('.gitmodules') }}
+          restore-keys: |
+            build-linux-clang-Release-shared-
+            build-linux-clang-Release-
+            build-linux-clang-
 
-    - name: Configure CMake
-      run: |
-        cmake -B build -S . \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
-          -DVNEIO_BUILD_TESTS=ON
+      - name: Install clang, clang-tidy, Assimp
+        run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake clang clang-tidy libassimp-dev
 
-    - name: Build
-      run: cmake --build build --config Release --parallel
+      - name: Configure CMake (cache miss fallback)
+        run: |
+          rm -rf deps/external/assimp
+          if [ ! -f build/shared/Release/compile_commands.json ]; then
+            cmake -B build/shared/Release -S . \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_C_COMPILER=clang \
+              -DCMAKE_CXX_COMPILER=clang++ \
+              -DVNEIO_CI=ON \
+              -DVNEIO_BUILD_TESTS=ON \
+              -DVNEIO_LIB_TYPE=shared \
+              -DENABLE_IPO=OFF \
+              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            cmake --build build/shared/Release --config Release --parallel
+          fi
 
-    - name: Test
-      working-directory: build
-      run: ctest --output-on-failure
+      - name: Run clang-tidy
+        run: |
+          find src -type f \( -name '*.cpp' -o -name '*.h' \) -print0 \
+            | xargs -0 -r clang-tidy -p build/shared/Release \
+                --warnings-as-errors='*'
 
-  windows:
-    runs-on: windows-latest
+      - name: Write clang-tidy summary
+        if: always()
+        run: |
+          echo "## clang-tidy" >> "$GITHUB_STEP_SUMMARY"
+          echo "Analyzed \`src/\` with \`build/shared/Release/compile_commands.json\`" >> "$GITHUB_STEP_SUMMARY"
+
+  ci-gate:
+    name: "CI Gate"
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - detect-release
+      - pre-checks-gate
+      - build-linux-gcc
+      - build-linux-clang
+      - build-linux-clang-static
+      - build-linux-asan
+      - build-macos
+      - build-windows
+      - build-web
+      - build-ios
+      - build-android
+      - clang-tidy
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
+      - name: Check all required jobs passed
+        run: |
+          RESULTS=(
+            "pre-checks-gate=${{ needs.pre-checks-gate.result }}"
+            "build-linux-gcc=${{ needs.build-linux-gcc.result }}"
+            "build-linux-clang=${{ needs.build-linux-clang.result }}"
+            "build-linux-clang-static=${{ needs.build-linux-clang-static.result }}"
+            "build-linux-asan=${{ needs.build-linux-asan.result }}"
+            "build-macos=${{ needs.build-macos.result }}"
+            "build-windows=${{ needs.build-windows.result }}"
+            "build-web=${{ needs.build-web.result }}"
+            "build-ios=${{ needs.build-ios.result }}"
+            "build-android=${{ needs.build-android.result }}"
+            "clang-tidy=${{ needs.clang-tidy.result }}"
+          )
+          FAILED=0
+          for entry in "${RESULTS[@]}"; do
+            JOB="${entry%%=*}"
+            RESULT="${entry##*=}"
+            if [[ "$RESULT" != "success" && "$RESULT" != "skipped" ]]; then
+              echo "::error::Job '$JOB' did not pass (result: $RESULT)"
+              FAILED=1
+            fi
+          done
+          if [[ $FAILED -eq 1 ]]; then
+            exit 1
+          fi
+          echo "All CI jobs passed."
 
-    - name: Configure CMake
-      run: |
-        cmake -B build -S . `
-          -DCMAKE_BUILD_TYPE=Release `
-          -DVNEIO_BUILD_MESH=ON `
-          -DVNEIO_BUILD_IMAGE=ON `
-          -DVNEIO_BUILD_TESTS=ON
-
-    - name: Build
-      run: cmake --build build --config Release --parallel
-
-    - name: Test
-      working-directory: build
-      run: ctest --output-on-failure -C Release
+      - name: Write pipeline summary
+        if: always()
+        run: |
+          echo "# CI Pipeline Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Job | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----|--------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| pre-checks-gate | ${{ needs.pre-checks-gate.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-linux-gcc | ${{ needs.build-linux-gcc.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-linux-clang | ${{ needs.build-linux-clang.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-linux-clang-static | ${{ needs.build-linux-clang-static.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-linux-asan | ${{ needs.build-linux-asan.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-macos | ${{ needs.build-macos.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-windows | ${{ needs.build-windows.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-web | ${{ needs.build-web.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-ios | ${{ needs.build-ios.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| build-android | ${{ needs.build-android.result }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| clang-tidy | ${{ needs.clang-tidy.result }} |" >> "$GITHUB_STEP_SUMMARY"

@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/load_request.h"
 
 namespace vne {
@@ -27,7 +28,7 @@ namespace io {
  * Loader implementations (e.g. AssimpLoader, NrrdLoader) implement canLoad()
  * and the type-specific load method. Used by AssetIO registry.
  */
-class IAssetLoader {
+class VNEIO_API IAssetLoader {
    public:
     virtual ~IAssetLoader() = default;
 
