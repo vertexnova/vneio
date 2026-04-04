@@ -8,6 +8,7 @@
 
 #include "vertexnova/io/image/volume_exporter.h"
 #include "vertexnova/io/common/binary_io.h"
+#include "vertexnova/logging/logging.h"
 
 #include <fstream>
 #include <filesystem>
@@ -15,6 +16,8 @@
 namespace vne::image {
 
 namespace {
+
+CREATE_VNE_LOGGER_CATEGORY("vne.io.image.volume_export_mhd");
 
 void setError(std::string* out_error, const std::string& msg) {
     if (out_error) {
@@ -59,15 +62,18 @@ bool exportMhd(const std::string& mhd_or_mha_path,
                std::string* out_error) {
     if (vol.isEmpty()) {
         setError(out_error, "exportMhd: volume is empty");
+        VNE_LOG_ERROR << "exportMhd: volume is empty (path=\"" << mhd_or_mha_path << "\")";
         return false;
     }
     if (vol.components != 1) {
         setError(out_error, "exportMhd: only scalar volumes (components==1) are supported");
+        VNE_LOG_ERROR << "exportMhd: components != 1 for \"" << mhd_or_mha_path << "\"";
         return false;
     }
     const std::string et = pixelTypeToMet(vol.pixel_type);
     if (et == "MET_UNKNOWN") {
         setError(out_error, "exportMhd: unsupported pixel type");
+        VNE_LOG_ERROR << "exportMhd: unsupported pixel type for \"" << mhd_or_mha_path << "\"";
         return false;
     }
 
@@ -84,8 +90,12 @@ bool exportMhd(const std::string& mhd_or_mha_path,
     std::ofstream h(mhd_or_mha_path, std::ios::binary | std::ios::trunc);
     if (!h) {
         setError(out_error, "exportMhd: cannot open header for writing");
+        VNE_LOG_ERROR << "exportMhd: cannot open \"" << mhd_or_mha_path << "\" for writing";
         return false;
     }
+
+    VNE_LOG_INFO << "exportMhd: writing \"" << mhd_or_mha_path << "\" dims=" << vol.dims[0] << "x" << vol.dims[1] << "x"
+                 << vol.dims[2];
 
     h << "ObjectType = Image\n";
     h << "NDims = 3\n";
@@ -93,6 +103,9 @@ bool exportMhd(const std::string& mhd_or_mha_path,
     h << "ElementType = " << et << "\n";
     h << "ElementSpacing = " << vol.spacing[0] << " " << vol.spacing[1] << " " << vol.spacing[2] << "\n";
     h << "Position = " << vol.origin[0] << " " << vol.origin[1] << " " << vol.origin[2] << "\n";
+    h << "TransformMatrix = " << vol.direction[0] << " " << vol.direction[1] << " " << vol.direction[2] << " "
+      << vol.direction[3] << " " << vol.direction[4] << " " << vol.direction[5] << " " << vol.direction[6] << " "
+      << vol.direction[7] << " " << vol.direction[8] << "\n";
     h << "ElementByteOrderMSB = False\n";
 
     if (writing_mha) {
@@ -101,14 +114,17 @@ bool exportMhd(const std::string& mhd_or_mha_path,
         h.write(reinterpret_cast<const char*>(vol.data.data()), static_cast<std::streamsize>(bytes));
         if (!h) {
             setError(out_error, "exportMhd: failed while writing inline payload");
+            VNE_LOG_ERROR << "exportMhd: failed while writing inline payload to \"" << mhd_or_mha_path << "\"";
             return false;
         }
+        VNE_LOG_INFO << "exportMhd: finished inline MHA \"" << mhd_or_mha_path << "\"";
         return true;
     }
 
     h << "ElementDataFile = " << raw_name << "\n\n";
     if (!h) {
         setError(out_error, "exportMhd: failed while writing header");
+        VNE_LOG_ERROR << "exportMhd: failed while writing header \"" << mhd_or_mha_path << "\"";
         return false;
     }
 
@@ -116,8 +132,10 @@ bool exportMhd(const std::string& mhd_or_mha_path,
     auto st = vne::io::binaryio::writeFile(raw_path, vol.data.data(), bytes);
     if (!st) {
         setError(out_error, "exportMhd: " + st.message);
+        VNE_LOG_ERROR << "exportMhd: " << st.message;
         return false;
     }
+    VNE_LOG_INFO << "exportMhd: finished MHD + raw \"" << mhd_or_mha_path << "\"";
     return true;
 }
 

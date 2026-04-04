@@ -92,8 +92,13 @@ set(VNEIO_TEST_LIBS "")
 if(TARGET vneio_asset_io)
     list(APPEND VNEIO_TEST_LIBS vneio_asset_io)
 endif()
+# NrrdIO OBJECT sources are merged into vneio_image; linking NrrdIO again duplicates symbols (e.g. main in sampleIO.c).
 if(VNEIO_NRRDIO_TARGET)
-    list(APPEND VNEIO_TEST_LIBS ${VNEIO_NRRDIO_TARGET})
+    get_target_property(_vneio_test_nrrd_type "${VNEIO_NRRDIO_TARGET}" TYPE)
+    get_target_property(_vneio_test_nrrd_imported "${VNEIO_NRRDIO_TARGET}" IMPORTED)
+    if(_vneio_test_nrrd_imported OR NOT _vneio_test_nrrd_type STREQUAL "OBJECT_LIBRARY")
+        list(APPEND VNEIO_TEST_LIBS ${VNEIO_NRRDIO_TARGET})
+    endif()
 endif()
 
 target_link_libraries(TestVneIo

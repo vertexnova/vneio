@@ -12,8 +12,10 @@
 
 #include "vertexnova/io/export.h"
 
+#include <cmath>
 #include <cstdint>
 #include <cstddef>
+#include <type_traits>
 #include <vector>
 
 namespace vne {
@@ -45,6 +47,9 @@ constexpr int kVolumeDirectionMatrixElements = 9;
 
 /** Bytes per voxel for VolumePixelType::eFloat64. */
 constexpr int kBytesPerFloat64 = 8;
+
+/** Epsilon for direction / metadata checks. */
+constexpr float kVolumeDirectionEpsilon = 1e-4f;
 
 /**
  * @brief Bytes per voxel for the given VolumePixelType.
@@ -79,9 +84,12 @@ constexpr int kBytesPerFloat64 = 8;
  * @struct Volume
  * @brief 3D volume for medical/imaging data.
  *
- * Dimensions (width, height, depth), spacing (mm or physical units),
- * origin, pixel type, and contiguous raw buffer. Used for multiplanar
- * reformats and window/level in viewers.
+ * **Geometry convention (for I/O and rendering):** @a spacing[i] is the sample distance
+ * along axis i. @a direction stores a row-major 3×3 matrix whose rows are **unit** axis
+ * direction vectors (world space). NRRD writers combine them as `space directions` =
+ * `direction[row] * spacing[row]`. Loaders must normalize NRRD space directions into this form.
+ *
+ * Dimensions (width, height, depth), spacing, origin, pixel type, and contiguous raw buffer.
  */
 struct VNEIO_API Volume {
     int dims[3] = {0, 0, 0};                //!< Width (x), height (y), depth (z).
@@ -116,6 +124,81 @@ struct VNEIO_API Volume {
 
     [[nodiscard]] bool isEmpty() const {
         return dims[0] <= 0 || dims[1] <= 0 || dims[2] <= 0 || data.size() < byteCount();
+    }
+
+    /** True if dimensions are positive and the buffer size matches @ref byteCount() exactly. */
+    [[nodiscard]] bool hasExactBufferSize() const {
+        if (dims[0] <= 0 || dims[1] <= 0 || dims[2] <= 0) {
+            return false;
+        }
+        if (components <= 0 || pixel_type == VolumePixelType::eUnknown) {
+            return false;
+        }
+        return data.size() == byteCount();
+    }
+
+    [[nodiscard]] bool hasScalarVoxels() const { return components == 1; }
+
+    /** True if @a direction is approximately the 3×3 identity. */
+    [[nodiscard]] bool hasIdentityDirection() const {
+        const float e = kVolumeDirectionEpsilon;
+        return std::fabs(direction[0] - 1.0f) < e && std::fabs(direction[1]) < e && std::fabs(direction[2]) < e
+            && std::fabs(direction[3]) < e && std::fabs(direction[4] - 1.0f) < e && std::fabs(direction[5]) < e
+            && std::fabs(direction[6]) < e && std::fabs(direction[7]) < e && std::fabs(direction[8] - 1.0f) < e;
+    }
+
+    /**
+     * @brief Typed read-only view of voxel data (trivially copyable types only).
+     */
+    template<typename T>
+    [[nodiscard]] const T* dataAs() const {
+        static_assert(std::is_trivially_copyable_v<T>);
+        return reinterpret_cast<const T*>(data.data());
+    }
+
+    /**
+     * @brief Heuristic validity for upload / rendering: positive dims, known scalar type,
+     *        positive finite spacing, well-conditioned direction rows, exact buffer size.
+     */
+    [[nodiscard]] bool isMetadataValid() const {
+        if (!hasExactBufferSize() || !hasScalarVoxels()) {
+            return false;
+        }
+        for (int i = 0; i < 3; ++i) {
+            if (!std::isfinite(spacing[i]) || spacing[i] <= 0.0f) {
+                return false;
+            }
+            if (!std::isfinite(origin[i])) {
+                return false;
+            }
+        }
+        auto rowLen = [this](int row) {
+            int b = row * 3;
+            float x = direction[b + 0];
+            float y = direction[b + 1];
+            float z = direction[b + 2];
+            return std::sqrt(x * x + y * y + z * z);
+        };
+        for (int r = 0; r < 3; ++r) {
+            float len = rowLen(r);
+            if (!std::isfinite(len) || len < 0.01f || std::fabs(len - 1.0f) > 0.02f) {
+                return false;
+            }
+        }
+        float d0 = direction[0];
+        float d1 = direction[1];
+        float d2 = direction[2];
+        float d3 = direction[3];
+        float d4 = direction[4];
+        float d5 = direction[5];
+        float d6 = direction[6];
+        float d7 = direction[7];
+        float d8 = direction[8];
+        float det = d0 * (d4 * d8 - d5 * d7) - d1 * (d3 * d8 - d5 * d6) + d2 * (d3 * d7 - d4 * d6);
+        if (!std::isfinite(det) || std::fabs(det) < 1e-4f) {
+            return false;
+        }
+        return true;
     }
 
     [[nodiscard]] const uint8_t* getData() const { return data.data(); }

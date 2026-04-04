@@ -10,6 +10,7 @@
 #include "vertexnova/io/image/nrrd_loader.h"
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/load_request.h"
+#include "vertexnova/logging/logging.h"
 
 #include <algorithm>
 #include <cmath>
@@ -17,6 +18,14 @@
 #include <string>
 
 #include <NrrdIO.h>
+
+namespace {
+
+CREATE_VNE_LOGGER_CATEGORY("vne.io.image.nrrd_loader");
+
+constexpr float kSpaceDirEps = 1e-20f;
+
+}  // namespace
 
 namespace vne {
 namespace image {
@@ -58,6 +67,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     Nrrd* nin = nrrdNew();
     if (!nin) {
         last_error_ = "NrrdLoader: failed to create Nrrd struct";
+        VNE_LOG_ERROR << last_error_;
         return false;
     }
 
@@ -68,18 +78,32 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         if (err) {
             free(err);
         }
+        VNE_LOG_ERROR << "NrrdLoader: load failed for \"" << path << "\": "
+                      << (last_error_.size() > 200 ? last_error_.substr(0, 200) + "..." : last_error_);
         nrrdNuke(nin);
         return false;
     }
 
-    // Support 1D, 2D, or 3D; store as 3D volume (unused dims = 1)
+    VNE_LOG_INFO << "NrrdLoader: loading \"" << path << "\"";
+
     if (nin->dim < 1 || nin->dim > 3) {
         last_error_ = "NrrdLoader: dimension 1, 2, or 3 supported, got " + std::to_string(nin->dim);
+        VNE_LOG_ERROR << last_error_;
         nrrdNuke(nin);
         return false;
     }
 
-    // Map nrrdType to VolumePixelType
+    for (unsigned int i = 0; i < nin->dim; ++i) {
+        unsigned int ks = nrrdKindSize(nin->axis[i].kind);
+        if (ks >= 2) {
+            last_error_ = "NrrdLoader: multi-component / non-scalar axis kind not supported (axis " + std::to_string(i)
+                + ", kind " + std::to_string(nin->axis[i].kind) + ")";
+            VNE_LOG_ERROR << last_error_;
+            nrrdNuke(nin);
+            return false;
+        }
+    }
+
     VolumePixelType pixel_type = VolumePixelType::eUnknown;
     switch (nin->type) {
         case nrrdTypeUChar:
@@ -108,17 +132,18 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
             break;
         default:
             last_error_ = "NrrdLoader: unsupported pixel type";
+            VNE_LOG_ERROR << last_error_;
             nrrdNuke(nin);
             return false;
     }
 
-    // Extract dimensions (axis[0] fastest, axis[2] slowest); pad with 1 for 1D/2D
     int sizes[3] = {1, 1, 1};
     for (unsigned int i = 0; i < nin->dim && i < 3u; ++i) {
         sizes[i] = static_cast<int>(nin->axis[i].size);
     }
     if (sizes[0] <= 0 || sizes[1] <= 0 || sizes[2] <= 0) {
         last_error_ = "NrrdLoader: invalid sizes";
+        VNE_LOG_ERROR << last_error_;
         nrrdNuke(nin);
         return false;
     }
@@ -127,39 +152,102 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     out_volume.dims[1] = sizes[1];
     out_volume.dims[2] = sizes[2];
     out_volume.pixel_type = pixel_type;
+    out_volume.components = 1;
 
-    // Extract spacing (if available); only set for present axes
-    for (unsigned int i = 0; i < nin->dim && i < 3u; ++i) {
-        if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
-            out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
-        }
+    const size_t expected_elements = nrrdElementNumber(nin);
+    const size_t expected_bytes = nrrdElementSize(nin) * expected_elements;
+    const size_t vol_bytes = out_volume.byteCount();
+    if (expected_bytes != vol_bytes) {
+        last_error_ = "NrrdLoader: data size mismatch (file " + std::to_string(expected_bytes) + " bytes, volume "
+            + std::to_string(vol_bytes) + ")";
+        VNE_LOG_ERROR << last_error_;
+        nrrdNuke(nin);
+        return false;
     }
 
-    // Extract origin (if space information is available)
     if (nin->spaceDim > 0 && nin->spaceDim <= 3) {
         for (unsigned int i = 0; i < nin->spaceDim; ++i) {
             out_volume.origin[i] = static_cast<float>(nin->spaceOrigin[i]);
         }
     }
 
-    // Extract direction matrix (if available)
+    static const float identity[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+    std::memcpy(out_volume.direction, identity, sizeof(identity));
+
     if (nin->spaceDim == 3) {
         for (int i = 0; i < 3; ++i) {
-            if (!std::isnan(nin->axis[i].spaceDirection[0]) && !std::isnan(nin->axis[i].spaceDirection[1])
-                && !std::isnan(nin->axis[i].spaceDirection[2])) {
-                out_volume.direction[i * 3 + 0] = static_cast<float>(nin->axis[i].spaceDirection[0]);
-                out_volume.direction[i * 3 + 1] = static_cast<float>(nin->axis[i].spaceDirection[1]);
-                out_volume.direction[i * 3 + 2] = static_cast<float>(nin->axis[i].spaceDirection[2]);
+            if (i >= static_cast<int>(nin->dim)) {
+                continue;
+            }
+            const double dx = nin->axis[i].spaceDirection[0];
+            const double dy = nin->axis[i].spaceDirection[1];
+            const double dz = nin->axis[i].spaceDirection[2];
+            const bool sd_valid = !std::isnan(dx) && !std::isnan(dy) && !std::isnan(dz) && !std::isinf(dx)
+                && !std::isinf(dy) && !std::isinf(dz);
+            if (sd_valid) {
+                const float fx = static_cast<float>(dx);
+                const float fy = static_cast<float>(dy);
+                const float fz = static_cast<float>(dz);
+                const float len = std::sqrt(fx * fx + fy * fy + fz * fz);
+                if (len > kSpaceDirEps) {
+                    out_volume.spacing[i] = len;
+                    out_volume.direction[i * 3 + 0] = fx / len;
+                    out_volume.direction[i * 3 + 1] = fy / len;
+                    out_volume.direction[i * 3 + 2] = fz / len;
+                    const bool spacing_set = !std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0;
+                    if (spacing_set) {
+                        const float from_axis = static_cast<float>(nin->axis[i].spacing);
+                        if (std::fabs(from_axis - len) > 1e-3f * std::max(len, 1.0f)) {
+                            VNE_LOG_WARN << "NrrdLoader: axis " << i
+                                         << " spacing field disagrees with |space direction|; using |space direction|="
+                                         << len << " (spacing field was " << from_axis << ")";
+                        }
+                    }
+                    VNE_LOG_DEBUG << "NrrdLoader: axis " << i << " space direction length=" << len << " (normalized)";
+                } else {
+                    VNE_LOG_WARN << "NrrdLoader: axis " << i << " space direction near zero; using identity row + axis "
+                                    "spacing fallback";
+                    out_volume.direction[i * 3 + 0] = identity[i * 3 + 0];
+                    out_volume.direction[i * 3 + 1] = identity[i * 3 + 1];
+                    out_volume.direction[i * 3 + 2] = identity[i * 3 + 2];
+                    if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
+                        out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
+                    }
+                }
+            } else {
+                if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
+                    out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
+                }
+                VNE_LOG_DEBUG << "NrrdLoader: axis " << i << " no valid space direction; spacing="
+                              << out_volume.spacing[i];
             }
         }
+    } else {
+        for (unsigned int i = 0; i < nin->dim && i < 3u; ++i) {
+            if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
+                out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
+            }
+        }
+        VNE_LOG_DEBUG << "NrrdLoader: spaceDim=" << nin->spaceDim << " (no 3D space directions); using spacings only";
     }
 
-    // Copy data
-    size_t num_bytes = out_volume.byteCount();
-    out_volume.data.resize(num_bytes);
-    std::memcpy(out_volume.data.data(), nin->data, num_bytes);
+    out_volume.data.resize(vol_bytes);
+    std::memcpy(out_volume.data.data(), nin->data, vol_bytes);
+
+    if (!out_volume.hasExactBufferSize()) {
+        last_error_ = "NrrdLoader: internal buffer size error";
+        VNE_LOG_ERROR << last_error_;
+        nrrdNuke(nin);
+        return false;
+    }
 
     nrrdNuke(nin);
+
+    VNE_LOG_INFO << "NrrdLoader: loaded \"" << path << "\" dims=" << out_volume.dims[0] << "x" << out_volume.dims[1]
+                 << "x" << out_volume.dims[2] << " type=" << static_cast<int>(out_volume.pixel_type) << " spacing=("
+                 << out_volume.spacing[0] << "," << out_volume.spacing[1] << "," << out_volume.spacing[2] << ") origin=("
+                 << out_volume.origin[0] << "," << out_volume.origin[1] << "," << out_volume.origin[2] << ")";
+
     return true;
 }
 

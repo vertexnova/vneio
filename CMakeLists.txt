@@ -509,6 +509,28 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     if(VNEIO_NRRDIO_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
     endif()
+    if(VNEIO_HAS_LOGGING)
+        if(_VNEIO_LIB_KIND STREQUAL STATIC AND TARGET vneio_logging_embed)
+            target_sources(vneio_image PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
+            add_dependencies(vneio_image vneio_logging_embed)
+            target_include_directories(vneio_image PRIVATE
+                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
+                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
+                "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
+                "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
+            if(NOT WIN32 AND NOT EMSCRIPTEN)
+                target_link_libraries(vneio_image PUBLIC Threads::Threads)
+            endif()
+            if(VNE_TARGET_PLATFORM STREQUAL "Android")
+                target_link_libraries(vneio_image PUBLIC log)
+            elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
+                target_link_libraries(vneio_image PUBLIC "-framework" "Foundation")
+            endif()
+        elseif(TARGET vne::logging)
+            target_link_libraries(vneio_image PRIVATE vne::logging)
+        endif()
+        target_compile_definitions(vneio_image PRIVATE VNEIO_HAS_LOGGING=1)
+    endif()
     add_library(vne::io::image ALIAS vneio_image)
 endif()
 
