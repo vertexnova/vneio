@@ -109,12 +109,15 @@ int runLibraryInfoExample() {
     {
         vne::image::Volume v;
         printVolumeInfo(v);
-        if (!check(v.isEmpty(), "empty volume isEmpty()==true"))
+        if (!check(v.isEmpty(), "empty volume isEmpty()==true")) {
             return 1;
-        if (!check(!v.isMetadataValid(), "empty volume isMetadataValid()==false"))
+        }
+        if (!check(!v.isMetadataValid(), "empty volume isMetadataValid()==false")) {
             return 1;
-        if (!check(v.hasIdentityDirection(), "default direction is identity"))
+        }
+        if (!check(v.hasIdentityDirection(), "default direction is identity")) {
             return 1;
+        }
     }
 
     VNE_LOG_INFO << "01_library_info: done.";

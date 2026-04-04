@@ -35,16 +35,21 @@ int runImageLoadingExample() {
             VNE_LOG_WARN << "testdata not found — skipping further image tests";
             return 0;  // soft skip when testdata absent
         }
-        if (!check(!img.isEmpty(), "image is not empty"))
+        if (!check(!img.isEmpty(), "image is not empty")) {
             return 1;
-        if (!check(img.getWidth() > 0, "width > 0"))
+        }
+        if (!check(img.getWidth() > 0, "width > 0")) {
             return 1;
-        if (!check(img.getHeight() > 0, "height > 0"))
+        }
+        if (!check(img.getHeight() > 0, "height > 0")) {
             return 1;
-        if (!check(img.getChannels() >= 1 && img.getChannels() <= 4, "channels in [1,4]"))
+        }
+        if (!check(img.getChannels() >= 1 && img.getChannels() <= 4, "channels in [1,4]")) {
             return 1;
-        if (!check(img.getData() != nullptr, "getData() non-null"))
+        }
+        if (!check(img.getData() != nullptr, "getData() non-null")) {
             return 1;
+        }
 
         VNE_LOG_INFO << "  width=" << img.getWidth() << "  height=" << img.getHeight()
                      << "  channels=" << img.getChannels()
@@ -55,35 +60,44 @@ int runImageLoadingExample() {
     printSection("Construct Image from file path");
     {
         vne::image::Image img(tex_path);
-        if (!check(!img.isEmpty(), "Image(path) is not empty"))
+        if (!check(!img.isEmpty(), "Image(path) is not empty")) {
             return 1;
+        }
     }
 
     // ── Resize + save + reload ────────────────────────────────────────────────
     printSection("Resize to 128x128 and save");
     {
         vne::image::Image img;
-        if (!check(img.loadFromFile(tex_path), ("loadFromFile: " + tex_path).c_str()))
+        if (!check(img.loadFromFile(tex_path), ("loadFromFile: " + tex_path).c_str())) {
             return 1;
+        }
 
-        if (!check(img.resize(128, 128), "resize(128,128) returned true"))
+        if (!check(img.resize(128, 128), "resize(128,128) returned true")) {
             return 1;
-        if (!check(img.getWidth() == 128, "width == 128 after resize"))
+        }
+        if (!check(img.getWidth() == 128, "width == 128 after resize")) {
             return 1;
-        if (!check(img.getHeight() == 128, "height == 128 after resize"))
+        }
+        if (!check(img.getHeight() == 128, "height == 128 after resize")) {
             return 1;
+        }
 
         const std::string out_path = tmpPath("vneio_ex02_resized.png");
-        if (!check(img.saveToFile(out_path, "png"), ("saveToFile: " + out_path).c_str()))
+        if (!check(img.saveToFile(out_path, "png"), ("saveToFile: " + out_path).c_str())) {
             return 1;
+        }
 
         vne::image::Image reloaded;
-        if (!check(reloaded.loadFromFile(out_path, false), "reload saved PNG"))
+        if (!check(reloaded.loadFromFile(out_path, false), "reload saved PNG")) {
             return 1;
-        if (!check(reloaded.getWidth() == 128, "reloaded width == 128"))
+        }
+        if (!check(reloaded.getWidth() == 128, "reloaded width == 128")) {
             return 1;
-        if (!check(reloaded.getHeight() == 128, "reloaded height == 128"))
+        }
+        if (!check(reloaded.getHeight() == 128, "reloaded height == 128")) {
             return 1;
+        }
         VNE_LOG_INFO << "  reloaded channels=" << reloaded.getChannels();
     }
 
@@ -91,11 +105,13 @@ int runImageLoadingExample() {
     printSection("Flip vertically");
     {
         vne::image::Image img;
-        if (!check(img.loadFromFile(tex_path, false), ("loadFromFile (no flip): " + tex_path).c_str()))
+        if (!check(img.loadFromFile(tex_path, false), ("loadFromFile (no flip): " + tex_path).c_str())) {
             return 1;
+        }
         img.flipVertically();
-        if (!check(!img.isEmpty(), "flipped image is not empty"))
+        if (!check(!img.isEmpty(), "flipped image is not empty")) {
             return 1;
+        }
     }
 
     // ── image_utils raw API ───────────────────────────────────────────────────
@@ -103,20 +119,24 @@ int runImageLoadingExample() {
     {
         int w = 0, h = 0, c = 0;
         uint8_t* raw = vne::image::image_utils::loadImage(tex_path, &w, &h, &c);
-        if (!check(raw != nullptr, "loadImage returned non-null"))
+        if (!check(raw != nullptr, "loadImage returned non-null")) {
             return 1;
-        if (!check(w > 0 && h > 0 && c > 0, "w/h/c all > 0"))
+        }
+        if (!check(w > 0 && h > 0 && c > 0, "w/h/c all > 0")) {
             return 1;
+        }
         VNE_LOG_INFO << "  raw: " << w << "x" << h << " ch=" << c;
 
         const std::string raw_out = tmpPath("vneio_ex02_raw.png");
         if (!check(vne::image::image_utils::saveImage(raw_out, raw, w, h, c, "png"),
-                   ("image_utils::saveImage: " + raw_out).c_str()))
+                   ("image_utils::saveImage: " + raw_out).c_str())) {
             return 1;
+        }
 
         vne::image::image_utils::freeImage(raw);
-        if (!check(true, "freeImage (no crash)"))
+        if (!check(true, "freeImage (no crash)")) {
             return 1;
+        }
     }
 
     // ── Construct from raw data ───────────────────────────────────────────────
@@ -129,14 +149,18 @@ int runImageLoadingExample() {
             buf[i * CH + 3] = 255;
         }
         vne::image::Image img(buf, W, H, CH);
-        if (!check(!img.isEmpty(), "Image(raw) is not empty"))
+        if (!check(!img.isEmpty(), "Image(raw) is not empty")) {
             return 1;
-        if (!check(img.getWidth() == W, "width matches"))
+        }
+        if (!check(img.getWidth() == W, "width matches")) {
             return 1;
-        if (!check(img.getHeight() == H, "height matches"))
+        }
+        if (!check(img.getHeight() == H, "height matches")) {
             return 1;
-        if (!check(img.getChannels() == CH, "channels matches"))
+        }
+        if (!check(img.getChannels() == CH, "channels matches")) {
             return 1;
+        }
     }
 
     // ── Error path: non-existent file ─────────────────────────────────────────
@@ -144,10 +168,12 @@ int runImageLoadingExample() {
     {
         vne::image::Image img;
         bool ok = img.loadFromFile("/nonexistent/path/image.png");
-        if (!check(!ok, "loadFromFile returns false for missing file"))
+        if (!check(!ok, "loadFromFile returns false for missing file")) {
             return 1;
-        if (!check(img.isEmpty(), "isEmpty()==true after failed load"))
+        }
+        if (!check(img.isEmpty(), "isEmpty()==true after failed load")) {
             return 1;
+        }
     }
 
     VNE_LOG_INFO << "02_image_loading: done.";

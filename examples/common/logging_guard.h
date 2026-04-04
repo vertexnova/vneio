@@ -81,8 +81,9 @@ class ExampleLogStream {
     }
 
     ~ExampleLogStream() {
-        if (prefix_)
+        if (prefix_) {
             out_ << prefix_;
+        }
         out_ << oss_.str() << '\n';
     }
 

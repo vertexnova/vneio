@@ -43,9 +43,10 @@ static bool verifyRoundTrip(const vne::image::Volume& src, const vne::image::Vol
     ok &= check(nearEq(loaded.origin[0], src.origin[0]) && nearEq(loaded.origin[1], src.origin[1])
                     && nearEq(loaded.origin[2], src.origin[2]),
                 (std::string(label) + ": origin match").c_str());
-    for (int i = 0; i < 9; ++i)
+    for (int i = 0; i < 9; ++i) {
         ok &= check(nearEq(loaded.direction[i], src.direction[i]),
                     (std::string(label) + ": direction[" + std::to_string(i) + "] match").c_str());
+    }
     ok &= check(loaded.pixel_type == src.pixel_type, (std::string(label) + ": pixel_type match").c_str());
     ok &= check(loaded.byteCount() == src.byteCount(), (std::string(label) + ": byteCount match").c_str());
     // First and last voxel
@@ -83,11 +84,13 @@ int runVolumeExportExample() {
     src.components = 1;
     src.data.resize(src.byteCount());
     auto* p = reinterpret_cast<uint16_t*>(src.data.data());
-    for (size_t i = 0; i < src.voxelCount(); ++i)
+    for (size_t i = 0; i < src.voxelCount(); ++i) {
         p[i] = static_cast<uint16_t>(i * 100 + 1);
+    }
     printVolumeInfo(src, "source");
-    if (!check(src.isMetadataValid(), "source isMetadataValid()==true"))
+    if (!check(src.isMetadataValid(), "source isMetadataValid()==true")) {
         return 1;
+    }
 
     // ── Variant 1: .nrrd attached ─────────────────────────────────────────────
     printSection("Variant 1: NRRD attached (.nrrd)");
@@ -105,8 +108,9 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "nrrd-attached"))
+        if (!verifyRoundTrip(src, loaded, "nrrd-attached")) {
             return 1;
+        }
         printVolumeInfo(loaded, "loaded (nrrd attached)");
     }
 
@@ -127,8 +131,9 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "nrrd-detached"))
+        if (!verifyRoundTrip(src, loaded, "nrrd-detached")) {
             return 1;
+        }
         printVolumeInfo(loaded, "loaded (nrrd detached)");
     }
 
@@ -148,8 +153,9 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "mhd-separate"))
+        if (!verifyRoundTrip(src, loaded, "mhd-separate")) {
             return 1;
+        }
         printVolumeInfo(loaded, "loaded (mhd + raw)");
     }
 
@@ -170,8 +176,9 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "mha-inline"))
+        if (!verifyRoundTrip(src, loaded, "mha-inline")) {
             return 1;
+        }
         printVolumeInfo(loaded, "loaded (mha inline)");
     }
 

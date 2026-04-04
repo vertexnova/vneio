@@ -81,12 +81,15 @@ inline void printStatus(const Status& s) {
     } else {
         std::ostringstream oss;
         oss << "  status: " << errorCodeName(s.code);
-        if (!s.subsystem.empty())
+        if (!s.subsystem.empty()) {
             oss << "  subsystem: " << s.subsystem;
-        if (!s.message.empty())
+        }
+        if (!s.message.empty()) {
             oss << "  msg: " << s.message;
-        if (!s.path.empty())
+        }
+        if (!s.path.empty()) {
             oss << "  path: " << s.path;
+        }
         VNE_LOG_WARN << oss.str();
     }
 }
