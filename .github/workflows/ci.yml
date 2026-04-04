@@ -94,7 +94,9 @@ jobs:
 
       - name: Check formatting
         run: |
-          find src include tests \
+          DIRS=(src include)
+          [[ -d tests ]] && DIRS+=(tests)
+          find "${DIRS[@]}" \
             -type f \( -name '*.h' -o -name '*.hpp' -o -name '*.cpp' -o -name '*.c' \) \
             -print0 \
           | xargs -0 -r clang-format --dry-run --Werror \
