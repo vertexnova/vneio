@@ -12,12 +12,14 @@ Published files:
 
 `ARTIFACT_DETAIL` is computed in the **Compute artifact detail suffix** step.
 
+**Normalization:** Any field that is empty or the literal **`unknown`** (case-insensitive) is **left out** of the suffix — the workflow does **not** embed the token `unknown` in filenames. That includes **`VERSION_ID`**, **`uname -m`**, **GCC version**, **NDK revision**, and **macOS / Xcode** segments where applicable. If **`uname -m`** is missing, the trailing `-{arch}` piece is omitted (with a notice). If both **GCC** and **`VERSION_ID`** are unusable on Linux, the fallback prefix is `linux-gcc` before any arch suffix.
+
 | Platform         | `ARTIFACT_DETAIL` rule |
 |------------------|------------------------|
-| **linux-gcc**    | `ubuntu{VERSION_ID}-gcc{gcc -dumpfullversion}-{uname -m}` using **`/etc/os-release` `VERSION_ID`** and **GCC’s version string with dots preserved** (e.g. **22.04**, **13.2.0**). If GCC is missing, `ubuntu{VERSION_ID}-{arch}` with a notice. |
-| **macos**        | When both parse: `macos{productVersion}-xcode{xcodeVersion}-{uname -m}` with **dots preserved** (`sw_vers -productVersion`, `xcodebuild` second field), e.g. **14.2.1**, **26.0**. If **product version** is missing, empty, or the literal `unknown` (any case), the `macos{version}` segment is **omitted** — e.g. `macos-xcode{…}-{arch}` or `macos-{arch}` — never `macosunknown-…`. If Xcode does not parse, the `xcode{…}` segment is omitted with a notice. |
+| **linux-gcc**    | Typically `ubuntu{VERSION_ID}-gcc{gcc -dumpfullversion}-{uname -m}` with dots preserved on Ubuntu/GCC strings. If **`VERSION_ID`** is missing or `unknown`, the `ubuntu{…}` segment is dropped (`gcc{…}-{arch}` or `linux-gcc-{arch}` / `linux-gcc` if needed). If GCC is missing, `ubuntu{VERSION_ID}-{arch}` or `ubuntu{VERSION_ID}`; notices as above. |
+| **macos**        | Typically `macos{productVersion}-xcode{xcodeVersion}-{uname -m}` with dots preserved. If **product version** is missing or `unknown`, that segment is omitted (e.g. `macos-xcode{…}-{arch}`). If Xcode does not parse, the `xcode{…}` segment is omitted. Trailing `{arch}` follows the same rules as other platforms. |
 | **windows**      | `vs2022-x64` (fixed). |
-| **web-emscripten** | `emcc{emcc -dumpversion}-{uname -m}`; fails the job if the version is missing or `unknown`. |
+| **web-emscripten** | `emcc{emcc -dumpversion}-{uname -m}` when both parse; the job errors if the Emscripten version is missing or `unknown`. |
 | **ios-static**   | `xcode{xcodebuild version}-arm64` with **dots preserved** (e.g. **26.0**). The Xcode version must be readable from `xcodebuild -version`; there is **no** generic fallback suffix (e.g. `ios-arm64`) if parsing fails. |
 | **android**      | `android{API}-ndk{NDK Pkg.Revision}-arm64v8a` with **NDK revision dots preserved**, or `android{API}-arm64v8a` if NDK revision cannot be read. |
 
@@ -53,14 +55,19 @@ This means the install step did not place any `.a` files under `install/`, or th
 
 ### Xcode / artifact suffix errors
 
-If `xcodebuild -version` is missing or unusable (wrong `DEVELOPER_DIR`, Xcode not selected, broken image), the **iOS** publish job stops with an error from **Verify Xcode (iOS release)** or, defensively, from **Compute artifact detail suffix** — consistent with the table: no ambiguous `ios-arm64`-only suffix.
+For **ios-static**, `release-please.yml` evaluates **`xcodebuild -version`** in several steps (not just one):
 
-macOS desktop jobs avoid embedding the literal `unknown` in `ARTIFACT_DETAIL` when OS or Xcode metadata is missing.
+1. **Verify Xcode (iOS release)** — runs `xcodebuild -version` and errors if it fails or the Xcode version line cannot be read.
+2. **Configure CMake (iOS)** — runs `xcodebuild -version` again (under `set -x`) before invoking CMake.
+3. **Compute artifact detail suffix** — runs `xcodebuild -version` once more to build `xcode{version}-arm64`; errors if parsing still fails.
+
+If Xcode is missing, wrong, or `DEVELOPER_DIR` is broken, open the failed publish job log, **search for `xcodebuild -version`**, and read the **`::error::`** line in the step that actually stopped (often the first of the three that runs). The table still applies: there is no ambiguous **`ios-arm64`-only** suffix when the version cannot be read.
 
 ### Getting more compiler output
 
-- iOS **Configure**: `CMAKE_VERBOSE_MAKEFILE=ON`
-- iOS **Build**: `VERBOSE=1` and `cmake --build … --verbose`
-- iOS **Install**: `cmake --install … --verbose`
+For **ios-static** / **Build / iOS**, both **`release-please.yml`** and **`ci.yml`** pass **`-DCMAKE_VERBOSE_MAKEFILE=ON`** on the **`cmake -B … -S …`** line in the **Configure CMake (iOS)** step.
 
-The same verbosity applies to the **Build / iOS** job in `ci.yml` for parity.
+- iOS **Build**: **`VERBOSE=1`** and **`cmake --build … --config Release --parallel --verbose`** (this is usually where full compile/link lines show up with **`-G Xcode`**).
+- iOS **Install** (release only): **`cmake --install … --verbose`**.
+
+`ci.yml` **Build / iOS** mirrors the same configure flag and build verbosity as the release publish job.
