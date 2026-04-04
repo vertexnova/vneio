@@ -228,13 +228,12 @@ if(EXISTS "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/CMakeLists.txt")
         )
         if(NOT WIN32 AND NOT EMSCRIPTEN)
             find_package(Threads REQUIRED)
-            # PUBLIC so dependents (e.g. static vneio_mesh) propagate pthread to final links.
-            target_link_libraries(vneio_logging_embed PUBLIC Threads::Threads)
+            target_link_libraries(vneio_logging_embed PRIVATE Threads::Threads)
         endif()
         if(VNE_TARGET_PLATFORM STREQUAL "Android")
-            target_link_libraries(vneio_logging_embed PUBLIC log)
+            target_link_libraries(vneio_logging_embed PRIVATE log)
         elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
-            target_link_libraries(vneio_logging_embed PUBLIC "-framework" "Foundation")
+            target_link_libraries(vneio_logging_embed PRIVATE "-framework" "Foundation")
         endif()
         if(MSVC)
             target_compile_definitions(vneio_logging_embed PRIVATE _CRT_SECURE_NO_WARNINGS)
@@ -406,14 +405,24 @@ if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
     )
     if(VNEIO_HAS_LOGGING)
         if(_VNEIO_LIB_KIND STREQUAL STATIC AND TARGET vneio_logging_embed)
-            # Link the OBJECT target (not $<TARGET_OBJECTS:...>) so Threads, log, and Foundation
-            # usage requirements propagate to vneio_mesh consumers.
-            target_link_libraries(vneio_mesh PRIVATE vneio_logging_embed)
+            # OBJECT embedding keeps vneio_logging_embed out of install(EXPORT); pthread / log /
+            # Foundation are not pulled in via that edge, so declare them PUBLIC on vneio_mesh
+            # for consumers linking the static library.
+            target_sources(vneio_mesh PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
+            add_dependencies(vneio_mesh vneio_logging_embed)
             target_include_directories(vneio_mesh PRIVATE
                 "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
                 "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
                 "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
                 "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
+            if(NOT WIN32 AND NOT EMSCRIPTEN)
+                target_link_libraries(vneio_mesh PUBLIC Threads::Threads)
+            endif()
+            if(VNE_TARGET_PLATFORM STREQUAL "Android")
+                target_link_libraries(vneio_mesh PUBLIC log)
+            elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
+                target_link_libraries(vneio_mesh PUBLIC "-framework" "Foundation")
+            endif()
         elseif(TARGET vne::logging)
             target_link_libraries(vneio_mesh PRIVATE vne::logging)
         endif()
