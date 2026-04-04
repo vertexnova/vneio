@@ -19,6 +19,7 @@ ignore:
   - "tests/**/*"
   - "*_test.cpp"
   - "deps/**/*"
+  # Examples: not built under ENABLE_COVERAGE; also excluded from lcov in build-reusable.yml
   - "examples/**/*"
   - "_deps/**/*"
   - "cmake/**/*"
