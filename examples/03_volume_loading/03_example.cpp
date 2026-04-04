@@ -29,10 +29,13 @@ namespace vne::io::examples {
 // Helper: compute min/max over a uint8 volume buffer
 static void voxelMinMax(const vne::image::Volume& v, uint8_t& out_min, uint8_t& out_max) {
     const auto* p = v.dataAs<uint8_t>();
-    out_min = 255; out_max = 0;
+    out_min = 255;
+    out_max = 0;
     for (size_t i = 0; i < v.voxelCount(); ++i) {
-        if (p[i] < out_min) out_min = p[i];
-        if (p[i] > out_max) out_max = p[i];
+        if (p[i] < out_min)
+            out_min = p[i];
+        if (p[i] > out_max)
+            out_max = p[i];
     }
 }
 
@@ -40,10 +43,13 @@ static void voxelMinMax(const vne::image::Volume& v, uint8_t& out_min, uint8_t& 
 static void voxelMinMaxU16(const vne::image::Volume& v, uint16_t& out_min, uint16_t& out_max) {
     const auto* p = v.dataAs<uint16_t>();
     size_t n = v.voxelCount();
-    out_min = 65535; out_max = 0;
+    out_min = 65535;
+    out_max = 0;
     for (size_t i = 0; i < n; ++i) {
-        if (p[i] < out_min) out_min = p[i];
-        if (p[i] > out_max) out_max = p[i];
+        if (p[i] < out_min)
+            out_min = p[i];
+        if (p[i] > out_max)
+            out_max = p[i];
     }
 }
 
@@ -58,22 +64,24 @@ int runVolumeLoadingExample() {
         vne::image::Volume vol;
         bool ok = loader.load(path, vol);
         if (!ok) {
-            VNE_LOG_WARN << "small3d.nrrd not found: " << loader.getLastError()
-                << " — skipping NRRD tests";
+            VNE_LOG_WARN << "small3d.nrrd not found: " << loader.getLastError() << " — skipping NRRD tests";
         } else {
             printVolumeInfo(vol, "small3d.nrrd");
-            if (!check(!vol.isEmpty(),        "volume is not empty"))       return 1;
-            if (!check(vol.isMetadataValid(), "isMetadataValid()==true"))   return 1;
-            if (!check(vol.hasScalarVoxels(), "hasScalarVoxels()==true"))   return 1;
-            if (!check(vol.dims[0] > 0 && vol.dims[1] > 0 && vol.dims[2] > 0,
-                       "all dims > 0"))                                      return 1;
-            if (!check(vol.hasExactBufferSize(), "hasExactBufferSize()==true")) return 1;
+            if (!check(!vol.isEmpty(), "volume is not empty"))
+                return 1;
+            if (!check(vol.isMetadataValid(), "isMetadataValid()==true"))
+                return 1;
+            if (!check(vol.hasScalarVoxels(), "hasScalarVoxels()==true"))
+                return 1;
+            if (!check(vol.dims[0] > 0 && vol.dims[1] > 0 && vol.dims[2] > 0, "all dims > 0"))
+                return 1;
+            if (!check(vol.hasExactBufferSize(), "hasExactBufferSize()==true"))
+                return 1;
 
             if (vol.pixel_type == vne::image::VolumePixelType::eUint8) {
                 uint8_t mn, mx;
                 voxelMinMax(vol, mn, mx);
-                VNE_LOG_INFO << "  voxel min=" << static_cast<int>(mn)
-                    << "  max=" << static_cast<int>(mx);
+                VNE_LOG_INFO << "  voxel min=" << static_cast<int>(mn) << "  max=" << static_cast<int>(mx);
             } else if (vol.pixel_type == vne::image::VolumePixelType::eUint16) {
                 uint16_t mn, mx;
                 voxelMinMaxU16(vol, mn, mx);
@@ -94,10 +102,13 @@ int runVolumeLoadingExample() {
             vne::image::NrrdLoader loader;
             vne::image::Volume vol;
             bool ok = loader.load(path, vol);
-            if (!check(ok, ("load an-hist.nrrd: " + path).c_str())) return 1;
+            if (!check(ok, ("load an-hist.nrrd: " + path).c_str()))
+                return 1;
             printVolumeInfo(vol, "an-hist.nrrd");
-            if (!check(!vol.isEmpty(),        "volume is not empty"))     return 1;
-            if (!check(vol.isMetadataValid(), "isMetadataValid()==true")) return 1;
+            if (!check(!vol.isEmpty(), "volume is not empty"))
+                return 1;
+            if (!check(vol.isMetadataValid(), "isMetadataValid()==true"))
+                return 1;
         }
     }
 
@@ -113,11 +124,13 @@ int runVolumeLoadingExample() {
             vne::image::NrrdLoader loader;
             vne::io::LoadRequest req;
             req.asset_type = vne::io::AssetType::eVolume;
-            req.uri        = path;
-            auto result    = loader.loadVolume(req);
-            if (!check(result.ok(), "loadVolume(LoadRequest) ok")) return 1;
+            req.uri = path;
+            auto result = loader.loadVolume(req);
+            if (!check(result.ok(), "loadVolume(LoadRequest) ok"))
+                return 1;
             printStatus(result.status);
-            if (!check(!result.value.isEmpty(), "result.value is not empty")) return 1;
+            if (!check(!result.value.isEmpty(), "result.value is not empty"))
+                return 1;
         }
     }
 
@@ -127,8 +140,12 @@ int runVolumeLoadingExample() {
         // Build a minimal 3×3×3 uint8 volume
         vne::image::Volume src;
         src.dims[0] = src.dims[1] = src.dims[2] = 3;
-        src.spacing[0] = 0.5f; src.spacing[1] = 0.5f; src.spacing[2] = 1.0f;
-        src.origin[0]  = 1.0f; src.origin[1]  = 2.0f; src.origin[2]  = 3.0f;
+        src.spacing[0] = 0.5f;
+        src.spacing[1] = 0.5f;
+        src.spacing[2] = 1.0f;
+        src.origin[0] = 1.0f;
+        src.origin[1] = 2.0f;
+        src.origin[2] = 3.0f;
         src.pixel_type = vne::image::VolumePixelType::eUint8;
         src.components = 1;
         src.data.resize(src.byteCount());
@@ -137,8 +154,7 @@ int runVolumeLoadingExample() {
 
         const std::string mhd_path = tmpPath("vneio_ex03_synth.mhd");
         std::string err;
-        if (!check(vne::image::exportMhd(mhd_path, src, {}, &err),
-                   ("exportMhd to " + mhd_path).c_str())) {
+        if (!check(vne::image::exportMhd(mhd_path, src, {}, &err), ("exportMhd to " + mhd_path).c_str())) {
             VNE_LOG_ERROR << "exportMhd error: " << err;
             return 1;
         }
@@ -151,10 +167,14 @@ int runVolumeLoadingExample() {
             return 1;
         }
         printVolumeInfo(loaded, "synthetic MHD (loaded)");
-        if (!check(loaded.dims[0] == 3, "dims[0]==3")) return 1;
-        if (!check(loaded.dims[1] == 3, "dims[1]==3")) return 1;
-        if (!check(loaded.dims[2] == 3, "dims[2]==3")) return 1;
-        if (!check(loaded.isMetadataValid(), "isMetadataValid()==true")) return 1;
+        if (!check(loaded.dims[0] == 3, "dims[0]==3"))
+            return 1;
+        if (!check(loaded.dims[1] == 3, "dims[1]==3"))
+            return 1;
+        if (!check(loaded.dims[2] == 3, "dims[2]==3"))
+            return 1;
+        if (!check(loaded.isMetadataValid(), "isMetadataValid()==true"))
+            return 1;
     }
 
     // ── MhdLoader via LoadRequest interface ───────────────────────────────────
@@ -169,9 +189,10 @@ int runVolumeLoadingExample() {
             vne::image::MhdLoader loader;
             vne::io::LoadRequest req;
             req.asset_type = vne::io::AssetType::eVolume;
-            req.uri        = mhd_path;
-            auto result    = loader.loadVolume(req);
-            if (!check(result.ok(), "MhdLoader loadVolume(LoadRequest) ok")) return 1;
+            req.uri = mhd_path;
+            auto result = loader.loadVolume(req);
+            if (!check(result.ok(), "MhdLoader loadVolume(LoadRequest) ok"))
+                return 1;
             printStatus(result.status);
         }
     }
@@ -182,9 +203,11 @@ int runVolumeLoadingExample() {
         vne::image::NrrdLoader loader;
         vne::image::Volume vol;
         bool ok = loader.load("/nonexistent/path/vol.nrrd", vol);
-        if (!check(!ok, "load returns false for missing file")) return 1;
-        if (!check(!loader.getLastError().empty(), "getLastError() non-empty")) return 1;
-        VNE_LOG_INFO << "  error: " << loader.getLastError();
+        if (!check(!ok, "load returns false for missing file"))
+            return 1;
+        if (!check(!loader.getLastError().empty(), "getLastError() non-empty"))
+            return 1;
+        VNE_LOG_ERROR << "  " << loader.getLastError();
     }
 
     VNE_LOG_INFO << "03_volume_loading: done.";

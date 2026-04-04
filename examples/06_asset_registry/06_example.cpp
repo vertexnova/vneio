@@ -41,7 +41,8 @@ int runAssetRegistryExample() {
         registry.registerVolumeLoader(std::make_unique<vne::image::NrrdLoader>());
         registry.registerVolumeLoader(std::make_unique<vne::image::MhdLoader>());
         registry.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
-        if (!check(true, "registry constructed and loaders registered")) return 1;
+        if (!check(true, "registry constructed and loaders registered"))
+            return 1;
     }
 
     // ── Shared registry for remaining sections ────────────────────────────────
@@ -56,15 +57,15 @@ int runAssetRegistryExample() {
     {
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eImage;
-        req.uri        = std::string(VNEIO_TESTDATA_DIR) + "/textures/sample.png";
+        req.uri = std::string(VNEIO_TESTDATA_DIR) + "/textures/sample.png";
 
         auto result = registry.loadImage(req);
         printStatus(result.status);
         if (result.ok()) {
-            if (!check(!result.value.isEmpty(), "image is not empty")) return 1;
-            VNE_LOG_INFO << "  image: " << result.value.getWidth()
-                << "x" << result.value.getHeight()
-                << " ch=" << result.value.getChannels();
+            if (!check(!result.value.isEmpty(), "image is not empty"))
+                return 1;
+            VNE_LOG_INFO << "  image: " << result.value.getWidth() << "x" << result.value.getHeight()
+                         << " ch=" << result.value.getChannels();
         } else if (result.status.code == vne::io::ErrorCode::eFileNotFound) {
             VNE_LOG_WARN << "testdata not found — continuing with remaining sections";
         } else {
@@ -78,13 +79,15 @@ int runAssetRegistryExample() {
     {
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eVolume;
-        req.uri        = std::string(VNEIO_TESTDATA_DIR) + "/volumes/small3d.nrrd";
+        req.uri = std::string(VNEIO_TESTDATA_DIR) + "/volumes/small3d.nrrd";
 
         auto result = registry.loadVolume(req);
         printStatus(result.status);
         if (result.ok()) {
-            if (!check(!result.value.isEmpty(),        "volume is not empty"))     return 1;
-            if (!check(result.value.isMetadataValid(), "isMetadataValid()==true")) return 1;
+            if (!check(!result.value.isEmpty(), "volume is not empty"))
+                return 1;
+            if (!check(result.value.isMetadataValid(), "isMetadataValid()==true"))
+                return 1;
             printVolumeInfo(result.value);
         } else if (result.status.code == vne::io::ErrorCode::eFileNotFound) {
             VNE_LOG_WARN << "testdata not found — continuing";
@@ -99,12 +102,13 @@ int runAssetRegistryExample() {
     {
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eMesh;
-        req.uri        = std::string(VNEIO_TESTDATA_DIR) + "/meshes/minimal.stl";
+        req.uri = std::string(VNEIO_TESTDATA_DIR) + "/meshes/minimal.stl";
 
         auto result = registry.loadMesh(req);
         printStatus(result.status);
         if (result.ok()) {
-            if (!check(!result.value.isEmpty(), "mesh is not empty")) return 1;
+            if (!check(!result.value.isEmpty(), "mesh is not empty"))
+                return 1;
             printMeshInfo(result.value);
         } else if (result.status.code == vne::io::ErrorCode::eFileNotFound) {
             VNE_LOG_WARN << "testdata not found — continuing";
@@ -119,7 +123,7 @@ int runAssetRegistryExample() {
     {
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eVolume;
-        req.uri        = "/nonexistent/path/vol.nrrd";
+        req.uri = "/nonexistent/path/vol.nrrd";
 
         auto result = registry.loadVolume(req);
         // Always gate on ok() before accessing .value
@@ -127,10 +131,10 @@ int runAssetRegistryExample() {
             VNE_LOG_ERROR << "expected failure but got ok — something is wrong";
             return 1;
         }
-        if (!check(!result.ok(), "result.ok()==false for missing file")) return 1;
-        VNE_LOG_INFO << "  code=" << errorCodeName(result.status.code)
-            << "  subsystem=" << result.status.subsystem
-            << "  msg=" << result.status.message;
+        if (!check(!result.ok(), "result.ok()==false for missing file"))
+            return 1;
+        VNE_LOG_INFO << "  code=" << errorCodeName(result.status.code) << "  subsystem=" << result.status.subsystem
+                     << "  msg=" << result.status.message;
     }
 
     // ── Negative: file not found ──────────────────────────────────────────────
@@ -138,10 +142,11 @@ int runAssetRegistryExample() {
     {
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eImage;
-        req.uri        = "/nonexistent/path/image.png";
+        req.uri = "/nonexistent/path/image.png";
 
         auto result = registry.loadImage(req);
-        if (!check(!result.ok(), "result not ok")) return 1;
+        if (!check(!result.ok(), "result not ok"))
+            return 1;
         VNE_LOG_INFO << "  code=" << errorCodeName(result.status.code);
     }
 
@@ -153,12 +158,13 @@ int runAssetRegistryExample() {
 
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eImage;
-        req.uri        = "something.png";
+        req.uri = "something.png";
 
         auto result = empty_registry.loadImage(req);
-        if (!check(!result.ok(), "empty registry result not ok")) return 1;
-        if (!check(result.status.code == vne::io::ErrorCode::eUnsupportedFormat,
-                   "code == eUnsupportedFormat")) return 1;
+        if (!check(!result.ok(), "empty registry result not ok"))
+            return 1;
+        if (!check(result.status.code == vne::io::ErrorCode::eUnsupportedFormat, "code == eUnsupportedFormat"))
+            return 1;
         VNE_LOG_INFO << "  code=" << errorCodeName(result.status.code);
     }
 
@@ -168,11 +174,12 @@ int runAssetRegistryExample() {
         vne::io::AssetIO empty_registry;
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eMesh;
-        req.uri        = "mesh.stl";
-        auto result    = empty_registry.loadMesh(req);
-        if (!check(!result.ok(), "empty registry mesh result not ok")) return 1;
-        if (!check(result.status.code == vne::io::ErrorCode::eUnsupportedFormat,
-                   "code == eUnsupportedFormat")) return 1;
+        req.uri = "mesh.stl";
+        auto result = empty_registry.loadMesh(req);
+        if (!check(!result.ok(), "empty registry mesh result not ok"))
+            return 1;
+        if (!check(result.status.code == vne::io::ErrorCode::eUnsupportedFormat, "code == eUnsupportedFormat"))
+            return 1;
         VNE_LOG_INFO << "  code=" << errorCodeName(result.status.code);
     }
 

@@ -28,17 +28,17 @@ namespace io {
  * @brief Stable error codes for load and export operations.
  */
 enum class ErrorCode : int {
-    eOk = 0,              //!< Success.
-    eUnknown = -1,             //!< Unknown error.
-    eInvalidArgument = -2,     //!< Invalid parameter.
-    eNotImplemented = -3,      //!< Feature not implemented.
-    eOutOfMemory = -4,         //!< Allocation failed.
-    eFileNotFound = -5,        //!< File does not exist.
-    eFileOpenFailed = -6,      //!< Failed to open file.
-    eFileReadFailed = -7,      //!< Read error.
-    eFileWriteFailed = -8,     //!< Write error.
-    ePathInvalid = -9,         //!< Invalid path.
-    eUnsupportedFormat = -10,          //!< Format not supported.
+    eOk = 0,                    //!< Success.
+    eUnknown = -1,              //!< Unknown error.
+    eInvalidArgument = -2,      //!< Invalid parameter.
+    eNotImplemented = -3,       //!< Feature not implemented.
+    eOutOfMemory = -4,          //!< Allocation failed.
+    eFileNotFound = -5,         //!< File does not exist.
+    eFileOpenFailed = -6,       //!< Failed to open file.
+    eFileReadFailed = -7,       //!< Read error.
+    eFileWriteFailed = -8,      //!< Write error.
+    ePathInvalid = -9,          //!< Invalid path.
+    eUnsupportedFormat = -10,   //!< Format not supported.
     eUnsupportedFeature = -11,  //!< Feature not supported.
     eParseError = -12,          //!< Parse failed.
     eDataCorrupt = -13,         //!< Corrupt data.

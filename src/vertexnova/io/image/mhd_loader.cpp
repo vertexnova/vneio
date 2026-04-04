@@ -25,7 +25,15 @@ namespace {
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.mhd_loader");
 
 constexpr float kIdentityDirection3x3[9] = {
-    1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f,
+    1.f,
+    0.f,
+    0.f,
+    0.f,
+    1.f,
+    0.f,
+    0.f,
+    0.f,
+    1.f,
 };
 /** Minimum axis length before treating a TransformMatrix row as degenerate. */
 constexpr float kTransformAxisMinLength = 1e-20f;

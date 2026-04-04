@@ -28,22 +28,21 @@ namespace vne::io::examples {
 
 static constexpr float kEps = 5e-4f;
 
-static bool nearEq(float a, float b) { return std::fabs(a - b) < kEps; }
+static bool nearEq(float a, float b) {
+    return std::fabs(a - b) < kEps;
+}
 
 // Verify that `loaded` matches `src` geometry and voxel endpoints.
-static bool verifyRoundTrip(const vne::image::Volume& src,
-                             const vne::image::Volume& loaded,
-                             const char* label) {
+static bool verifyRoundTrip(const vne::image::Volume& src, const vne::image::Volume& loaded, const char* label) {
     bool ok = true;
-    ok &= check(loaded.dims[0] == src.dims[0] &&
-                loaded.dims[1] == src.dims[1] &&
-                loaded.dims[2] == src.dims[2], (std::string(label) + ": dims match").c_str());
-    ok &= check(nearEq(loaded.spacing[0], src.spacing[0]) &&
-                nearEq(loaded.spacing[1], src.spacing[1]) &&
-                nearEq(loaded.spacing[2], src.spacing[2]), (std::string(label) + ": spacing match").c_str());
-    ok &= check(nearEq(loaded.origin[0], src.origin[0]) &&
-                nearEq(loaded.origin[1], src.origin[1]) &&
-                nearEq(loaded.origin[2], src.origin[2]),  (std::string(label) + ": origin match").c_str());
+    ok &= check(loaded.dims[0] == src.dims[0] && loaded.dims[1] == src.dims[1] && loaded.dims[2] == src.dims[2],
+                (std::string(label) + ": dims match").c_str());
+    ok &= check(nearEq(loaded.spacing[0], src.spacing[0]) && nearEq(loaded.spacing[1], src.spacing[1])
+                    && nearEq(loaded.spacing[2], src.spacing[2]),
+                (std::string(label) + ": spacing match").c_str());
+    ok &= check(nearEq(loaded.origin[0], src.origin[0]) && nearEq(loaded.origin[1], src.origin[1])
+                    && nearEq(loaded.origin[2], src.origin[2]),
+                (std::string(label) + ": origin match").c_str());
     for (int i = 0; i < 9; ++i)
         ok &= check(nearEq(loaded.direction[i], src.direction[i]),
                     (std::string(label) + ": direction[" + std::to_string(i) + "] match").c_str());
@@ -51,10 +50,8 @@ static bool verifyRoundTrip(const vne::image::Volume& src,
     ok &= check(loaded.byteCount() == src.byteCount(), (std::string(label) + ": byteCount match").c_str());
     // First and last voxel
     if (!loaded.data.empty() && !src.data.empty()) {
-        ok &= check(loaded.data.front() == src.data.front(),
-                    (std::string(label) + ": first voxel match").c_str());
-        ok &= check(loaded.data.back()  == src.data.back(),
-                    (std::string(label) + ": last voxel match").c_str());
+        ok &= check(loaded.data.front() == src.data.front(), (std::string(label) + ": first voxel match").c_str());
+        ok &= check(loaded.data.back() == src.data.back(), (std::string(label) + ": last voxel match").c_str());
     }
     return ok;
 }
@@ -65,13 +62,23 @@ int runVolumeExportExample() {
     // ── Build reference volume ────────────────────────────────────────────────
     printSection("Build synthetic 4x4x4 uint16 volume");
     vne::image::Volume src;
-    src.dims[0]    = src.dims[1] = src.dims[2] = 4;
-    src.spacing[0] = 0.75f;  src.spacing[1] = 1.25f;  src.spacing[2] = 2.0f;
-    src.origin[0]  = 10.0f;  src.origin[1]  = -5.0f;  src.origin[2]  = 0.5f;
+    src.dims[0] = src.dims[1] = src.dims[2] = 4;
+    src.spacing[0] = 0.75f;
+    src.spacing[1] = 1.25f;
+    src.spacing[2] = 2.0f;
+    src.origin[0] = 10.0f;
+    src.origin[1] = -5.0f;
+    src.origin[2] = 0.5f;
     // Non-identity direction (slight rotation in XY)
-    src.direction[0] = 0.9998477f; src.direction[1] = -0.0174524f; src.direction[2] = 0.0f;
-    src.direction[3] = 0.0174524f; src.direction[4] =  0.9998477f; src.direction[5] = 0.0f;
-    src.direction[6] = 0.0f;       src.direction[7] =  0.0f;       src.direction[8] = 1.0f;
+    src.direction[0] = 0.9998477f;
+    src.direction[1] = -0.0174524f;
+    src.direction[2] = 0.0f;
+    src.direction[3] = 0.0174524f;
+    src.direction[4] = 0.9998477f;
+    src.direction[5] = 0.0f;
+    src.direction[6] = 0.0f;
+    src.direction[7] = 0.0f;
+    src.direction[8] = 1.0f;
     src.pixel_type = vne::image::VolumePixelType::eUint16;
     src.components = 1;
     src.data.resize(src.byteCount());
@@ -79,7 +86,8 @@ int runVolumeExportExample() {
     for (size_t i = 0; i < src.voxelCount(); ++i)
         p[i] = static_cast<uint16_t>(i * 100 + 1);
     printVolumeInfo(src, "source");
-    if (!check(src.isMetadataValid(), "source isMetadataValid()==true")) return 1;
+    if (!check(src.isMetadataValid(), "source isMetadataValid()==true"))
+        return 1;
 
     // ── Variant 1: .nrrd attached ─────────────────────────────────────────────
     printSection("Variant 1: NRRD attached (.nrrd)");
@@ -87,8 +95,7 @@ int runVolumeExportExample() {
         const std::string path = tmpPath("vneio_ex04_v1.nrrd");
         std::string err;
         vne::image::NrrdExportOptions opts;
-        if (!check(vne::image::exportNrrd(path, src, opts, &err),
-                   ("exportNrrd: " + path).c_str())) {
+        if (!check(vne::image::exportNrrd(path, src, opts, &err), ("exportNrrd: " + path).c_str())) {
             VNE_LOG_ERROR << "error: " << err;
             return 1;
         }
@@ -98,7 +105,8 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "nrrd-attached")) return 1;
+        if (!verifyRoundTrip(src, loaded, "nrrd-attached"))
+            return 1;
         printVolumeInfo(loaded, "loaded (nrrd attached)");
     }
 
@@ -109,8 +117,7 @@ int runVolumeExportExample() {
         std::string err;
         vne::image::NrrdExportOptions opts;
         opts.detached_data = true;
-        if (!check(vne::image::exportNrrd(path, src, opts, &err),
-                   ("exportNrrd detached: " + path).c_str())) {
+        if (!check(vne::image::exportNrrd(path, src, opts, &err), ("exportNrrd detached: " + path).c_str())) {
             VNE_LOG_ERROR << "error: " << err;
             return 1;
         }
@@ -120,7 +127,8 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "nrrd-detached")) return 1;
+        if (!verifyRoundTrip(src, loaded, "nrrd-detached"))
+            return 1;
         printVolumeInfo(loaded, "loaded (nrrd detached)");
     }
 
@@ -130,8 +138,7 @@ int runVolumeExportExample() {
         const std::string path = tmpPath("vneio_ex04_v3.mhd");
         std::string err;
         vne::image::MhdExportOptions opts;  // inline_data=false by default
-        if (!check(vne::image::exportMhd(path, src, opts, &err),
-                   ("exportMhd: " + path).c_str())) {
+        if (!check(vne::image::exportMhd(path, src, opts, &err), ("exportMhd: " + path).c_str())) {
             VNE_LOG_ERROR << "error: " << err;
             return 1;
         }
@@ -141,7 +148,8 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "mhd-separate")) return 1;
+        if (!verifyRoundTrip(src, loaded, "mhd-separate"))
+            return 1;
         printVolumeInfo(loaded, "loaded (mhd + raw)");
     }
 
@@ -152,8 +160,7 @@ int runVolumeExportExample() {
         std::string err;
         vne::image::MhdExportOptions opts;
         opts.inline_data = true;
-        if (!check(vne::image::exportMhd(path, src, opts, &err),
-                   ("exportMhd inline: " + path).c_str())) {
+        if (!check(vne::image::exportMhd(path, src, opts, &err), ("exportMhd inline: " + path).c_str())) {
             VNE_LOG_ERROR << "error: " << err;
             return 1;
         }
@@ -163,7 +170,8 @@ int runVolumeExportExample() {
             VNE_LOG_ERROR << "reload error: " << loader.getLastError();
             return 1;
         }
-        if (!verifyRoundTrip(src, loaded, "mha-inline")) return 1;
+        if (!verifyRoundTrip(src, loaded, "mha-inline"))
+            return 1;
         printVolumeInfo(loaded, "loaded (mha inline)");
     }
 

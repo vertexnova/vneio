@@ -26,11 +26,11 @@ int runLibraryInfoExample() {
     printSection("Image Formats (StbImageLoader)");
     {
         vne::image::StbImageLoader loader;
-        const char* exts[] = { "png", "jpg", "jpeg", "bmp", "tga", "hdr", "nrrd", "mhd" };
+        const char* exts[] = {"png", "jpg", "jpeg", "bmp", "tga", "hdr", "nrrd", "mhd"};
         for (const char* ext : exts) {
             std::string dummy = std::string("file.") + ext;
             VNE_LOG_INFO << "  " << dummy << " -> "
-                << (loader.isExtensionSupported(dummy) ? "supported" : "not supported");
+                         << (loader.isExtensionSupported(dummy) ? "supported" : "not supported");
         }
     }
 
@@ -38,20 +38,20 @@ int runLibraryInfoExample() {
     printSection("Volume Formats");
     {
         vne::image::NrrdLoader nrrd;
-        vne::image::MhdLoader  mhd;
+        vne::image::MhdLoader mhd;
 
-        const char* exts[] = { "nrrd", "nhdr", "mhd", "mha", "obj" };
+        const char* exts[] = {"nrrd", "nhdr", "mhd", "mha", "obj"};
         VNE_LOG_INFO << "NrrdLoader:";
         for (const char* ext : exts) {
             std::string dummy = std::string("vol.") + ext;
             VNE_LOG_INFO << "  " << dummy << " -> "
-                << (nrrd.isExtensionSupported(dummy) ? "supported" : "not supported");
+                         << (nrrd.isExtensionSupported(dummy) ? "supported" : "not supported");
         }
         VNE_LOG_INFO << "MhdLoader:";
         for (const char* ext : exts) {
             std::string dummy = std::string("vol.") + ext;
             VNE_LOG_INFO << "  " << dummy << " -> "
-                << (mhd.isExtensionSupported(dummy) ? "supported" : "not supported");
+                         << (mhd.isExtensionSupported(dummy) ? "supported" : "not supported");
         }
     }
 
@@ -59,11 +59,11 @@ int runLibraryInfoExample() {
     printSection("Mesh Formats (AssimpLoader)");
     {
         vne::mesh::AssimpLoader loader;
-        const char* exts[] = { "obj", "stl", "fbx", "gltf", "glb", "ply", "dae", "nrrd" };
+        const char* exts[] = {"obj", "stl", "fbx", "gltf", "glb", "ply", "dae", "nrrd"};
         for (const char* ext : exts) {
             std::string dummy = std::string("mesh.") + ext;
             VNE_LOG_INFO << "  " << dummy << " -> "
-                << (loader.isExtensionSupported(dummy) ? "supported" : "not supported");
+                         << (loader.isExtensionSupported(dummy) ? "supported" : "not supported");
         }
     }
 
@@ -71,30 +71,34 @@ int runLibraryInfoExample() {
     printSection("VolumePixelType — bytes per voxel");
     {
         using T = vne::image::VolumePixelType;
-        const T types[] = {
-            T::eUint8, T::eInt8, T::eUint16, T::eInt16,
-            T::eUint32, T::eInt32, T::eFloat32, T::eFloat64, T::eUnknown
-        };
+        const T types[] =
+            {T::eUint8, T::eInt8, T::eUint16, T::eInt16, T::eUint32, T::eInt32, T::eFloat32, T::eFloat64, T::eUnknown};
         for (auto t : types) {
-            VNE_LOG_INFO << "  " << pixelTypeName(t)
-                << " -> " << vne::image::bytesPerVoxel(t) << " bytes";
+            VNE_LOG_INFO << "  " << pixelTypeName(t) << " -> " << vne::image::bytesPerVoxel(t) << " bytes";
         }
     }
 
     // ── ErrorCode table ───────────────────────────────────────────────────────
     printSection("ErrorCode values");
     {
-        const ErrorCode codes[] = {
-            ErrorCode::eOk, ErrorCode::eUnknown, ErrorCode::eInvalidArgument,
-            ErrorCode::eNotImplemented, ErrorCode::eOutOfMemory,
-            ErrorCode::eFileNotFound, ErrorCode::eFileOpenFailed,
-            ErrorCode::eFileReadFailed, ErrorCode::eFileWriteFailed,
-            ErrorCode::ePathInvalid, ErrorCode::eUnsupportedFormat,
-            ErrorCode::eUnsupportedFeature, ErrorCode::eParseError,
-            ErrorCode::eDataCorrupt, ErrorCode::eDataTruncated,
-            ErrorCode::eInvalidDimensions, ErrorCode::eInvalidPixelType,
-            ErrorCode::eThirdPartyError
-        };
+        const ErrorCode codes[] = {ErrorCode::eOk,
+                                   ErrorCode::eUnknown,
+                                   ErrorCode::eInvalidArgument,
+                                   ErrorCode::eNotImplemented,
+                                   ErrorCode::eOutOfMemory,
+                                   ErrorCode::eFileNotFound,
+                                   ErrorCode::eFileOpenFailed,
+                                   ErrorCode::eFileReadFailed,
+                                   ErrorCode::eFileWriteFailed,
+                                   ErrorCode::ePathInvalid,
+                                   ErrorCode::eUnsupportedFormat,
+                                   ErrorCode::eUnsupportedFeature,
+                                   ErrorCode::eParseError,
+                                   ErrorCode::eDataCorrupt,
+                                   ErrorCode::eDataTruncated,
+                                   ErrorCode::eInvalidDimensions,
+                                   ErrorCode::eInvalidPixelType,
+                                   ErrorCode::eThirdPartyError};
         for (auto c : codes) {
             VNE_LOG_INFO << "  " << static_cast<int>(c) << "  " << errorCodeName(c);
         }
@@ -105,9 +109,12 @@ int runLibraryInfoExample() {
     {
         vne::image::Volume v;
         printVolumeInfo(v);
-        if (!check(v.isEmpty(),            "empty volume isEmpty()==true"))        return 1;
-        if (!check(!v.isMetadataValid(),   "empty volume isMetadataValid()==false")) return 1;
-        if (!check(v.hasIdentityDirection(),"default direction is identity"))       return 1;
+        if (!check(v.isEmpty(), "empty volume isEmpty()==true"))
+            return 1;
+        if (!check(!v.isMetadataValid(), "empty volume isMetadataValid()==false"))
+            return 1;
+        if (!check(v.hasIdentityDirection(), "default direction is identity"))
+            return 1;
     }
 
     VNE_LOG_INFO << "01_library_info: done.";

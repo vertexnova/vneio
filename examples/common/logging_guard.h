@@ -71,7 +71,8 @@ namespace vne::io::examples {
 class ExampleLogStream {
    public:
     explicit ExampleLogStream(std::ostream& out, const char* prefix = nullptr)
-        : out_(out), prefix_(prefix) {}
+        : out_(out)
+        , prefix_(prefix) {}
 
     template<typename T>
     ExampleLogStream& operator<<(const T& msg) {
@@ -101,8 +102,8 @@ struct LoggingGuard {};
 
 #define VNE_LOG_TRACE ::vne::io::examples::ExampleLogStream(std::cout, "[TRACE] ")
 #define VNE_LOG_DEBUG ::vne::io::examples::ExampleLogStream(std::cout, "[DEBUG] ")
-#define VNE_LOG_INFO  ::vne::io::examples::ExampleLogStream(std::cout)
-#define VNE_LOG_WARN  ::vne::io::examples::ExampleLogStream(std::cerr, "[WARN] ")
+#define VNE_LOG_INFO ::vne::io::examples::ExampleLogStream(std::cout)
+#define VNE_LOG_WARN ::vne::io::examples::ExampleLogStream(std::cerr, "[WARN] ")
 #define VNE_LOG_ERROR ::vne::io::examples::ExampleLogStream(std::cerr, "[ERROR] ")
 #define VNE_LOG_FATAL ::vne::io::examples::ExampleLogStream(std::cerr, "[FATAL] ")
 
