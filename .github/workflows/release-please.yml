@@ -7,38 +7,8 @@
 #
 # Description: Release Please + publish prebuilt install trees per platform.
 #
-# Artifact naming (semver + matrix.platform + ARTIFACT_DETAIL):
-#   vneio-v{VERSION}-{matrix.platform}-{ARTIFACT_DETAIL}.tar.gz
-#   matrix.platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static | android
-#
-# ARTIFACT_DETAIL is produced by "Compute artifact detail suffix" (see that step). Rules:
-#   linux-gcc:        ubuntu{VERSION_ID dots removed}-gcc{gcc -dumpfullversion dots removed}-{uname -m}
-#                     e.g. Ubuntu 22.04, GCC 13.2.0 → ubuntu2204-gcc1320-x86_64
-#   macos:            macos{sw_vers dots removed}-xcode{xcodebuild dots removed}-{uname -m}
-#                     (xcode segment omitted if xcodebuild does not parse)
-#                     e.g. macOS 14.2 + Xcode 26.0 → macos1421-xcode260-arm64
-#   windows:          vs2022-x64  (fixed; no uname -m)
-#   web-emscripten:   emcc{emcc -dumpversion output}-{uname -m}
-#                     e.g. emcc3.1.64-x86_64  (Emcc version keeps dots)
-#   ios-static:       xcode{major.minor.patch with '.' removed}-arm64 when xcodebuild parses;
-#                     otherwise ios-arm64 (version intentionally ignored).
-#   android:          android{API level}-ndk{Pkg.Revision from NDK source.properties, '.' removed}-arm64v8a
-#                     e.g. API 24, NDK 27.2.12479018 → android24-ndk27212479018-arm64v8a
-#
-# Examples (illustrative; exact strings depend on runner / toolchain):
-#   .../vneio-v1.2.3-linux-gcc-ubuntu2204-gcc1320-x86_64.tar.gz
-#   .../vneio-v1.2.3-macos-macos1421-xcode260-arm64.tar.gz
-#   .../vneio-v1.2.3-windows-vs2022-x64.tar.gz
-#   .../vneio-v1.2.3-web-emscripten-emcc3.1.64-x86_64.tar.gz
-#   .../vneio-v1.2.3-ios-static-xcode260-arm64.tar.gz
-#   .../vneio-v1.2.3-ios-static-ios-arm64.tar.gz   (fallback when Xcode version not parsed)
-#   .../vneio-v1.2.3-android-android24-ndk27212479018-arm64v8a.tar.gz
-#
-# Archive layout (cmake --install prefix): include/, lib/ (and bin/ on Windows),
-# LICENSE, CHANGELOG.md; plus platform-specific outputs (e.g. .wasm/.js for web).
-#
-# Web / iOS / Android jobs mirror .github/workflows/ci.yml where applicable; validate locally
-# before relying on release binaries in production.
+# Artifact naming, install layout, troubleshooting:
+#   .github/docs/release-please-publish.md
 #
 # Autodoc:   yes
 # ----------------------------------------------------------------------
@@ -155,6 +125,23 @@ jobs:
         with:
           xcode-version: '26.0'
 
+      - name: Verify Xcode (iOS release)
+        if: matrix.platform == 'ios-static'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! out="$(xcodebuild -version 2>&1)"; then
+            echo "::error::xcodebuild -version failed (exit non-zero)."
+            echo "$out"
+            exit 1
+          fi
+          echo "$out"
+          ver="$(printf '%s\n' "$out" | awk '/^Xcode /{print $2; exit}')"
+          if [[ -z "$ver" || "$ver" == "unknown" ]]; then
+            echo "::error::iOS release: could not read a valid Xcode version from xcodebuild -version (got: ${ver:-empty}). Select Xcode on the runner (see setup-xcode step)."
+            exit 1
+          fi
+
       - name: Install Linux build dependencies
         if: matrix.platform == 'linux-gcc'
         run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake libassimp-dev
@@ -205,8 +192,8 @@ jobs:
               -DVNEIO_BUILD_TESTS=OFF \
               -DVNEIO_SANITIZE_INSTALL=ON \
               -DENABLE_IPO=OFF \
-            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
-            $COMPILER_FLAGS
+              -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
+              $COMPILER_FLAGS
           fi
 
       - name: Configure CMake (Android)
@@ -265,6 +252,7 @@ jobs:
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_VERBOSE_MAKEFILE=ON \
             -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
             -DVNEIO_CI=ON \
             -DVNEIO_LIB_TYPE=static \
@@ -279,6 +267,7 @@ jobs:
           set -e
           BDIR="${{ matrix.build_dir }}"
           if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            export VERBOSE=1
             set -x
             cmake --build "$BDIR" --config Release --parallel --verbose
           else
@@ -291,7 +280,11 @@ jobs:
           set -e
           BDIR="${{ matrix.build_dir }}"
           WS="${{ github.workspace }}"
-          cmake --install "$BDIR" --config Release
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            cmake --install "$BDIR" --config Release --verbose
+          else
+            cmake --install "$BDIR" --config Release
+          fi
           INSTALL="$WS/install"
           if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
             echo "::group::iOS build tree — static libraries (.a)"
@@ -366,33 +359,45 @@ jobs:
               fi
               ;;
             macos)
-              macv="$(sw_vers -productVersion 2>/dev/null || echo unknown)"
+              macv="$(sw_vers -productVersion 2>/dev/null || true)"
               macv="${macv//./}"
-              xv="$(xcodebuild -version 2>/dev/null | awk '/Xcode/{print $2; exit}')"
-              xv="${xv//./}"
+              xv_raw="$(xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"
+              if [[ "$xv_raw" == "unknown" ]]; then xv_raw=""; fi
+              xv="${xv_raw//./}"
               if [[ -n "$xv" ]]; then
-                detail="macos${macv}-xcode${xv}-${arch}"
+                if [[ -n "$macv" ]]; then
+                  detail="macos${macv}-xcode${xv}-${arch}"
+                else
+                  detail="macos-xcode${xv}-${arch}"
+                fi
               else
                 echo "::notice::Xcode version not parsed; omitting xcode segment from macOS artifact suffix."
-                detail="macos${macv}-${arch}"
+                if [[ -n "$macv" ]]; then
+                  detail="macos${macv}-${arch}"
+                else
+                  detail="macos-${arch}"
+                fi
               fi
               ;;
             windows)
               detail="vs2022-x64"
               ;;
             web-emscripten)
-              emv="$(emcc -dumpversion 2>/dev/null || echo unknown)"
+              emv="$(emcc -dumpversion 2>/dev/null || true)"
+              if [[ -z "$emv" || "$emv" == "unknown" ]]; then
+                echo "::error::web-emscripten: emcc -dumpversion did not return a usable version (got: ${emv:-empty})."
+                exit 1
+              fi
               detail="emcc${emv}-${arch}"
               ;;
             ios-static)
-              xv="$(xcodebuild -version 2>/dev/null | awk '/Xcode/{print $2; exit}')"
-              xv="${xv//./}"
-              if [[ -n "$xv" ]]; then
-                detail="xcode${xv}-arm64"
-              else
-                echo "::notice::Xcode version not parsed; using generic iOS artifact suffix."
-                detail="ios-arm64"
+              xv_raw="$(xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"
+              if [[ -z "$xv_raw" || "$xv_raw" == "unknown" ]]; then
+                echo "::error::iOS artifact naming: xcodebuild did not return a usable Xcode version (got: ${xv_raw:-empty}). The Verify Xcode step should have caught this; check the runner image."
+                exit 1
               fi
+              xv="${xv_raw//./}"
+              detail="xcode${xv}-arm64"
               ;;
             android)
               api="24"
