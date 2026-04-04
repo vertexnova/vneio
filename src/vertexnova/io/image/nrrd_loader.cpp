@@ -78,8 +78,8 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         if (err) {
             free(err);
         }
-        VNE_LOG_ERROR << "NrrdLoader: load failed for \"" << path << "\": "
-                      << (last_error_.size() > 200 ? last_error_.substr(0, 200) + "..." : last_error_);
+        VNE_LOG_ERROR << "NrrdLoader: load failed for \"" << path
+                      << "\": " << (last_error_.size() > 200 ? last_error_.substr(0, 200) + "..." : last_error_);
         nrrdNuke(nin);
         return false;
     }
@@ -97,7 +97,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         unsigned int ks = nrrdKindSize(nin->axis[i].kind);
         if (ks >= 2) {
             last_error_ = "NrrdLoader: multi-component / non-scalar axis kind not supported (axis " + std::to_string(i)
-                + ", kind " + std::to_string(nin->axis[i].kind) + ")";
+                          + ", kind " + std::to_string(nin->axis[i].kind) + ")";
             VNE_LOG_ERROR << last_error_;
             nrrdNuke(nin);
             return false;
@@ -159,7 +159,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
     const size_t vol_bytes = out_volume.byteCount();
     if (expected_bytes != vol_bytes) {
         last_error_ = "NrrdLoader: data size mismatch (file " + std::to_string(expected_bytes) + " bytes, volume "
-            + std::to_string(vol_bytes) + ")";
+                      + std::to_string(vol_bytes) + ")";
         VNE_LOG_ERROR << last_error_;
         nrrdNuke(nin);
         return false;
@@ -183,7 +183,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
             const double dy = nin->axis[i].spaceDirection[1];
             const double dz = nin->axis[i].spaceDirection[2];
             const bool sd_valid = !std::isnan(dx) && !std::isnan(dy) && !std::isnan(dz) && !std::isinf(dx)
-                && !std::isinf(dy) && !std::isinf(dz);
+                                  && !std::isinf(dy) && !std::isinf(dz);
             if (sd_valid) {
                 const float fx = static_cast<float>(dx);
                 const float fy = static_cast<float>(dy);
@@ -205,7 +205,8 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
                     }
                     VNE_LOG_DEBUG << "NrrdLoader: axis " << i << " space direction length=" << len << " (normalized)";
                 } else {
-                    VNE_LOG_WARN << "NrrdLoader: axis " << i << " space direction near zero; using identity row + axis "
+                    VNE_LOG_WARN << "NrrdLoader: axis " << i
+                                 << " space direction near zero; using identity row + axis "
                                     "spacing fallback";
                     out_volume.direction[i * 3 + 0] = identity[i * 3 + 0];
                     out_volume.direction[i * 3 + 1] = identity[i * 3 + 1];
@@ -218,8 +219,8 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
                 if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
                     out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
                 }
-                VNE_LOG_DEBUG << "NrrdLoader: axis " << i << " no valid space direction; spacing="
-                              << out_volume.spacing[i];
+                VNE_LOG_DEBUG << "NrrdLoader: axis " << i
+                              << " no valid space direction; spacing=" << out_volume.spacing[i];
             }
         }
     } else {
@@ -245,8 +246,9 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
 
     VNE_LOG_INFO << "NrrdLoader: loaded \"" << path << "\" dims=" << out_volume.dims[0] << "x" << out_volume.dims[1]
                  << "x" << out_volume.dims[2] << " type=" << static_cast<int>(out_volume.pixel_type) << " spacing=("
-                 << out_volume.spacing[0] << "," << out_volume.spacing[1] << "," << out_volume.spacing[2] << ") origin=("
-                 << out_volume.origin[0] << "," << out_volume.origin[1] << "," << out_volume.origin[2] << ")";
+                 << out_volume.spacing[0] << "," << out_volume.spacing[1] << "," << out_volume.spacing[2]
+                 << ") origin=(" << out_volume.origin[0] << "," << out_volume.origin[1] << "," << out_volume.origin[2]
+                 << ")";
 
     return true;
 }

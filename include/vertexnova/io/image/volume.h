@@ -143,8 +143,8 @@ struct VNEIO_API Volume {
     [[nodiscard]] bool hasIdentityDirection() const {
         const float e = kVolumeDirectionEpsilon;
         return std::fabs(direction[0] - 1.0f) < e && std::fabs(direction[1]) < e && std::fabs(direction[2]) < e
-            && std::fabs(direction[3]) < e && std::fabs(direction[4] - 1.0f) < e && std::fabs(direction[5]) < e
-            && std::fabs(direction[6]) < e && std::fabs(direction[7]) < e && std::fabs(direction[8] - 1.0f) < e;
+               && std::fabs(direction[3]) < e && std::fabs(direction[4] - 1.0f) < e && std::fabs(direction[5]) < e
+               && std::fabs(direction[6]) < e && std::fabs(direction[7]) < e && std::fabs(direction[8] - 1.0f) < e;
     }
 
     /**

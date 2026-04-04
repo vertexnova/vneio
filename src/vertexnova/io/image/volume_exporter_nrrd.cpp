@@ -101,8 +101,8 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
         VNE_LOG_ERROR << "exportNrrd: cannot open \"" << nrrd_or_nhdr_path << "\" for writing";
         return false;
     }
-    VNE_LOG_INFO << "exportNrrd: writing \"" << nrrd_or_nhdr_path << "\" dims=" << vol.dims[0] << "x" << vol.dims[1] << "x"
-                 << vol.dims[2];
+    VNE_LOG_INFO << "exportNrrd: writing \"" << nrrd_or_nhdr_path << "\" dims=" << vol.dims[0] << "x" << vol.dims[1]
+                 << "x" << vol.dims[2];
     h << "NRRD0005\n";
     h << "type: " << type << "\n";
     h << "dimension: 3\n";

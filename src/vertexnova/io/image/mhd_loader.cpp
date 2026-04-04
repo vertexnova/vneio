@@ -88,8 +88,7 @@ void byteSwapVolumeData(vne::image::Volume& vol, vne::image::VolumePixelType pix
 }
 
 float determinant3(const float d[9]) {
-    return d[0] * (d[4] * d[8] - d[5] * d[7]) - d[1] * (d[3] * d[8] - d[5] * d[6])
-        + d[2] * (d[3] * d[7] - d[4] * d[6]);
+    return d[0] * (d[4] * d[8] - d[5] * d[7]) - d[1] * (d[3] * d[8] - d[5] * d[6]) + d[2] * (d[3] * d[7] - d[4] * d[6]);
 }
 
 /** Normalize rows of 3×3 row-major matrix in place; returns false if any row degenerate or |det| tiny. */
@@ -301,8 +300,8 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     }
 
     if (have_element_channels && element_channels != 1) {
-        last_error_ = "MhdLoader: only scalar volumes supported (ElementNumberOfChannels=" + std::to_string(element_channels)
-            + ")";
+        last_error_ = "MhdLoader: only scalar volumes supported (ElementNumberOfChannels="
+                      + std::to_string(element_channels) + ")";
         VNE_LOG_ERROR << last_error_;
         return false;
     }
@@ -385,8 +384,8 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
         f.seekg(0, std::ios::end);
         const auto fend = f.tellg();
         if (fend != static_cast<std::streamoff>(-1) && data_start_offset >= 0) {
-            const auto expected_end = static_cast<std::streamoff>(data_start_offset)
-                + static_cast<std::streamoff>(num_bytes);
+            const auto expected_end =
+                static_cast<std::streamoff>(data_start_offset) + static_cast<std::streamoff>(num_bytes);
             if (fend > expected_end) {
                 VNE_LOG_WARN << "MhdLoader: " << (fend - expected_end) << " trailing byte(s) after inline payload in \""
                              << path << "\"";
