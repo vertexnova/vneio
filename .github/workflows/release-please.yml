@@ -348,9 +348,7 @@ jobs:
             linux-gcc)
               . /etc/os-release 2>/dev/null || true
               vid="${VERSION_ID:-unknown}"
-              vid="${vid//./}"
               gcv="$(gcc -dumpfullversion 2>/dev/null || gcc -dumpversion 2>/dev/null || true)"
-              gcv="${gcv//./}"
               if [[ -n "$gcv" ]]; then
                 detail="ubuntu${vid}-gcc${gcv}-${arch}"
               else
@@ -362,19 +360,17 @@ jobs:
               macv="$(sw_vers -productVersion 2>/dev/null || true)"
               macv="${macv//$'\r'/}"
               macv="${macv//[[:space:]]/}"
-              macv="${macv//./}"
               if [[ -n "$macv" && "$(printf '%s' "$macv" | tr '[:upper:]' '[:lower:]')" == "unknown" ]]; then
                 macv=""
               fi
               xv_raw="$(xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"
               if [[ "$xv_raw" == "unknown" ]]; then xv_raw=""; fi
-              xv="${xv_raw//./}"
-              if [[ -n "$xv" ]]; then
+              if [[ -n "$xv_raw" ]]; then
                 if [[ -n "$macv" ]]; then
-                  detail="macos${macv}-xcode${xv}-${arch}"
+                  detail="macos${macv}-xcode${xv_raw}-${arch}"
                 else
                   echo "::notice::macOS product version missing or unusable; omitting macos{version} segment from artifact suffix."
-                  detail="macos-xcode${xv}-${arch}"
+                  detail="macos-xcode${xv_raw}-${arch}"
                 fi
               else
                 echo "::notice::Xcode version not parsed; omitting xcode segment from macOS artifact suffix."
@@ -403,8 +399,7 @@ jobs:
                 echo "::error::iOS artifact naming: xcodebuild did not return a usable Xcode version (got: ${xv_raw:-empty}). The Verify Xcode step should have caught this; check the runner image."
                 exit 1
               fi
-              xv="${xv_raw//./}"
-              detail="xcode${xv}-arm64"
+              detail="xcode${xv_raw}-arm64"
               ;;
             android)
               api="24"
@@ -413,7 +408,6 @@ jobs:
               ndk_rev=""
               if [[ -n "$ndk_root" && -f "$ndk_root/source.properties" ]]; then
                 ndk_rev="$(grep -E '^[[:space:]]*Pkg.Revision[[:space:]]*=' "$ndk_root/source.properties" | head -1 | cut -d= -f2- | tr -d ' \t\r\n')"
-                ndk_rev="${ndk_rev//./}"
               fi
               if [[ -n "$ndk_rev" ]]; then
                 detail="android${api}-ndk${ndk_rev}-${abi_slug}"

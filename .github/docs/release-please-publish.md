@@ -14,21 +14,21 @@ Published files:
 
 | Platform         | `ARTIFACT_DETAIL` rule |
 |------------------|------------------------|
-| **linux-gcc**    | `ubuntu{VERSION_ID (no dots)}-gcc{gcc version (no dots)}-{uname -m}`; if GCC is missing, `ubuntu{VERSION_ID}-{arch}` with a notice. |
-| **macos**        | When both parse: `macos{productVersion}-xcode{xcodeVersion}-{uname -m}`, where **productVersion** / **xcodeVersion** are the full strings from `sw_vers -productVersion` / `xcodebuild` with **every `.` removed** (not “major.minor only”). Examples: `14.2` → `macos142`, `14.2.1` → `macos1421`; Xcode `26.0` → `xcode260`. If **product version** is missing, empty, or the literal `unknown` (any case), the `macos{version}` segment is **omitted** — e.g. `macos-xcode{…}-{arch}` or `macos-{arch}` — never `macosunknown-…`. If Xcode does not parse, the `xcode{…}` segment is omitted with a notice. |
+| **linux-gcc**    | `ubuntu{VERSION_ID}-gcc{gcc -dumpfullversion}-{uname -m}` using **`/etc/os-release` `VERSION_ID`** and **GCC’s version string with dots preserved** (e.g. **22.04**, **13.2.0**). If GCC is missing, `ubuntu{VERSION_ID}-{arch}` with a notice. |
+| **macos**        | When both parse: `macos{productVersion}-xcode{xcodeVersion}-{uname -m}` with **dots preserved** (`sw_vers -productVersion`, `xcodebuild` second field), e.g. **14.2.1**, **26.0**. If **product version** is missing, empty, or the literal `unknown` (any case), the `macos{version}` segment is **omitted** — e.g. `macos-xcode{…}-{arch}` or `macos-{arch}` — never `macosunknown-…`. If Xcode does not parse, the `xcode{…}` segment is omitted with a notice. |
 | **windows**      | `vs2022-x64` (fixed). |
 | **web-emscripten** | `emcc{emcc -dumpversion}-{uname -m}`; fails the job if the version is missing or `unknown`. |
-| **ios-static**   | `xcode{xcodebuild version (no dots)}-arm64`. The job **fails early** if Xcode is missing or the version cannot be read (no `xcodeunknown-arm64` or similar). |
-| **android**      | `android{API}-ndk{NDK Pkg.Revision (no dots)}-arm64v8a`, or `android{API}-arm64v8a` if NDK revision cannot be read. |
+| **ios-static**   | `xcode{xcodebuild version}-arm64` with **dots preserved** (e.g. **26.0**). The job **fails early** if Xcode is missing or the version cannot be read. |
+| **android**      | `android{API}-ndk{NDK Pkg.Revision}-arm64v8a` with **NDK revision dots preserved**, or `android{API}-arm64v8a` if NDK revision cannot be read. |
 
-Examples (runner-dependent):
+Examples (runner-dependent; version segments keep **dots** as reported by the OS/tooling):
 
-- `vneio-v1.2.3-linux-gcc-ubuntu2204-gcc1320-x86_64.tar.gz`
-- `vneio-v1.2.3-macos-macos1421-xcode260-arm64.tar.gz` (`sw_vers` **14.2.1** → `macos1421`; Xcode **26.0** → `xcode260`)
-- `vneio-v1.2.3-macos-macos142-xcode260-arm64.tar.gz` (`sw_vers` **14.2** → `macos142`; same Xcode encoding)
-- `vneio-v1.2.3-macos-xcode260-arm64.tar.gz` (when `sw_vers` did not yield a usable product version)
-- `vneio-v1.2.3-ios-static-xcode260-arm64.tar.gz`
-- `vneio-v1.2.3-android-android24-ndk27212479018-arm64v8a.tar.gz`
+- `vneio-v1.2.3-linux-gcc-ubuntu22.04-gcc13.2.0-x86_64.tar.gz`
+- `vneio-v1.2.3-macos-macos14.2.1-xcode26.0-arm64.tar.gz`
+- `vneio-v1.2.3-macos-macos14.2-xcode26.0-arm64.tar.gz` (two-part macOS product version)
+- `vneio-v1.2.3-macos-xcode26.0-arm64.tar.gz` (when `sw_vers` did not yield a usable product version)
+- `vneio-v1.2.3-ios-static-xcode26.0-arm64.tar.gz`
+- `vneio-v1.2.3-android-android24-ndk27.2.12479018-arm64v8a.tar.gz`
 
 ## Install tree layout
 
