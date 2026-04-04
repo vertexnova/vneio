@@ -37,8 +37,12 @@ set(SOURCES_FILES
 #                                 Library                                      #
 #==============================================================================
 
-# Create a library from the selected source and header files
-add_library(stb_image STATIC ${INCLUDE_FILES} ${SOURCES_FILES})
+option(STB_IMAGE_OBJECT_LIBRARY "Build as OBJECT library for embedding (e.g. VneIo)" OFF)
+if(STB_IMAGE_OBJECT_LIBRARY)
+    add_library(stb_image OBJECT ${SOURCES_FILES})
+else()
+    add_library(stb_image STATIC ${INCLUDE_FILES} ${SOURCES_FILES})
+endif()
 
 # Set include directories for the library
 target_include_directories(stb_image

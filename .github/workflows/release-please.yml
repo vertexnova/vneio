@@ -7,12 +7,26 @@
 #
 # Description: Release Please + publish prebuilt install trees per platform.
 #
-# Artifact naming (same semver for every platform — one app can derive URLs):
-#   vneio-v{VERSION}-{platform}.tar.gz
-#   platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static
-# Example:
-#   .../releases/download/v1.2.3/vneio-v1.2.3-linux-gcc.tar.gz
-#   .../releases/download/v1.2.3/vneio-v1.2.3-web-emscripten.tar.gz
+# Artifact naming (semver + matrix.platform + ARTIFACT_DETAIL):
+#   vneio-v{VERSION}-{matrix.platform}-{ARTIFACT_DETAIL}.tar.gz
+#   matrix.platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static
+#
+# ARTIFACT_DETAIL is produced by "Compute artifact detail suffix" (see that step). Rules:
+#   linux-gcc:        ubuntu{VERSION_ID with '.' removed}-{uname -m}
+#                     e.g. Ubuntu 22.04 on GitHub → ubuntu2204-x86_64
+#   macos:            macos{sw_vers -productVersion with '.' removed}-{uname -m}
+#                     e.g. 14.2.1 on arm64 runner → macos1421-arm64
+#   windows:          vs2022-x64  (fixed; no uname -m)
+#   web-emscripten:   emcc{emcc -dumpversion output}-{uname -m}
+#                     e.g. emcc3.1.64-x86_64  (Emcc version keeps dots)
+#   ios-static:       xcode{xcodebuild Xcode version with '.' removed}-arm64  (fixed arch)
+#
+# Examples (illustrative; exact strings depend on runner / toolchain):
+#   .../vneio-v1.2.3-linux-gcc-ubuntu2204-x86_64.tar.gz
+#   .../vneio-v1.2.3-macos-macos1421-arm64.tar.gz
+#   .../vneio-v1.2.3-windows-vs2022-x64.tar.gz
+#   .../vneio-v1.2.3-web-emscripten-emcc3.1.64-x86_64.tar.gz
+#   .../vneio-v1.2.3-ios-static-xcode164-arm64.tar.gz
 #
 # Archive layout (cmake --install prefix): include/, lib/ (and bin/ on Windows),
 # LICENSE, CHANGELOG.md; plus platform-specific outputs (e.g. .wasm/.js for web).
@@ -154,6 +168,7 @@ jobs:
               -DVNEIO_CI=ON \
               -DVNEIO_LIB_TYPE=shared \
               -DVNEIO_BUILD_TESTS=OFF \
+              -DVNEIO_SANITIZE_INSTALL=ON \
               -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
               $COMPILER_FLAGS
           else
@@ -162,6 +177,7 @@ jobs:
               -DVNEIO_CI=ON \
               -DVNEIO_LIB_TYPE=shared \
               -DVNEIO_BUILD_TESTS=OFF \
+              -DVNEIO_SANITIZE_INSTALL=ON \
               -DENABLE_IPO=OFF \
               -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
               $COMPILER_FLAGS
@@ -180,6 +196,7 @@ jobs:
             -DVNEIO_LIB_TYPE=shared \
             -DVNEIO_BUILD_TESTS=OFF \
             -DVNEIO_BUILD_MESH=OFF \
+            -DVNEIO_SANITIZE_INSTALL=ON \
             -DENABLE_IPO=OFF \
             -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
@@ -200,6 +217,7 @@ jobs:
             -DVNEIO_CI=ON \
             -DVNEIO_LIB_TYPE=static \
             -DVNEIO_BUILD_TESTS=OFF \
+            -DVNEIO_SANITIZE_INSTALL=ON \
             -DENABLE_IPO=OFF \
             -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
 
@@ -215,6 +233,11 @@ jobs:
           if [[ ! -d "$INSTALL/include/vertexnova" ]]; then
             echo "::error::Expected install/include/vertexnova missing."
             find "$INSTALL" -type f 2>/dev/null | sort | head -50
+            exit 1
+          fi
+          if [[ -d "$INSTALL/include/vertexnova/logging" ]] || [[ -d "$INSTALL/include/vertexnova/common" ]]; then
+            echo "::error::VNEIO_SANITIZE_INSTALL should remove embedded vnelogging/vnecommon headers."
+            find "$INSTALL/include/vertexnova" -type d
             exit 1
           fi
           for f in LICENSE CHANGELOG.md; do
@@ -247,14 +270,50 @@ jobs:
               ;;
           esac
 
+      - name: Compute artifact detail suffix
+        shell: bash
+        run: |
+          set -e
+          base="${{ matrix.platform }}"
+          arch="$(uname -m 2>/dev/null || echo unknown)"
+          case "$base" in
+            linux-gcc)
+              . /etc/os-release 2>/dev/null || true
+              vid="${VERSION_ID:-unknown}"
+              vid="${vid//./}"
+              detail="ubuntu${vid}-${arch}"
+              ;;
+            macos)
+              macv="$(sw_vers -productVersion 2>/dev/null || echo unknown)"
+              macv="${macv//./}"
+              detail="macos${macv}-${arch}"
+              ;;
+            windows)
+              detail="vs2022-x64"
+              ;;
+            web-emscripten)
+              emv="$(emcc -dumpversion 2>/dev/null || echo unknown)"
+              detail="emcc${emv}-${arch}"
+              ;;
+            ios-static)
+              xv="$(xcodebuild -version 2>/dev/null | awk '/Xcode/{print $2; exit}' || echo unknown)"
+              xv="${xv//./}"
+              detail="xcode${xv}-arm64"
+              ;;
+            *)
+              detail="${arch}"
+              ;;
+          esac
+          echo "ARTIFACT_DETAIL=${detail}" >> "$GITHUB_ENV"
+
       - name: Package artifact
         shell: bash
         run: |
           VER="${{ needs.release-please.outputs.version }}"
-          ARTIFACT="vneio-v${VER}-${{ matrix.platform }}.tar.gz"
+          ARTIFACT="vneio-v${VER}-${{ matrix.platform }}-${ARTIFACT_DETAIL}.tar.gz"
           tar -czf "${ARTIFACT}" -C "${{ github.workspace }}/install" .
           echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
-          echo "Published: ${ARTIFACT} (platform slug: ${{ matrix.platform }})"
+          echo "Published: ${ARTIFACT}"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
