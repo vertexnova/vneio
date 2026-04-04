@@ -66,7 +66,7 @@ set(TEST_SOURCES
     image/volume_test.cpp
     main.cpp
 )
-# path_utils (needs config.h from build dir)
+# path_utils (needs vneio_config.h from build dir)
 list(APPEND TEST_SOURCES ${VNEIO_ROOT}/src/vertexnova/io/utils/path_utils.cpp)
 
 add_executable(TestVneIo ${TEST_SOURCES})

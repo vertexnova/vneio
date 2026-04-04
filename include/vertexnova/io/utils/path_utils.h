@@ -29,7 +29,7 @@ namespace utils {
  * When built with CMake, this is the testdata root (typically testdata/). Tests use
  * getTestdataPath("meshes/minimal.stl") or getTestdataPath("textures/sample.png").
  *
- * Include directory for the build must contain the generated config.h (VNEIO_TESTDATA_DIR).
+ * Include directory for the build must contain the generated vneio_config.h (VNEIO_TESTDATA_DIR).
  * @return Testdata resources root path, or empty string if not defined.
  */
 VNEIO_API std::string getTestdataRoot();

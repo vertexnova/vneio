@@ -12,6 +12,8 @@
 #include "vertexnova/io/image/image.h"
 #include "vertexnova/io/utils/path_utils.h"
 
+#include <vneio_config.h>
+
 #include <filesystem>
 #include <cstring>
 
@@ -25,7 +27,7 @@ namespace {
 const std::string kTestImagePath = getTestdataPath("textures/sample.png");
 const std::string kNonExistentPath = getTestdataPath("textures/does_not_exist.png");
 
-const std::string kTestOutputDir = "test_output";
+const std::string kTestOutputDir = VNEIO_TEST_OUTPUT_DIR;
 }  // namespace
 
 class ImageTest : public ::testing::Test {

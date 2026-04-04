@@ -10,7 +10,7 @@
 #include "vertexnova/io/utils/path_utils.h"
 
 #if !defined(VNEIO_TESTDATA_DIR)
-#include <config.h>
+#include <vneio_config.h>
 #endif
 
 namespace vne {
