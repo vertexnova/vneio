@@ -51,7 +51,7 @@ Image::Image(const uint8_t* data, int width, int height, int channels)
     , height_(height)
     , channels_(channels) {
     if (width > 0 && height > 0 && channels > 0 && data) {
-        const size_t data_size = static_cast<size_t>(width * height * channels);
+        const auto data_size = static_cast<size_t>(width * height * channels);
         data_.resize(data_size);
         std::memcpy(data_.data(), data, data_size);
     }
@@ -64,9 +64,9 @@ Image::~Image() {
 bool Image::loadFromFile(const std::string& file_path, bool flip_vertically) {
     clear();
 
-    int width;
-    int height;
-    int channels;
+    int width = 0;
+    int height = 0;
+    int channels = 0;
     uint8_t* data = image_utils::loadImage(file_path, &width, &height, &channels, 0, flip_vertically);
 
     if (!data) {
@@ -77,7 +77,7 @@ bool Image::loadFromFile(const std::string& file_path, bool flip_vertically) {
     height_ = height;
     channels_ = channels;
 
-    size_t data_size = static_cast<size_t>(width_ * height_ * channels_);
+    const auto data_size = static_cast<size_t>(width_ * height_ * channels_);
     data_.resize(data_size);
     std::memcpy(data_.data(), data, data_size);
 
@@ -164,7 +164,8 @@ bool Image::resize(int new_width, int new_height) {
                 const float v0 = v00 + (v10 - v00) * tx;
                 const float v1 = v01 + (v11 - v01) * tx;
                 const float v = v0 + (v1 - v0) * ty;
-                dst[c] = static_cast<uint8_t>(std::max(0.0f, std::min(255.0f, v)));
+                constexpr float kByteClampMax = 255.0f;
+                dst[c] = static_cast<uint8_t>(std::max(0.0f, std::min(kByteClampMax, v)));
             }
         }
     }
@@ -244,7 +245,8 @@ bool saveImage(
     if (format == "png") {
         result = stbi_write_png(file_path.c_str(), width, height, channels, data, stride);
     } else if (format == "jpg" || format == "jpeg") {
-        result = stbi_write_jpg(file_path.c_str(), width, height, channels, data, 90);
+        constexpr int kDefaultJpegQuality = 90;
+        result = stbi_write_jpg(file_path.c_str(), width, height, channels, data, kDefaultJpegQuality);
     } else if (format == "bmp") {
         result = stbi_write_bmp(file_path.c_str(), width, height, channels, data);
     } else if (format == "tga") {

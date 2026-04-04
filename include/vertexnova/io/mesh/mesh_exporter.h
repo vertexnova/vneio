@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/mesh/mesh.h"
 
 #include <string>
@@ -32,10 +33,10 @@ namespace vne::mesh {
  * @brief Options for Wavefront OBJ (+MTL) export.
  */
 struct ObjExportOptions {
-    bool write_mtl = true;       //!< If true, write a .mtl material file.
-    bool write_normals = true;   //!< If true, output vertex normals (vn).
-    bool write_texcoords = true;//!< If true, output texture coordinates (vt).
-    bool flip_v = false;         //!< If true, invert texcoord Y (e.g. for different renderer convention).
+    bool write_mtl = true;        //!< If true, write a .mtl material file.
+    bool write_normals = true;    //!< If true, output vertex normals (vn).
+    bool write_texcoords = true;  //!< If true, output texture coordinates (vt).
+    bool flip_v = false;          //!< If true, invert texcoord Y (e.g. for different renderer convention).
 };
 
 /**
@@ -47,9 +48,9 @@ struct ObjExportOptions {
  * @param out_error  If non-null, receives an error description on failure.
  * @return true if export succeeded, false otherwise (check out_error if provided).
  */
-bool exportObj(const std::string& obj_path,
-               const Mesh& mesh,
-               const ObjExportOptions& opts = {},
-               std::string* out_error = nullptr);
+VNEIO_API bool exportObj(const std::string& obj_path,
+                         const Mesh& mesh,
+                         const ObjExportOptions& opts = {},
+                         std::string* out_error = nullptr);
 
 }  // namespace vne::mesh

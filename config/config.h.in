@@ -20,3 +20,5 @@
 #define VNEIO_SRC_DIR          "@VNEIO_SRC_DIR@"
 #define VNEIO_BUILD_DIR        "@CMAKE_BINARY_DIR@"
 #define VNEIO_TESTDATA_DIR     "@VNEIO_TESTDATA_DIR@"
+/** Writable test artifacts directory (under CMAKE_BINARY_DIR); used by TestVneIo. */
+#define VNEIO_TEST_OUTPUT_DIR  "@VNEIO_TEST_OUTPUT_DIR@"

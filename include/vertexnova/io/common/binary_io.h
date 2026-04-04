@@ -84,7 +84,9 @@ namespace binaryio {
  * @param data_offset Output: absolute offset in file where the binary payload starts.
  * @return Status (eOk when blank line found, eDataTruncated if EOF before blank line).
  */
-[[nodiscard]] inline Status readHeaderUntilBlankLine(std::ifstream& f, std::string& header_text, std::streamoff& data_offset) {
+[[nodiscard]] inline Status readHeaderUntilBlankLine(std::ifstream& f,
+                                                     std::string& header_text,
+                                                     std::streamoff& data_offset) {
     header_text.clear();
     data_offset = 0;
     if (!f) {

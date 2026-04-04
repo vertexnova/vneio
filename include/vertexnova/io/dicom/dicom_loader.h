@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/load_request.h"
@@ -27,11 +28,11 @@ namespace vne::dicom {
  * @class IDicomLoader
  * @brief Interface for loading DICOM series from a directory.
  */
-class IDicomLoader : public vne::io::IAssetLoader {
+class VNEIO_API IDicomLoader : public vne::io::IAssetLoader {
    public:
     ~IDicomLoader() override = default;
 
-    bool canLoad(const vne::io::LoadRequest& request) const override;
+    [[nodiscard]] bool canLoad(const vne::io::LoadRequest& request) const override;
 
     /**
      * @brief Load a DICOM series from the given request (AssetIO registry API).
@@ -65,7 +66,7 @@ class IDicomLoader : public vne::io::IAssetLoader {
     [[nodiscard]] virtual std::string getLastError() const = 0;
 };
 
-[[nodiscard]] inline bool IDicomLoader::canLoad(const vne::io::LoadRequest& request) const {
+inline bool IDicomLoader::canLoad(const vne::io::LoadRequest& request) const {
     return request.asset_type == vne::io::AssetType::eDicomSeries && !request.uri.empty();
 }
 

@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/asset_loader.h"
 #include "vertexnova/io/load_request.h"
 #include "vertexnova/io/mesh/mesh.h"
@@ -31,7 +32,7 @@ namespace mesh {
  * Implementations (e.g. AssimpLoader) load supported formats into Mesh.
  * Use MeshLoaderRegistry::getLoaderFor(path) to obtain a loader by file extension.
  */
-class IMeshLoader : public vne::io::IAssetLoader {
+class VNEIO_API IMeshLoader : public vne::io::IAssetLoader {
    public:
     ~IMeshLoader() override = default;
 

@@ -35,7 +35,7 @@ class NullDicomLoader final : public IDicomLoader {
         return false;
     }
 
-    std::string getLastError() const override { return last_error_; }
+    [[nodiscard]] std::string getLastError() const override { return last_error_; }
 
    private:
     std::string last_error_;

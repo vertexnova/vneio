@@ -1,0 +1,263 @@
+# ----------------------------------------------------------------------
+# Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License")
+#
+# Author:    Ajeet Singh Yadav
+# Created:   February 2026
+#
+# Description: Release Please + publish prebuilt install trees per platform.
+#
+# Artifact naming (same semver for every platform — one app can derive URLs):
+#   vneio-v{VERSION}-{platform}.tar.gz
+#   platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static
+# Example:
+#   .../releases/download/v1.2.3/vneio-v1.2.3-linux-gcc.tar.gz
+#   .../releases/download/v1.2.3/vneio-v1.2.3-web-emscripten.tar.gz
+#
+# Archive layout (cmake --install prefix): include/, lib/ (and bin/ on Windows),
+# LICENSE, CHANGELOG.md; plus platform-specific outputs (e.g. .wasm/.js for web).
+#
+# Web / iOS jobs mirror .github/workflows/ci.yml; validate locally before relying
+# on release binaries in production.
+#
+# Autodoc:   yes
+# ----------------------------------------------------------------------
+
+name: Release Please
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: "Release / release-please"
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+      version: ${{ steps.rp.outputs.version }}
+    steps:
+      - name: Run release-please
+        id: rp
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: .github/release-please-config.json
+          token: ${{ secrets.REPO_ACCESS_TOKEN || github.token }}
+
+      - name: Enable auto-merge on Release PR
+        if: steps.rp.outputs.pr != ''
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN || github.token }}
+          PR_RAW: ${{ steps.rp.outputs.pr }}
+        run: |
+          PR_NUMBER="$(echo "$PR_RAW" | python3 -c 'import sys,json; print(json.load(sys.stdin)["number"])')"
+          if ! gh pr merge --repo "${{ github.repository }}" --auto --squash "$PR_NUMBER" 2>&1 | tee /tmp/gh-out; then
+            if grep -q "enablePullRequestAutoMerge\|Auto merge is not allowed" /tmp/gh-out; then
+              echo "::warning::Auto-merge is disabled for this repo. Enable Settings -> General -> Pull Requests -> 'Allow auto-merge'. Release PR #$PR_NUMBER remains open for manual merge."
+              exit 0
+            fi
+            exit 1
+          fi
+
+  publish:
+    name: "Release / publish (${{ matrix.platform }})"
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-gcc
+            runner: ubuntu-latest
+            build_dir: build/shared/Release
+            c: gcc
+            cpp: g++
+          - platform: macos
+            runner: macos-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+          - platform: windows
+            runner: windows-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+          - platform: web-emscripten
+            runner: ubuntu-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+          - platform: ios-static
+            runner: macos-latest
+            build_dir: build/static/Release
+            c: ""
+            cpp: ""
+
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Use HTTPS for GitHub (CI runners have no SSH key)
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          submodules: recursive
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux-gcc'
+        run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake libassimp-dev
+
+      - name: Use system Assimp on Linux (native)
+        if: matrix.platform == 'linux-gcc'
+        shell: bash
+        run: rm -rf deps/external/assimp
+
+      - name: Install Assimp (macOS — desktop + iOS jobs)
+        if: matrix.platform == 'macos' || matrix.platform == 'ios-static'
+        run: brew install assimp
+
+      - name: Use system Assimp on macOS / iOS
+        if: matrix.platform == 'macos' || matrix.platform == 'ios-static'
+        shell: bash
+        run: rm -rf deps/external/assimp
+
+      - name: Install Emscripten
+        if: matrix.platform == 'web-emscripten'
+        uses: mymindstorm/setup-emscripten@v14
+
+      - name: Configure CMake (Linux / macOS / Windows desktop)
+        if: matrix.platform != 'web-emscripten' && matrix.platform != 'ios-static'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          set -e
+          COMPILER_FLAGS=""
+          if [[ -n "${{ matrix.c }}" ]]; then
+            COMPILER_FLAGS="-DCMAKE_C_COMPILER=${{ matrix.c }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }}"
+          fi
+          BUILD_DIR="${{ matrix.build_dir }}"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cmake -B "$BUILD_DIR" -S . -G "Visual Studio 17 2022" -A x64 \
+              -DVNEIO_CI=ON \
+              -DVNEIO_LIB_TYPE=shared \
+              -DVNEIO_BUILD_TESTS=OFF \
+              -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
+              $COMPILER_FLAGS
+          else
+            cmake -B "$BUILD_DIR" -S . \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DVNEIO_CI=ON \
+              -DVNEIO_LIB_TYPE=shared \
+              -DVNEIO_BUILD_TESTS=OFF \
+              -DENABLE_IPO=OFF \
+              -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
+              $COMPILER_FLAGS
+          fi
+
+      - name: Configure CMake (Emscripten)
+        if: matrix.platform == 'web-emscripten'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=shared \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DVNEIO_BUILD_MESH=OFF \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+
+      - name: Configure CMake (iOS)
+        if: matrix.platform == 'ios-static'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=static \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+
+      - name: Build
+        shell: bash
+        run: cmake --build "${{ matrix.build_dir }}" --config Release --parallel
+
+      - name: Install to staging directory
+        shell: bash
+        run: |
+          cmake --install "${{ matrix.build_dir }}" --config Release
+          INSTALL="${{ github.workspace }}/install"
+          if [[ ! -d "$INSTALL/include/vertexnova" ]]; then
+            echo "::error::Expected install/include/vertexnova missing."
+            find "$INSTALL" -type f 2>/dev/null | sort | head -50
+            exit 1
+          fi
+          for f in LICENSE CHANGELOG.md; do
+            if [[ ! -f "$INSTALL/$f" ]]; then
+              echo "::error::Expected install/$f missing."
+              exit 1
+            fi
+          done
+          case "${{ matrix.platform }}" in
+            web-emscripten)
+              if [ -z "$(find "$INSTALL" -type f \( -name '*.wasm' -o -name '*.a' -o -name '*.js' \) -print -quit)" ]; then
+                echo "::error::Web install: expected some of .wasm / .a / .js under install/"
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+            ios-static)
+              if [ -z "$(find "$INSTALL" -type f -name '*.a' -print -quit)" ]; then
+                echo "::error::iOS install: expected at least one .a under install/"
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+            *)
+              if [ -z "$(find "$INSTALL" -type f \( -iname '*vneio*' -o -iname '*VneIo*' \) -print -quit)" ]; then
+                echo "::error::No VneIo library artifacts found under install/"
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+          esac
+
+      - name: Package artifact
+        shell: bash
+        run: |
+          VER="${{ needs.release-please.outputs.version }}"
+          ARTIFACT="vneio-v${VER}-${{ matrix.platform }}.tar.gz"
+          tar -czf "${ARTIFACT}" -C "${{ github.workspace }}/install" .
+          echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
+          echo "Published: ${ARTIFACT} (platform slug: ${{ matrix.platform }})"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: ${{ env.ARTIFACT }}

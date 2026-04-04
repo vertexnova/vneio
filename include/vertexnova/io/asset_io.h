@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/dicom/dicom_loader.h"
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/image/image.h"
@@ -37,10 +38,15 @@ namespace io {
  *
  * Decode on CPU only; upload to GPU lives in a separate module (e.g. engine).
  */
-class AssetIO {
+class VNEIO_API AssetIO {
    public:
     AssetIO() = default;
     ~AssetIO() = default;
+
+    AssetIO(const AssetIO&) = delete;
+    AssetIO& operator=(const AssetIO&) = delete;
+    AssetIO(AssetIO&&) noexcept = default;
+    AssetIO& operator=(AssetIO&&) noexcept = default;
 
     /** @brief Register an image loader. Called first is tried first. */
     void registerImageLoader(std::unique_ptr<vne::image::IImageLoader> loader);

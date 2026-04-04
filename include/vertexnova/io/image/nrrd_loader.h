@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/volume_loader.h"
 #include "vertexnova/io/load_request.h"
@@ -31,7 +32,7 @@ namespace image {
  * Supports dimension 3, type uchar/uint8/ushort/uint16/float, encoding raw,
  * attached or detached data file. Spacings and (optionally) space origin are read when present.
  */
-class NrrdLoader : public IVolumeLoader {
+class VNEIO_API NrrdLoader : public IVolumeLoader {
    public:
     NrrdLoader() = default;
 

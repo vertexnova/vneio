@@ -10,7 +10,7 @@
 #include "vertexnova/io/utils/path_utils.h"
 
 #if !defined(VNEIO_TESTDATA_DIR)
-#include <config.h>
+#include <vneio_config.h>
 #endif
 
 namespace vne {
@@ -19,9 +19,9 @@ namespace utils {
 
 std::string getTestdataRoot() {
 #ifdef VNEIO_TESTDATA_DIR
-    return std::string(VNEIO_TESTDATA_DIR);
+    return {std::string(VNEIO_TESTDATA_DIR)};
 #else
-    return std::string();
+    return {};
 #endif
 }
 

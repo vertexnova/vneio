@@ -66,10 +66,16 @@ set(TEST_SOURCES
     image/volume_test.cpp
     main.cpp
 )
-# path_utils (needs config.h from build dir)
+# path_utils (needs vneio_config.h from build dir)
 list(APPEND TEST_SOURCES ${VNEIO_ROOT}/src/vertexnova/io/utils/path_utils.cpp)
 
 add_executable(TestVneIo ${TEST_SOURCES})
+
+# Shared DLL + tests: consumers see VNEIO_DLL / dllimport; MSVC C4251 on STL in exported
+# classes is expected (same as vneio targets' /wd4251 /wd4275).
+if(MSVC AND DEFINED VNEIO_LIB_TYPE AND VNEIO_LIB_TYPE STREQUAL "shared")
+    target_compile_options(TestVneIo PRIVATE /wd4251 /wd4275)
+endif()
 
 target_include_directories(TestVneIo
     PUBLIC

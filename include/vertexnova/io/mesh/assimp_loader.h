@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
 
@@ -30,24 +31,24 @@ constexpr float kAssimpNormalizeFillDefault = 0.999f;
  * @struct AssimpLoaderOptions
  * @brief Options for Assimp mesh loading (UV flip, tangents, triangulation, etc.).
  */
-struct AssimpLoaderOptions {
-    bool flip_uvs = true;                  //!< Flip texture V coordinate.
-    bool gen_tangents = true;              //!< Generate tangent/bitangent for normal mapping.
-    bool triangulate = true;              //!< Convert to triangles.
-    bool calc_normals_if_missing = false; //!< Compute normals if absent.
-    bool pre_transform_vertices = true;   //!< Apply node transforms to vertices.
-    bool ensure_ccw_winding = true;       //!< Ensure counter-clockwise winding.
-    bool normalize_to_unit_sphere = false;//!< Scale mesh to fit unit sphere.
-    float normalize_target_radius = 1.0f; //!< Target radius when normalizing.
-    float normalize_fill = kAssimpNormalizeFillDefault; //!< Fill ratio when normalizing.
-    bool generate_barycentrics = false;   //!< Generate barycentric coordinates (e.g. for wireframe).
+struct VNEIO_API AssimpLoaderOptions {
+    bool flip_uvs = true;                                //!< Flip texture V coordinate.
+    bool gen_tangents = true;                            //!< Generate tangent/bitangent for normal mapping.
+    bool triangulate = true;                             //!< Convert to triangles.
+    bool calc_normals_if_missing = false;                //!< Compute normals if absent.
+    bool pre_transform_vertices = true;                  //!< Apply node transforms to vertices.
+    bool ensure_ccw_winding = true;                      //!< Ensure counter-clockwise winding.
+    bool normalize_to_unit_sphere = false;               //!< Scale mesh to fit unit sphere.
+    float normalize_target_radius = 1.0f;                //!< Target radius when normalizing.
+    float normalize_fill = kAssimpNormalizeFillDefault;  //!< Fill ratio when normalizing.
+    bool generate_barycentrics = false;                  //!< Generate barycentric coordinates (e.g. for wireframe).
 };
 
 /**
  * @class AssimpLoader
  * @brief Loader for 3D meshes using Assimp (implements IMeshLoader).
  */
-class AssimpLoader : public IMeshLoader {
+class VNEIO_API AssimpLoader : public IMeshLoader {
    public:
     AssimpLoader() = default;
     ~AssimpLoader() override = default;

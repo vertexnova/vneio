@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
 
 #include <memory>
@@ -31,7 +32,7 @@ namespace mesh {
  * or nullptr if none is available. The default build registers Assimp
  * for common formats (e.g. .obj, .stl, .fbx, .gltf). Caller owns the returned loader.
  */
-class MeshLoaderRegistry {
+class VNEIO_API MeshLoaderRegistry {
    public:
     /**
      * @brief Return a loader that supports the given path, or nullptr

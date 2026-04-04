@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/image/volume.h"
 
 #include <string>
@@ -26,13 +27,13 @@ namespace vne::dicom {
  * @struct DicomSeries
  * @brief Lightweight DICOM series result: volume plus common tags as strings.
  */
-struct DicomSeries {
-    vne::image::Volume volume;                        //!< Reconstructed 3D volume.
-    std::unordered_map<std::string, std::string> meta; //!< Additional tags (e.g. for UI).
-    std::string series_uid;   //!< Series Instance UID.
-    std::string study_uid;    //!< Study Instance UID.
-    std::string patient_id;   //!< Patient ID.
-    std::string modality;    //!< Modality (e.g. CT, MR).
+struct VNEIO_API DicomSeries {
+    vne::image::Volume volume;                          //!< Reconstructed 3D volume.
+    std::unordered_map<std::string, std::string> meta;  //!< Additional tags (e.g. for UI).
+    std::string series_uid;                             //!< Series Instance UID.
+    std::string study_uid;                              //!< Study Instance UID.
+    std::string patient_id;                             //!< Patient ID.
+    std::string modality;                               //!< Modality (e.g. CT, MR).
 };
 
 }  // namespace vne::dicom

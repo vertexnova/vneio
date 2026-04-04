@@ -10,6 +10,7 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/export.h"
 #include "vertexnova/io/image/volume.h"
 
 #include <string>
@@ -25,8 +26,8 @@ namespace vne::image {
  * @struct NrrdExportOptions
  * @brief Options for NRRD export (detached vs attached data file).
  */
-struct NrrdExportOptions {
-    bool detached_data = false;       //!< If true, write .nhdr + separate .raw file.
+struct VNEIO_API NrrdExportOptions {
+    bool detached_data = false;      //!< If true, write .nhdr + separate .raw file.
     std::string detached_data_name;  //!< Override name for the raw file (optional).
 };
 
@@ -34,7 +35,7 @@ struct NrrdExportOptions {
  * @struct MhdExportOptions
  * @brief Options for MHD/MHA export (inline vs separate raw file).
  */
-struct MhdExportOptions {
+struct VNEIO_API MhdExportOptions {
     bool inline_data = false;   //!< If true, write .mha (ElementDataFile = LOCAL).
     std::string raw_data_name;  //!< Name for raw file when inline_data is false.
 };
@@ -47,10 +48,10 @@ struct MhdExportOptions {
  * @param out_error If non-null, receives error message on failure.
  * @return true on success, false otherwise.
  */
-[[nodiscard]] bool exportNrrd(const std::string& nrrd_or_nhdr_path,
-                              const Volume& vol,
-                              const NrrdExportOptions& opts = {},
-                              std::string* out_error = nullptr);
+[[nodiscard]] VNEIO_API bool exportNrrd(const std::string& nrrd_or_nhdr_path,
+                                        const Volume& vol,
+                                        const NrrdExportOptions& opts = {},
+                                        std::string* out_error = nullptr);
 
 /**
  * @brief Export volume to MetaImage (.mhd/.mha or .mha with inline data).
@@ -60,9 +61,9 @@ struct MhdExportOptions {
  * @param out_error If non-null, receives error message on failure.
  * @return true on success, false otherwise.
  */
-[[nodiscard]] bool exportMhd(const std::string& mhd_or_mha_path,
-                             const Volume& vol,
-                             const MhdExportOptions& opts = {},
-                             std::string* out_error = nullptr);
+[[nodiscard]] VNEIO_API bool exportMhd(const std::string& mhd_or_mha_path,
+                                       const Volume& vol,
+                                       const MhdExportOptions& opts = {},
+                                       std::string* out_error = nullptr);
 
 }  // namespace vne::image

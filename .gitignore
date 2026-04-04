@@ -2,7 +2,9 @@
 build/
 _build/
 cmake-build-*/
+build-*/
 out/
+target/
 *.user
 
 # Binaries / objects
@@ -19,6 +21,13 @@ out/
 *.exe
 *.out
 *.app
+*.ilk
+*.pdb
+*.dwo
+*.pch
+*.gch
+*.mod
+*.smod
 
 # CMake
 CMakeCache.txt
@@ -34,6 +43,24 @@ _deps/
 *.swp
 *.swo
 *~
+
+# Clangd / tooling cache
+.cache/
+
+# Qt Creator / local CMake user file
+CMakeLists.txt.user
+
+# AI tools (local-only)
+.cursor/
+.copilot/
+.claude/
+.deepseek/
+.gemini/
+.google/
+.openai/
+.anthropic/
+.perplexity/
+.grok/
 
 # OS
 .DS_Store
