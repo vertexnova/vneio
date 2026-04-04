@@ -56,6 +56,14 @@ else()
     endif()
 endif()
 
+if(COMMAND vneio_target_suppress_external_warnings)
+    foreach(_vneio_ext_gtest IN ITEMS gtest gtest_main gmock)
+        if(TARGET "${_vneio_ext_gtest}")
+            vneio_target_suppress_external_warnings("${_vneio_ext_gtest}")
+        endif()
+    endforeach()
+endif()
+
 #-----------------------------------------------------------------------------
 # Test sources (mesh + image, from vertexnova/tests/core)
 #-----------------------------------------------------------------------------

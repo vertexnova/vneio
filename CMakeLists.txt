@@ -201,6 +201,28 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
     target_compile_definitions(VneIoBuildSettings INTERFACE VNE_BUILD_TYPE_RELEASE)
 endif()
 
+# -----------------------------------------------------------------------------
+# Third-party targets under deps/external (and similar): do not use VneIo strict warnings.
+# -----------------------------------------------------------------------------
+function(vneio_target_suppress_external_warnings target_name)
+    if(NOT TARGET "${target_name}")
+        return()
+    endif()
+    get_target_property(_vneio_ext_imported "${target_name}" IMPORTED)
+    if(_vneio_ext_imported)
+        return()
+    endif()
+    get_target_property(_vneio_ext_type "${target_name}" TYPE)
+    if(_vneio_ext_type STREQUAL "INTERFACE_LIBRARY")
+        return()
+    endif()
+    if(MSVC)
+        target_compile_options("${target_name}" PRIVATE /W0)
+    else()
+        target_compile_options("${target_name}" PRIVATE $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-w>)
+    endif()
+endfunction()
+
 # =============================================================================
 # Internal: vnecommon + vnelogging (deps/internal), static embed target
 # =============================================================================
@@ -400,6 +422,19 @@ endif()
 
 if(VNEIO_BUILD_IMAGE AND NOT VNEIO_NRRDIO_FOUND)
     message(FATAL_ERROR "VneIo: nrrdio is required for the image component. Add deps/external/nrrdio or set nrrdio_DIR.")
+endif()
+
+# In-tree third-party libraries: silence compiler warnings in their sources only.
+if(VNEIO_BUILD_IMAGE)
+    if(TARGET stb_image)
+        vneio_target_suppress_external_warnings(stb_image)
+    endif()
+    if(TARGET NrrdIO)
+        vneio_target_suppress_external_warnings(NrrdIO)
+    endif()
+endif()
+if(VNEIO_BUILD_MESH AND TARGET assimp)
+    vneio_target_suppress_external_warnings(assimp)
 endif()
 
 # =============================================================================
