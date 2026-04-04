@@ -120,6 +120,13 @@ elseif(VNEIO_DEV)
     message(STATUS "VneIo: DEV build -> VNEIO_BUILD_TESTS=ON, VNEIO_BUILD_EXAMPLES=ON")
 endif()
 
+# iOS + Xcode: only under CI — skip code signing for static libs (no signing identity on runners).
+# Local iOS consumers keep Xcode defaults unless they set these (no CACHE FORCE).
+if(VNEIO_CI AND CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
+endif()
+
 if(ENABLE_COVERAGE AND ENABLE_ASAN)
     message(FATAL_ERROR
         "ENABLE_COVERAGE and ENABLE_ASAN cannot both be ON. "

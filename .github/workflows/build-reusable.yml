@@ -81,6 +81,13 @@ jobs:
         with:
           submodules: recursive
 
+      # Apple Silicon macOS CI: use Xcode 26 when the image provides it (see runner release notes).
+      - name: Select Xcode 26 (macOS)
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0'
+
       # Build tree: build/<shared|static>/<Release|Debug>/... (all platforms; isolates cache per config).
       - name: Set effective build type and cache key
         shell: bash

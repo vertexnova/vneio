@@ -7,32 +7,8 @@
 #
 # Description: Release Please + publish prebuilt install trees per platform.
 #
-# Artifact naming (semver + matrix.platform + ARTIFACT_DETAIL):
-#   vneio-v{VERSION}-{matrix.platform}-{ARTIFACT_DETAIL}.tar.gz
-#   matrix.platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static
-#
-# ARTIFACT_DETAIL is produced by "Compute artifact detail suffix" (see that step). Rules:
-#   linux-gcc:        ubuntu{VERSION_ID with '.' removed}-{uname -m}
-#                     e.g. Ubuntu 22.04 on GitHub → ubuntu2204-x86_64
-#   macos:            macos{sw_vers -productVersion with '.' removed}-{uname -m}
-#                     e.g. 14.2.1 on arm64 runner → macos1421-arm64
-#   windows:          vs2022-x64  (fixed; no uname -m)
-#   web-emscripten:   emcc{emcc -dumpversion output}-{uname -m}
-#                     e.g. emcc3.1.64-x86_64  (Emcc version keeps dots)
-#   ios-static:       xcode{xcodebuild Xcode version with '.' removed}-arm64  (fixed arch)
-#
-# Examples (illustrative; exact strings depend on runner / toolchain):
-#   .../vneio-v1.2.3-linux-gcc-ubuntu2204-x86_64.tar.gz
-#   .../vneio-v1.2.3-macos-macos1421-arm64.tar.gz
-#   .../vneio-v1.2.3-windows-vs2022-x64.tar.gz
-#   .../vneio-v1.2.3-web-emscripten-emcc3.1.64-x86_64.tar.gz
-#   .../vneio-v1.2.3-ios-static-xcode164-arm64.tar.gz
-#
-# Archive layout (cmake --install prefix): include/, lib/ (and bin/ on Windows),
-# LICENSE, CHANGELOG.md; plus platform-specific outputs (e.g. .wasm/.js for web).
-#
-# Web / iOS jobs mirror .github/workflows/ci.yml; validate locally before relying
-# on release binaries in production.
+# Artifact naming, install layout, troubleshooting:
+#   .github/docs/release-please-publish.md
 #
 # Autodoc:   yes
 # ----------------------------------------------------------------------
@@ -118,6 +94,12 @@ jobs:
             build_dir: build/static/Release
             c: ""
             cpp: ""
+          - platform: android
+            runner: ubuntu-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+            android_platform: android-24
 
     runs-on: ${{ matrix.runner }}
     steps:
@@ -128,6 +110,38 @@ jobs:
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
           submodules: recursive
+
+      - name: Setup Android NDK
+        if: matrix.platform == 'android'
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27d
+
+      # Pin Xcode 26 for Apple builds (desktop + iOS). If a runner image lacks 26.x, change
+      # xcode-version (e.g. latest-stable) or use a runner that ships Xcode 26.
+      - name: Select Xcode 26 (macOS + iOS)
+        if: matrix.platform == 'macos' || matrix.platform == 'ios-static'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0'
+
+      - name: Verify Xcode (iOS release)
+        if: matrix.platform == 'ios-static'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! out="$(xcodebuild -version 2>&1)"; then
+            echo "::error::xcodebuild -version failed (exit non-zero)."
+            echo "$out"
+            exit 1
+          fi
+          echo "$out"
+          ver="$(printf '%s\n' "$out" | awk '/^Xcode /{print $2; exit}')"
+          if [[ -z "$ver" || "$ver" == "unknown" ]]; then
+            echo "::error::iOS release: could not read a valid Xcode version from xcodebuild -version (got: ${ver:-empty}). Select Xcode on the runner (see setup-xcode step)."
+            exit 1
+          fi
 
       - name: Install Linux build dependencies
         if: matrix.platform == 'linux-gcc'
@@ -152,7 +166,7 @@ jobs:
         uses: mymindstorm/setup-emscripten@v14
 
       - name: Configure CMake (Linux / macOS / Windows desktop)
-        if: matrix.platform != 'web-emscripten' && matrix.platform != 'ios-static'
+        if: matrix.platform != 'web-emscripten' && matrix.platform != 'ios-static' && matrix.platform != 'android'
         shell: bash
         env:
           INSTALL_PREFIX: ${{ github.workspace }}/install
@@ -183,6 +197,31 @@ jobs:
               $COMPILER_FLAGS
           fi
 
+      - name: Configure CMake (Android)
+        if: matrix.platform == 'android'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          set -euo pipefail
+          NDK="${ANDROID_NDK_ROOT}"
+          if [[ -z "$NDK" || ! -f "$NDK/build/cmake/android.toolchain.cmake" ]]; then
+            echo "::error::Android NDK path invalid (ANDROID_NDK_ROOT=${NDK:-empty})"
+            exit 1
+          fi
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=${{ matrix.android_platform }} \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=shared \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DVNEIO_SANITIZE_INSTALL=ON \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+
       - name: Configure CMake (Emscripten)
         if: matrix.platform == 'web-emscripten'
         shell: bash
@@ -206,13 +245,15 @@ jobs:
         env:
           INSTALL_PREFIX: ${{ github.workspace }}/install
         run: |
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          set -euxo pipefail
           xcodebuild -version
           cmake -B "${{ matrix.build_dir }}" -S . \
             -G Xcode \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_VERBOSE_MAKEFILE=ON \
             -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
             -DVNEIO_CI=ON \
             -DVNEIO_LIB_TYPE=static \
@@ -223,13 +264,37 @@ jobs:
 
       - name: Build
         shell: bash
-        run: cmake --build "${{ matrix.build_dir }}" --config Release --parallel
+        run: |
+          set -e
+          BDIR="${{ matrix.build_dir }}"
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            export VERBOSE=1
+            set -x
+            cmake --build "$BDIR" --config Release --parallel --verbose
+          else
+            cmake --build "$BDIR" --config Release --parallel
+          fi
 
       - name: Install to staging directory
         shell: bash
         run: |
-          cmake --install "${{ matrix.build_dir }}" --config Release
-          INSTALL="${{ github.workspace }}/install"
+          set -e
+          BDIR="${{ matrix.build_dir }}"
+          WS="${{ github.workspace }}"
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            cmake --install "$BDIR" --config Release --verbose
+          else
+            cmake --install "$BDIR" --config Release
+          fi
+          INSTALL="$WS/install"
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            echo "::group::iOS build tree — static libraries (.a)"
+            find "$WS/$BDIR" -type f -name "*.a" 2>/dev/null | sort | head -80 || true
+            echo "::endgroup::"
+            echo "::group::iOS install prefix — static libraries (.a)"
+            find "$INSTALL" -type f -name "*.a" 2>/dev/null | sort || true
+            echo "::endgroup::"
+          fi
           if [[ ! -d "$INSTALL/include/vertexnova" ]]; then
             echo "::error::Expected install/include/vertexnova missing."
             find "$INSTALL" -type f 2>/dev/null | sort | head -50
@@ -257,7 +322,9 @@ jobs:
             ios-static)
               if [ -z "$(find "$INSTALL" -type f -name '*.a' -print -quit)" ]; then
                 echo "::error::iOS install: expected at least one .a under install/"
-                find "$INSTALL" -type f | sort
+                echo "Listing entire install/ and build tree .a files for diagnosis:"
+                find "$INSTALL" -type f 2>/dev/null | sort || true
+                find "$WS/$BDIR" -type f -name "*.a" 2>/dev/null | sort | head -100 || true
                 exit 1
               fi
               ;;
@@ -272,36 +339,130 @@ jobs:
 
       - name: Compute artifact detail suffix
         shell: bash
+        env:
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           set -e
           base="${{ matrix.platform }}"
-          arch="$(uname -m 2>/dev/null || echo unknown)"
+          arch="$(uname -m 2>/dev/null || true)"
+          arch="${arch//$'\r'/}"
+          arch="${arch//[[:space:]]/}"
+          if [[ -z "$arch" || "$(printf '%s' "$arch" | tr '[:upper:]' '[:lower:]')" == "unknown" ]]; then
+            arch=""
+          fi
+          arch_suffix=""
+          if [[ -n "$arch" ]]; then
+            arch_suffix="-${arch}"
+          else
+            echo "::notice::Machine architecture not detected; omitting arch segment from artifact suffix."
+          fi
           case "$base" in
             linux-gcc)
               . /etc/os-release 2>/dev/null || true
-              vid="${VERSION_ID:-unknown}"
-              vid="${vid//./}"
-              detail="ubuntu${vid}-${arch}"
+              vid="${VERSION_ID:-}"
+              if [[ -n "$vid" && "$(printf '%s' "$vid" | tr '[:upper:]' '[:lower:]')" == "unknown" ]]; then
+                vid=""
+              fi
+              gcv="$(gcc -dumpfullversion 2>/dev/null || gcc -dumpversion 2>/dev/null || true)"
+              if [[ -n "$gcv" && "$(printf '%s' "$gcv" | tr '[:upper:]' '[:lower:]')" == "unknown" ]]; then
+                gcv=""
+              fi
+              if [[ -n "$gcv" ]]; then
+                if [[ -n "$vid" ]]; then
+                  detail="ubuntu${vid}-gcc${gcv}${arch_suffix}"
+                else
+                  echo "::notice::VERSION_ID missing or unusable; omitting ubuntu{VERSION_ID} segment from artifact suffix."
+                  detail="gcc${gcv}${arch_suffix}"
+                fi
+              else
+                echo "::notice::gcc version not detected; omitting gcc segment from artifact suffix."
+                if [[ -n "$vid" ]]; then
+                  detail="ubuntu${vid}${arch_suffix}"
+                else
+                  echo "::notice::VERSION_ID missing or unusable; omitting ubuntu{VERSION_ID} segment from artifact suffix."
+                  detail="linux-gcc${arch_suffix}"
+                fi
+              fi
               ;;
             macos)
-              macv="$(sw_vers -productVersion 2>/dev/null || echo unknown)"
-              macv="${macv//./}"
-              detail="macos${macv}-${arch}"
+              macv="$(sw_vers -productVersion 2>/dev/null || true)"
+              macv="${macv//$'\r'/}"
+              macv="${macv//[[:space:]]/}"
+              if [[ -n "$macv" && "$(printf '%s' "$macv" | tr '[:upper:]' '[:lower:]')" == "unknown" ]]; then
+                macv=""
+              fi
+              xv_raw="$(xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"
+              if [[ "$xv_raw" == "unknown" ]]; then xv_raw=""; fi
+              if [[ -n "$xv_raw" ]]; then
+                if [[ -n "$macv" ]]; then
+                  detail="macos${macv}-xcode${xv_raw}${arch_suffix}"
+                else
+                  echo "::notice::macOS product version missing or unusable; omitting macos{version} segment from artifact suffix."
+                  detail="macos-xcode${xv_raw}${arch_suffix}"
+                fi
+              else
+                echo "::notice::Xcode version not parsed; omitting xcode segment from macOS artifact suffix."
+                if [[ -n "$macv" ]]; then
+                  detail="macos${macv}${arch_suffix}"
+                else
+                  echo "::notice::macOS product version missing or unusable; omitting macos{version} segment from artifact suffix."
+                  detail="macos${arch_suffix}"
+                fi
+              fi
               ;;
             windows)
               detail="vs2022-x64"
               ;;
             web-emscripten)
-              emv="$(emcc -dumpversion 2>/dev/null || echo unknown)"
-              detail="emcc${emv}-${arch}"
+              emv="$(emcc -dumpversion 2>/dev/null || true)"
+              if [[ -z "$emv" || "$emv" == "unknown" ]]; then
+                echo "::error::web-emscripten: emcc -dumpversion did not return a usable version (got: ${emv:-empty})."
+                exit 1
+              fi
+              detail="emcc${emv}${arch_suffix}"
               ;;
             ios-static)
-              xv="$(xcodebuild -version 2>/dev/null | awk '/Xcode/{print $2; exit}' || echo unknown)"
-              xv="${xv//./}"
-              detail="xcode${xv}-arm64"
+              xv_raw="$(xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"
+              if [[ -z "$xv_raw" || "$xv_raw" == "unknown" ]]; then
+                echo "::error::iOS artifact naming: xcodebuild did not return a usable Xcode version (got: ${xv_raw:-empty}). Search this job log for earlier xcodebuild -version output (Verify Xcode / Configure CMake (iOS))."
+                exit 1
+              fi
+              detail="xcode${xv_raw}-arm64"
+              ;;
+            android)
+              android_plat="${{ matrix.android_platform }}"
+              if [[ -z "$android_plat" ]]; then
+                echo "::error::matrix.android_platform is empty; set it on the android matrix row."
+                exit 1
+              fi
+              api="${android_plat#android-}"
+              if [[ -z "$api" || "$api" == "$android_plat" ]]; then
+                echo "::error::matrix.android_platform must be like android-24 (got: ${android_plat})."
+                exit 1
+              fi
+              abi_slug="arm64v8a"
+              ndk_root="${ANDROID_NDK_ROOT:-}"
+              ndk_rev=""
+              if [[ -n "$ndk_root" && -f "$ndk_root/source.properties" ]]; then
+                ndk_rev="$(grep -E '^[[:space:]]*Pkg.Revision[[:space:]]*=' "$ndk_root/source.properties" | head -1 | cut -d= -f2- | tr -d ' \t\r\n')"
+              fi
+              if [[ -n "$ndk_rev" && "$(printf '%s' "$ndk_rev" | tr '[:upper:]' '[:lower:]')" == "unknown" ]]; then
+                ndk_rev=""
+              fi
+              if [[ -n "$ndk_rev" ]]; then
+                detail="android${api}-ndk${ndk_rev}-${abi_slug}"
+              else
+                echo "::notice::NDK Pkg.Revision not read; omitting ndk segment from Android artifact suffix."
+                detail="android${api}-${abi_slug}"
+              fi
               ;;
             *)
-              detail="${arch}"
+              if [[ -n "$arch" ]]; then
+                detail="${arch}"
+              else
+                echo "::notice::Machine architecture not detected; using generic artifact suffix."
+                detail="generic"
+              fi
               ;;
           esac
           echo "ARTIFACT_DETAIL=${detail}" >> "$GITHUB_ENV"
