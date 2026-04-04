@@ -12,21 +12,24 @@
 #   matrix.platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static
 #
 # ARTIFACT_DETAIL is produced by "Compute artifact detail suffix" (see that step). Rules:
-#   linux-gcc:        ubuntu{VERSION_ID with '.' removed}-{uname -m}
-#                     e.g. Ubuntu 22.04 on GitHub → ubuntu2204-x86_64
-#   macos:            macos{sw_vers -productVersion with '.' removed}-{uname -m}
-#                     e.g. 14.2.1 on arm64 runner → macos1421-arm64
+#   linux-gcc:        ubuntu{VERSION_ID dots removed}-gcc{gcc -dumpfullversion dots removed}-{uname -m}
+#                     e.g. Ubuntu 22.04, GCC 13.2.0 → ubuntu2204-gcc1320-x86_64
+#   macos:            macos{sw_vers dots removed}-xcode{xcodebuild dots removed}-{uname -m}
+#                     (xcode segment omitted if xcodebuild does not parse)
+#                     e.g. macOS 14.2 + Xcode 26.0 → macos1421-xcode260-arm64
 #   windows:          vs2022-x64  (fixed; no uname -m)
 #   web-emscripten:   emcc{emcc -dumpversion output}-{uname -m}
 #                     e.g. emcc3.1.64-x86_64  (Emcc version keeps dots)
-#   ios-static:       xcode{xcodebuild Xcode version with '.' removed}-arm64  (fixed arch)
+#   ios-static:       xcode{major.minor.patch with '.' removed}-arm64 when xcodebuild parses;
+#                     otherwise ios-arm64 (version intentionally ignored).
 #
 # Examples (illustrative; exact strings depend on runner / toolchain):
-#   .../vneio-v1.2.3-linux-gcc-ubuntu2204-x86_64.tar.gz
-#   .../vneio-v1.2.3-macos-macos1421-arm64.tar.gz
+#   .../vneio-v1.2.3-linux-gcc-ubuntu2204-gcc1320-x86_64.tar.gz
+#   .../vneio-v1.2.3-macos-macos1421-xcode260-arm64.tar.gz
 #   .../vneio-v1.2.3-windows-vs2022-x64.tar.gz
 #   .../vneio-v1.2.3-web-emscripten-emcc3.1.64-x86_64.tar.gz
-#   .../vneio-v1.2.3-ios-static-xcode164-arm64.tar.gz
+#   .../vneio-v1.2.3-ios-static-xcode260-arm64.tar.gz
+#   .../vneio-v1.2.3-ios-static-ios-arm64.tar.gz   (fallback when Xcode version not parsed)
 #
 # Archive layout (cmake --install prefix): include/, lib/ (and bin/ on Windows),
 # LICENSE, CHANGELOG.md; plus platform-specific outputs (e.g. .wasm/.js for web).
@@ -129,6 +132,14 @@ jobs:
           ref: ${{ needs.release-please.outputs.tag_name }}
           submodules: recursive
 
+      # Pin Xcode 26 for Apple builds (desktop + iOS). If a runner image lacks 26.x, change
+      # xcode-version (e.g. latest-stable) or use a runner that ships Xcode 26.
+      - name: Select Xcode 26 (macOS + iOS)
+        if: matrix.platform == 'macos' || matrix.platform == 'ios-static'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0'
+
       - name: Install Linux build dependencies
         if: matrix.platform == 'linux-gcc'
         run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake libassimp-dev
@@ -206,12 +217,13 @@ jobs:
         env:
           INSTALL_PREFIX: ${{ github.workspace }}/install
         run: |
-          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          set -euxo pipefail
           xcodebuild -version
           cmake -B "${{ matrix.build_dir }}" -S . \
             -G Xcode \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
             -DVNEIO_CI=ON \
@@ -223,13 +235,32 @@ jobs:
 
       - name: Build
         shell: bash
-        run: cmake --build "${{ matrix.build_dir }}" --config Release --parallel
+        run: |
+          set -e
+          BDIR="${{ matrix.build_dir }}"
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            set -x
+            cmake --build "$BDIR" --config Release --parallel --verbose
+          else
+            cmake --build "$BDIR" --config Release --parallel
+          fi
 
       - name: Install to staging directory
         shell: bash
         run: |
-          cmake --install "${{ matrix.build_dir }}" --config Release
-          INSTALL="${{ github.workspace }}/install"
+          set -e
+          BDIR="${{ matrix.build_dir }}"
+          WS="${{ github.workspace }}"
+          cmake --install "$BDIR" --config Release
+          INSTALL="$WS/install"
+          if [[ "${{ matrix.platform }}" == "ios-static" ]]; then
+            echo "::group::iOS build tree — static libraries (.a)"
+            find "$WS/$BDIR" -type f -name "*.a" 2>/dev/null | sort | head -80 || true
+            echo "::endgroup::"
+            echo "::group::iOS install prefix — static libraries (.a)"
+            find "$INSTALL" -type f -name "*.a" 2>/dev/null | sort || true
+            echo "::endgroup::"
+          fi
           if [[ ! -d "$INSTALL/include/vertexnova" ]]; then
             echo "::error::Expected install/include/vertexnova missing."
             find "$INSTALL" -type f 2>/dev/null | sort | head -50
@@ -257,7 +288,9 @@ jobs:
             ios-static)
               if [ -z "$(find "$INSTALL" -type f -name '*.a' -print -quit)" ]; then
                 echo "::error::iOS install: expected at least one .a under install/"
-                find "$INSTALL" -type f | sort
+                echo "Listing entire install/ and build tree .a files for diagnosis:"
+                find "$INSTALL" -type f 2>/dev/null | sort || true
+                find "$WS/$BDIR" -type f -name "*.a" 2>/dev/null | sort | head -100 || true
                 exit 1
               fi
               ;;
@@ -281,12 +314,26 @@ jobs:
               . /etc/os-release 2>/dev/null || true
               vid="${VERSION_ID:-unknown}"
               vid="${vid//./}"
-              detail="ubuntu${vid}-${arch}"
+              gcv="$(gcc -dumpfullversion 2>/dev/null || gcc -dumpversion 2>/dev/null || true)"
+              gcv="${gcv//./}"
+              if [[ -n "$gcv" ]]; then
+                detail="ubuntu${vid}-gcc${gcv}-${arch}"
+              else
+                echo "::notice::gcc version not detected; omitting gcc segment from artifact suffix."
+                detail="ubuntu${vid}-${arch}"
+              fi
               ;;
             macos)
               macv="$(sw_vers -productVersion 2>/dev/null || echo unknown)"
               macv="${macv//./}"
-              detail="macos${macv}-${arch}"
+              xv="$(xcodebuild -version 2>/dev/null | awk '/Xcode/{print $2; exit}')"
+              xv="${xv//./}"
+              if [[ -n "$xv" ]]; then
+                detail="macos${macv}-xcode${xv}-${arch}"
+              else
+                echo "::notice::Xcode version not parsed; omitting xcode segment from macOS artifact suffix."
+                detail="macos${macv}-${arch}"
+              fi
               ;;
             windows)
               detail="vs2022-x64"
@@ -296,9 +343,14 @@ jobs:
               detail="emcc${emv}-${arch}"
               ;;
             ios-static)
-              xv="$(xcodebuild -version 2>/dev/null | awk '/Xcode/{print $2; exit}' || echo unknown)"
+              xv="$(xcodebuild -version 2>/dev/null | awk '/Xcode/{print $2; exit}')"
               xv="${xv//./}"
-              detail="xcode${xv}-arm64"
+              if [[ -n "$xv" ]]; then
+                detail="xcode${xv}-arm64"
+              else
+                echo "::notice::Xcode version not parsed; using generic iOS artifact suffix."
+                detail="ios-arm64"
+              fi
               ;;
             *)
               detail="${arch}"

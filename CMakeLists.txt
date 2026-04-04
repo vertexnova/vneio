@@ -24,6 +24,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(vneio VERSION 1.0.0 LANGUAGES CXX)
 
+# iOS + Xcode: static libraries in CI should not require code signing (avoids empty/failed builds).
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO CACHE BOOL "" FORCE)
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO CACHE BOOL "" FORCE)
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
