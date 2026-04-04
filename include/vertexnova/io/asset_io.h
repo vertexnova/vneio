@@ -43,6 +43,11 @@ class VNEIO_API AssetIO {
     AssetIO() = default;
     ~AssetIO() = default;
 
+    AssetIO(const AssetIO&) = delete;
+    AssetIO& operator=(const AssetIO&) = delete;
+    AssetIO(AssetIO&&) noexcept = default;
+    AssetIO& operator=(AssetIO&&) noexcept = default;
+
     /** @brief Register an image loader. Called first is tried first. */
     void registerImageLoader(std::unique_ptr<vne::image::IImageLoader> loader);
     /** @brief Register a mesh loader. */
