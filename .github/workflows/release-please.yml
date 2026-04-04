@@ -1,0 +1,178 @@
+# ----------------------------------------------------------------------
+# Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License")
+#
+# Author:    Ajeet Singh Yadav
+# Created:   February 2026
+#
+# Description: Release Please: opens/updates a Release PR from conventional commits.
+# When the Release PR is merged, publishes pre-built Release install trees as
+# tarballs on the GitHub Release.
+# Repo Settings (one-time):
+#   Settings -> General -> Pull Requests -> "Allow auto-merge" — ON
+#   REPO_ACCESS_TOKEN (optional): higher API limits; else github.token is used.
+#
+# Autodoc:   yes
+# ----------------------------------------------------------------------
+
+name: Release Please
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: "Release / release-please"
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.rp.outputs.release_created }}
+      tag_name: ${{ steps.rp.outputs.tag_name }}
+      version: ${{ steps.rp.outputs.version }}
+    steps:
+      - name: Run release-please
+        id: rp
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: .github/release-please-config.json
+          token: ${{ secrets.REPO_ACCESS_TOKEN || github.token }}
+
+      - name: Enable auto-merge on Release PR
+        if: steps.rp.outputs.pr != ''
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN || github.token }}
+          PR_RAW: ${{ steps.rp.outputs.pr }}
+        run: |
+          PR_NUMBER="$(echo "$PR_RAW" | python3 -c 'import sys,json; print(json.load(sys.stdin)["number"])')"
+          if ! gh pr merge --repo "${{ github.repository }}" --auto --squash "$PR_NUMBER" 2>&1 | tee /tmp/gh-out; then
+            if grep -q "enablePullRequestAutoMerge\|Auto merge is not allowed" /tmp/gh-out; then
+              echo "::warning::Auto-merge is disabled for this repo. Enable Settings -> General -> Pull Requests -> 'Allow auto-merge'. Release PR #$PR_NUMBER remains open for manual merge."
+              exit 0
+            fi
+            exit 1
+          fi
+
+  # --------------------------------------------------------------------
+  # Build and publish install-tree tarballs when release-please creates a release.
+  # Contents: CMake install prefix (lib/, include/vertexnova/, cmake/) for VneIo
+  # component libraries (mesh, image, asset_io, optional dicom) + interface target.
+  # --------------------------------------------------------------------
+  publish:
+    name: "Release / publish (${{ matrix.platform }})"
+    needs: [release-please]
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-gcc
+            runner: ubuntu-latest
+            c: gcc
+            cpp: g++
+          - platform: macos
+            runner: macos-latest
+            c: ""
+            cpp: ""
+          - platform: windows
+            runner: windows-latest
+            c: ""
+            cpp: ""
+
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Use HTTPS for GitHub (CI runners have no SSH key)
+        run: git config --global url."https://github.com/".insteadOf "git@github.com:"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+          submodules: recursive
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake libassimp-dev
+
+      - name: Use system Assimp on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: rm -rf deps/external/assimp
+
+      - name: Install Assimp (macOS)
+        if: runner.os == 'macOS'
+        run: brew install assimp
+
+      - name: Use system Assimp on macOS
+        if: runner.os == 'macOS'
+        shell: bash
+        run: rm -rf deps/external/assimp
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          set -e
+          COMPILER_FLAGS=""
+          if [[ -n "${{ matrix.c }}" ]]; then
+            COMPILER_FLAGS="-DCMAKE_C_COMPILER=${{ matrix.c }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }}"
+          fi
+          BUILD_DIR="build/shared/Release"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cmake -B "$BUILD_DIR" -S . -G "Visual Studio 17 2022" -A x64 \
+              -DVNEIO_CI=ON \
+              -DVNEIO_LIB_TYPE=shared \
+              -DVNEIO_BUILD_TESTS=OFF \
+              -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
+              $COMPILER_FLAGS
+          else
+            cmake -B "$BUILD_DIR" -S . \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DVNEIO_CI=ON \
+              -DVNEIO_LIB_TYPE=shared \
+              -DVNEIO_BUILD_TESTS=OFF \
+              -DENABLE_IPO=OFF \
+              -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
+              $COMPILER_FLAGS
+          fi
+
+      - name: Build
+        shell: bash
+        run: |
+          cmake --build build/shared/Release --config Release --parallel
+
+      - name: Install to staging directory
+        shell: bash
+        run: |
+          cmake --install build/shared/Release --config Release
+          if [[ ! -d "${{ github.workspace }}/install/include/vertexnova" ]]; then
+            echo "::error::Expected install/include/vertexnova missing — cmake install failed."
+            find "${{ github.workspace }}/install" -type f 2>/dev/null | sort | head -50
+            exit 1
+          fi
+          if ! find "${{ github.workspace }}/install" -type f \( -iname '*vneio*' -o -iname '*VneIo*' \) | head -1 | grep -q .; then
+            echo "::error::No VneIo library artifacts found under install/"
+            find "${{ github.workspace }}/install" -type f | sort
+            exit 1
+          fi
+
+      - name: Package artifact
+        shell: bash
+        run: |
+          ARTIFACT="vneio-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
+          tar -czf "${ARTIFACT}" -C "${{ github.workspace }}/install" .
+          echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.tag_name }}
+          files: ${{ env.ARTIFACT }}
