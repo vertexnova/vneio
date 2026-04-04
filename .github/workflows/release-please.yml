@@ -7,13 +7,26 @@
 #
 # Description: Release Please + publish prebuilt install trees per platform.
 #
-# Artifact naming (semver + base platform + OS / toolchain hint):
-#   vneio-v{VERSION}-{matrix.platform}-{detail}.tar.gz
+# Artifact naming (semver + matrix.platform + ARTIFACT_DETAIL):
+#   vneio-v{VERSION}-{matrix.platform}-{ARTIFACT_DETAIL}.tar.gz
 #   matrix.platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static
-#   detail: short OS or compiler version (e.g. ubuntu22.04, macos14.2, vs2022, emscripten version).
-# Example:
-#   .../vneio-v1.2.3-linux-gcc-ubuntu22.04-amd64.tar.gz
-#   .../vneio-v1.2.3-web-emscripten-3.1.64.tar.gz
+#
+# ARTIFACT_DETAIL is produced by "Compute artifact detail suffix" (see that step). Rules:
+#   linux-gcc:        ubuntu{VERSION_ID with '.' removed}-{uname -m}
+#                     e.g. Ubuntu 22.04 on GitHub → ubuntu2204-x86_64
+#   macos:            macos{sw_vers -productVersion with '.' removed}-{uname -m}
+#                     e.g. 14.2.1 on arm64 runner → macos1421-arm64
+#   windows:          vs2022-x64  (fixed; no uname -m)
+#   web-emscripten:   emcc{emcc -dumpversion output}-{uname -m}
+#                     e.g. emcc3.1.64-x86_64  (Emcc version keeps dots)
+#   ios-static:       xcode{xcodebuild Xcode version with '.' removed}-arm64  (fixed arch)
+#
+# Examples (illustrative; exact strings depend on runner / toolchain):
+#   .../vneio-v1.2.3-linux-gcc-ubuntu2204-x86_64.tar.gz
+#   .../vneio-v1.2.3-macos-macos1421-arm64.tar.gz
+#   .../vneio-v1.2.3-windows-vs2022-x64.tar.gz
+#   .../vneio-v1.2.3-web-emscripten-emcc3.1.64-x86_64.tar.gz
+#   .../vneio-v1.2.3-ios-static-xcode164-arm64.tar.gz
 #
 # Archive layout (cmake --install prefix): include/, lib/ (and bin/ on Windows),
 # LICENSE, CHANGELOG.md; plus platform-specific outputs (e.g. .wasm/.js for web).
