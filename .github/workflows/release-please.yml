@@ -360,7 +360,12 @@ jobs:
               ;;
             macos)
               macv="$(sw_vers -productVersion 2>/dev/null || true)"
+              macv="${macv//$'\r'/}"
+              macv="${macv//[[:space:]]/}"
               macv="${macv//./}"
+              if [[ -n "$macv" && "$(printf '%s' "$macv" | tr '[:upper:]' '[:lower:]')" == "unknown" ]]; then
+                macv=""
+              fi
               xv_raw="$(xcodebuild -version 2>/dev/null | awk '/^Xcode /{print $2; exit}')"
               if [[ "$xv_raw" == "unknown" ]]; then xv_raw=""; fi
               xv="${xv_raw//./}"
@@ -368,6 +373,7 @@ jobs:
                 if [[ -n "$macv" ]]; then
                   detail="macos${macv}-xcode${xv}-${arch}"
                 else
+                  echo "::notice::macOS product version missing or unusable; omitting macos{version} segment from artifact suffix."
                   detail="macos-xcode${xv}-${arch}"
                 fi
               else
@@ -375,6 +381,7 @@ jobs:
                 if [[ -n "$macv" ]]; then
                   detail="macos${macv}-${arch}"
                 else
+                  echo "::notice::macOS product version missing or unusable; omitting macos{version} segment from artifact suffix."
                   detail="macos-${arch}"
                 fi
               fi

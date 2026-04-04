@@ -24,12 +24,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(vneio VERSION 1.0.0 LANGUAGES CXX)
 
-# iOS + Xcode: static libraries in CI should not require code signing (avoids empty/failed builds).
-if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
-    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO CACHE BOOL "" FORCE)
-    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO CACHE BOOL "" FORCE)
-endif()
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -124,6 +118,13 @@ elseif(VNEIO_DEV)
     set(VNEIO_BUILD_TESTS ON CACHE BOOL "" FORCE)
     set(VNEIO_BUILD_EXAMPLES ON CACHE BOOL "" FORCE)
     message(STATUS "VneIo: DEV build -> VNEIO_BUILD_TESTS=ON, VNEIO_BUILD_EXAMPLES=ON")
+endif()
+
+# iOS + Xcode: only under CI — skip code signing for static libs (no signing identity on runners).
+# Local iOS consumers keep Xcode defaults unless they set these (no CACHE FORCE).
+if(VNEIO_CI AND CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED NO)
+    set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED NO)
 endif()
 
 if(ENABLE_COVERAGE AND ENABLE_ASAN)
