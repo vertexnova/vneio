@@ -21,7 +21,7 @@ Published files:
 | **windows**      | `vs2022-x64` (fixed). |
 | **web-emscripten** | `emcc{emcc -dumpversion}-{uname -m}` when both parse; the job errors if the Emscripten version is missing or `unknown`. |
 | **ios-static**   | `xcode{xcodebuild version}-arm64` with **dots preserved** (e.g. **26.0**). The Xcode version must be readable from `xcodebuild -version`; there is **no** generic fallback suffix (e.g. `ios-arm64`) if parsing fails. |
-| **android**      | `android{API}-ndk{NDK Pkg.Revision}-arm64v8a` with **NDK revision dots preserved**, or `android{API}-arm64v8a` if NDK revision cannot be read. |
+| **android**      | `android{API}-ndk{NDK Pkg.Revision}-arm64v8a` with **NDK revision dots preserved**, or `android{API}-arm64v8a` if NDK revision cannot be read. **{API}** is the numeric suffix of **`matrix.android_platform`** (e.g. `android-24` → `24`), the same string passed to **`-DANDROID_PLATFORM`** in **Configure CMake (Android)**. |
 
 Examples (runner-dependent; version segments keep **dots** as reported by the OS/tooling):
 
