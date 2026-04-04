@@ -105,6 +105,20 @@ if (!img.isEmpty()) {
 - `deps/external/assimp`, `deps/external/stb_image` – mesh/image dependencies (assimp is submodule, stb_image is a copy)
 - `tests/`, `examples/` – optional
 
+## Prebuilt binaries (GitHub Releases)
+
+Each tagged release publishes install trees as `vneio-v{VERSION}-{platform}.tar.gz` (same semver for every platform). Stable **`platform`** slugs are:
+
+| `platform` | Contents (high level) |
+|------------|------------------------|
+| `linux-gcc` | Shared library, headers, LICENSE, CHANGELOG |
+| `macos` | Shared library, headers, LICENSE, CHANGELOG |
+| `windows` | Shared library / DLL as applicable, headers, LICENSE, CHANGELOG |
+| `web-emscripten` | Emscripten build (shared); mesh disabled in CI/release to match CI |
+| `ios-static` | Static `.a`, headers, LICENSE, CHANGELOG (device arm64; mirrors CI) |
+
+Example URL pattern: `https://github.com/<org>/<repo>/releases/download/v1.2.3/vneio-v1.2.3-linux-gcc.tar.gz`. A single app can map runtime OS or target to one slug and download the matching archive for that release version.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [CODING_GUIDELINES.md](CODING_GUIDELINES.md). PRs use [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md); releases and changelog are driven by [release-please](https://github.com/googleapis/release-please) (Conventional Commits).

@@ -5,12 +5,20 @@
 # Author:    Ajeet Singh Yadav
 # Created:   February 2026
 #
-# Description: Release Please: opens/updates a Release PR from conventional commits.
-# When the Release PR is merged, publishes pre-built Release install trees as
-# tarballs on the GitHub Release.
-# Repo Settings (one-time):
-#   Settings -> General -> Pull Requests -> "Allow auto-merge" — ON
-#   REPO_ACCESS_TOKEN (optional): higher API limits; else github.token is used.
+# Description: Release Please + publish prebuilt install trees per platform.
+#
+# Artifact naming (same semver for every platform — one app can derive URLs):
+#   vneio-v{VERSION}-{platform}.tar.gz
+#   platform ∈ linux-gcc | macos | windows | web-emscripten | ios-static
+# Example:
+#   .../releases/download/v1.2.3/vneio-v1.2.3-linux-gcc.tar.gz
+#   .../releases/download/v1.2.3/vneio-v1.2.3-web-emscripten.tar.gz
+#
+# Archive layout (cmake --install prefix): include/, lib/ (and bin/ on Windows),
+# LICENSE, CHANGELOG.md; plus platform-specific outputs (e.g. .wasm/.js for web).
+#
+# Web / iOS jobs mirror .github/workflows/ci.yml; validate locally before relying
+# on release binaries in production.
 #
 # Autodoc:   yes
 # ----------------------------------------------------------------------
@@ -60,16 +68,6 @@ jobs:
             exit 1
           fi
 
-  # --------------------------------------------------------------------
-  # Build and publish install-tree tarballs when release-please creates a release.
-  # Archive layout (CMake --install prefix), typical:
-  #   include/vertexnova/   — public headers
-  #   lib/                  — static/shared libs + cmake/VneIo/*.cmake
-  #   bin/                  — Windows: DLLs when RUNTIME goes to bin (MSVC)
-  #   LICENSE, CHANGELOG.md — repo root files (installed via CMake DESTINATION .)
-  # CI (ci.yml + build-reusable.yml) is unchanged; this job only runs when
-  # release-please creates a GitHub Release after the release PR merge.
-  # --------------------------------------------------------------------
   publish:
     name: "Release / publish (${{ matrix.platform }})"
     needs: [release-please]
@@ -83,14 +81,27 @@ jobs:
         include:
           - platform: linux-gcc
             runner: ubuntu-latest
+            build_dir: build/shared/Release
             c: gcc
             cpp: g++
           - platform: macos
             runner: macos-latest
+            build_dir: build/shared/Release
             c: ""
             cpp: ""
           - platform: windows
             runner: windows-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+          - platform: web-emscripten
+            runner: ubuntu-latest
+            build_dir: build/shared/Release
+            c: ""
+            cpp: ""
+          - platform: ios-static
+            runner: macos-latest
+            build_dir: build/static/Release
             c: ""
             cpp: ""
 
@@ -105,38 +116,45 @@ jobs:
           submodules: recursive
 
       - name: Install Linux build dependencies
-        if: runner.os == 'Linux'
+        if: matrix.platform == 'linux-gcc'
         run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake libassimp-dev
 
-      - name: Use system Assimp on Linux
-        if: runner.os == 'Linux'
+      - name: Use system Assimp on Linux (native)
+        if: matrix.platform == 'linux-gcc'
         shell: bash
         run: rm -rf deps/external/assimp
 
-      - name: Install Assimp (macOS)
-        if: runner.os == 'macOS'
+      - name: Install Assimp (macOS — desktop + iOS jobs)
+        if: matrix.platform == 'macos' || matrix.platform == 'ios-static'
         run: brew install assimp
 
-      - name: Use system Assimp on macOS
-        if: runner.os == 'macOS'
+      - name: Use system Assimp on macOS / iOS
+        if: matrix.platform == 'macos' || matrix.platform == 'ios-static'
         shell: bash
         run: rm -rf deps/external/assimp
 
-      - name: Configure CMake
+      - name: Install Emscripten
+        if: matrix.platform == 'web-emscripten'
+        uses: mymindstorm/setup-emscripten@v14
+
+      - name: Configure CMake (Linux / macOS / Windows desktop)
+        if: matrix.platform != 'web-emscripten' && matrix.platform != 'ios-static'
         shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
         run: |
           set -e
           COMPILER_FLAGS=""
           if [[ -n "${{ matrix.c }}" ]]; then
             COMPILER_FLAGS="-DCMAKE_C_COMPILER=${{ matrix.c }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }}"
           fi
-          BUILD_DIR="build/shared/Release"
+          BUILD_DIR="${{ matrix.build_dir }}"
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             cmake -B "$BUILD_DIR" -S . -G "Visual Studio 17 2022" -A x64 \
               -DVNEIO_CI=ON \
               -DVNEIO_LIB_TYPE=shared \
               -DVNEIO_BUILD_TESTS=OFF \
-              -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
+              -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
               $COMPILER_FLAGS
           else
             cmake -B "$BUILD_DIR" -S . \
@@ -145,42 +163,98 @@ jobs:
               -DVNEIO_LIB_TYPE=shared \
               -DVNEIO_BUILD_TESTS=OFF \
               -DENABLE_IPO=OFF \
-              -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
+              -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
               $COMPILER_FLAGS
           fi
 
+      - name: Configure CMake (Emscripten)
+        if: matrix.platform == 'web-emscripten'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$EMSDK/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=shared \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DVNEIO_BUILD_MESH=OFF \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+
+      - name: Configure CMake (iOS)
+        if: matrix.platform == 'ios-static'
+        shell: bash
+        env:
+          INSTALL_PREFIX: ${{ github.workspace }}/install
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          cmake -B "${{ matrix.build_dir }}" -S . \
+            -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
+            -DVNEIO_CI=ON \
+            -DVNEIO_LIB_TYPE=static \
+            -DVNEIO_BUILD_TESTS=OFF \
+            -DENABLE_IPO=OFF \
+            -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+
       - name: Build
         shell: bash
-        run: |
-          cmake --build build/shared/Release --config Release --parallel
+        run: cmake --build "${{ matrix.build_dir }}" --config Release --parallel
 
       - name: Install to staging directory
         shell: bash
         run: |
-          cmake --install build/shared/Release --config Release
-          if [[ ! -d "${{ github.workspace }}/install/include/vertexnova" ]]; then
-            echo "::error::Expected install/include/vertexnova missing — cmake install failed."
-            find "${{ github.workspace }}/install" -type f 2>/dev/null | sort | head -50
-            exit 1
-          fi
-          if ! find "${{ github.workspace }}/install" -type f \( -iname '*vneio*' -o -iname '*VneIo*' \) | head -1 | grep -q .; then
-            echo "::error::No VneIo library artifacts found under install/"
-            find "${{ github.workspace }}/install" -type f | sort
+          cmake --install "${{ matrix.build_dir }}" --config Release
+          INSTALL="${{ github.workspace }}/install"
+          if [[ ! -d "$INSTALL/include/vertexnova" ]]; then
+            echo "::error::Expected install/include/vertexnova missing."
+            find "$INSTALL" -type f 2>/dev/null | sort | head -50
             exit 1
           fi
           for f in LICENSE CHANGELOG.md; do
-            if [[ ! -f "${{ github.workspace }}/install/$f" ]]; then
-              echo "::error::Expected install/$f missing — add install(FILES) in CMakeLists or ensure file exists at repo root."
+            if [[ ! -f "$INSTALL/$f" ]]; then
+              echo "::error::Expected install/$f missing."
               exit 1
             fi
           done
+          case "${{ matrix.platform }}" in
+            web-emscripten)
+              if ! find "$INSTALL" -type f \( -name '*.wasm' -o -name '*.a' -o -name '*.js' \) | head -1 | grep -q .; then
+                echo "::error::Web install: expected some of .wasm / .a / .js under install/"
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+            ios-static)
+              if ! find "$INSTALL" -type f -name '*.a' | head -1 | grep -q .; then
+                echo "::error::iOS install: expected at least one .a under install/"
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+            *)
+              if ! find "$INSTALL" -type f \( -iname '*vneio*' -o -iname '*VneIo*' \) | head -1 | grep -q .; then
+                echo "::error::No VneIo library artifacts found under install/"
+                find "$INSTALL" -type f | sort
+                exit 1
+              fi
+              ;;
+          esac
 
       - name: Package artifact
         shell: bash
         run: |
-          ARTIFACT="vneio-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
+          VER="${{ needs.release-please.outputs.version }}"
+          ARTIFACT="vneio-v${VER}-${{ matrix.platform }}.tar.gz"
           tar -czf "${ARTIFACT}" -C "${{ github.workspace }}/install" .
           echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
+          echo "Published: ${ARTIFACT} (platform slug: ${{ matrix.platform }})"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
