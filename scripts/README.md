@@ -82,13 +82,16 @@ Defaults: **`lib_type=static`**, **`build/static/<type>/…`**, **`VNEIO_BUILD_T
 
 Uses **`clang-format-17`** when available (same as CI), else `clang-format`. **`--dry-run`** exits non-zero if anything would change.
 
+Run from the **repository root**. Use **`python3 …`** (recommended): the kernel resolves `python3` from your shell `PATH`. **`./scripts/clang_formatter.py`** relies on the shebang `#!/usr/bin/env python3`; if zsh reports **no such file or directory**, the exec environment could not find `python3`—invoking via **`python3`** avoids that.
+
 ```bash
+python3 scripts/clang_formatter.py all --dry-run
 python3 scripts/clang_formatter.py --folder all --dry-run
-python3 scripts/clang_formatter.py --folder src
+python3 scripts/clang_formatter.py src
 python3 scripts/clang_formatter.py --file src/vertexnova/io/asset_io.cpp
 ```
 
-**`--folder`** with no path (or **`--folder all`**) scans **`src`**, **`include`**, **`examples`** (if present), **`tests`**.
+**`all`** (positional) or **`--folder`** with no path (or **`--folder all`**) scans **`src`**, **`include`**, **`examples`** (if present), **`tests`**.
 
 ## Documentation (`generate-docs.sh`)
 

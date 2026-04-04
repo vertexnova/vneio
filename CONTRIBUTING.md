@@ -29,9 +29,9 @@ Thank you for your interest in contributing. This document explains how to build
 
 - **Formatting** is enforced in CI. Before pushing, run:
   ```bash
-  python3 scripts/clang_formatter.py --folder all --dry-run
+  python3 scripts/clang_formatter.py all --dry-run
   ```
-  Remove `--dry-run` to apply fixes. CI uses `clang-format-17` when available (see [.github/workflows/ci.yml](.github/workflows/ci.yml)).
+  (`--folder all` is equivalent.) Remove `--dry-run` to apply fixes. CI uses `clang-format-17` when available (see [.github/workflows/ci.yml](.github/workflows/ci.yml)).
 - **Style and naming** are defined in [CODING_GUIDELINES.md](CODING_GUIDELINES.md). Static analysis uses [.clang-tidy](.clang-tidy).
 
 ## Pull requests

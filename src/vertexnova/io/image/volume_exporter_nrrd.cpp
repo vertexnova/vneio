@@ -105,10 +105,10 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
     // direction cosines (optional)
     h << "space directions: (" << vol.direction[dirIdx(0, 0)] * vol.spacing[0] << ","
       << vol.direction[dirIdx(0, 1)] * vol.spacing[0] << "," << vol.direction[dirIdx(0, 2)] * vol.spacing[0] << ") "
-      << "(" << vol.direction[dirIdx(1, 0)] * vol.spacing[1] << ","
-      << vol.direction[dirIdx(1, 1)] * vol.spacing[1] << "," << vol.direction[dirIdx(1, 2)] * vol.spacing[1] << ") "
-      << "(" << vol.direction[dirIdx(2, 0)] * vol.spacing[2] << ","
-      << vol.direction[dirIdx(2, 1)] * vol.spacing[2] << "," << vol.direction[dirIdx(2, 2)] * vol.spacing[2] << ")\n";
+      << "(" << vol.direction[dirIdx(1, 0)] * vol.spacing[1] << "," << vol.direction[dirIdx(1, 1)] * vol.spacing[1]
+      << "," << vol.direction[dirIdx(1, 2)] * vol.spacing[1] << ") "
+      << "(" << vol.direction[dirIdx(2, 0)] * vol.spacing[2] << "," << vol.direction[dirIdx(2, 1)] * vol.spacing[2]
+      << "," << vol.direction[dirIdx(2, 2)] * vol.spacing[2] << ")\n";
 
     if (detached || writing_nhdr) {
         h << "data file: " << raw_name << "\n";

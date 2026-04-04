@@ -8,7 +8,7 @@
 
 - [ ] Project builds (e.g. `cmake -B build/shared/Release` with `-DVNEIO_CI=ON` / `-DVNEIO_BUILD_TESTS=ON` as needed, and `cmake --build`, or a platform script from [scripts/README.md](../scripts/README.md)).
 - [ ] Tests pass (e.g. `ctest --test-dir build/shared/Release -C Release` or script `-a test`).
-- [ ] Code is formatted (e.g. `python3 scripts/clang_formatter.py --folder all --dry-run`); CI checks `clang-format`.
+- [ ] Code is formatted (e.g. `python3 scripts/clang_formatter.py all --dry-run`); CI checks `clang-format`.
 - [ ] Docs updated if you changed behavior or public API.
 
 ## Additional notes

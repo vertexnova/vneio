@@ -2,10 +2,10 @@
 """
 Clang formatter for C/C++. Same scope as CI (src, include, tests; examples if present).
 
-Usage:
-    python scripts/clang_formatter.py --folder all --dry-run
-    python scripts/clang_formatter.py --folder src
-    python scripts/clang_formatter.py --file path/to/file.cpp
+Usage (from repo root; use ``python3`` so PATH is yours, not the kernel's):
+    python3 scripts/clang_formatter.py all --dry-run
+    python3 scripts/clang_formatter.py src
+    python3 scripts/clang_formatter.py --file path/to/file.cpp
 """
 
 import argparse
@@ -113,20 +113,41 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
+    parser.add_argument(
+        "folder_positional",
+        nargs="?",
+        default=None,
+        metavar="FOLDER_OR_ALL",
+        help='Folder to format recursively, or "all" for CI dirs (src, include, examples if present, tests). '
+        "Alternative to --folder / --file.",
+    )
+    parser.add_argument(
         "--folder",
+        "-f",
+        dest="folder_option",
         metavar="PATH",
         nargs="?",
         const="all",
-        help='Folder to format recursively; omit PATH for CI dirs (src, include, examples if present, tests)',
+        default=None,
+        help="Same as positional folder; omit PATH after --folder to use CI dirs (same as 'all').",
     )
-    group.add_argument("--file", metavar="PATH", help="Specific file to format")
+    parser.add_argument("--file", metavar="PATH", default=None, help="Format a single file")
 
     parser.add_argument("--dry-run", action="store_true", help="Check only (CI-style)")
     parser.add_argument("--verbose", action="store_true")
 
     args = parser.parse_args()
+
+    if args.file is not None:
+        if args.folder_positional is not None or args.folder_option is not None:
+            parser.error("Do not combine --file with a folder argument or --folder.")
+    elif args.folder_positional is not None and args.folder_option is not None:
+        parser.error("Use either positional FOLDER_OR_ALL or --folder, not both.")
+    elif args.file is None and args.folder_positional is None and args.folder_option is None:
+        parser.error(
+            "Specify a folder (e.g. all or src), use --folder, or use --file PATH. "
+            "Example: python3 scripts/clang_formatter.py all --dry-run"
+        )
 
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
@@ -148,7 +169,10 @@ def main():
             sys.exit(1)
         source_files = [str(target_file)]
     else:
-        folder_arg = args.folder if args.folder is not None else "all"
+        if args.folder_option is not None:
+            folder_arg = args.folder_option
+        else:
+            folder_arg = args.folder_positional
         if folder_arg.lower() in ("all", "ci"):
             ci_dirs = ("src", "include", "examples", "tests")
             source_files = []
