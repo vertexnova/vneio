@@ -320,14 +320,20 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27d
+
       - name: Configure CMake (Android)
+        env:
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
+          set -euo pipefail
           NDK="${ANDROID_NDK_ROOT}"
-          if [[ -z "$NDK" && -n "$ANDROID_HOME" ]]; then
-            NDK="$(find "$ANDROID_HOME/ndk" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort -V | tail -1)"
-          fi
-          if [[ -z "$NDK" ]]; then
-            echo "::error::Android NDK not found (set ANDROID_NDK_ROOT or ANDROID_HOME/ndk)"
+          if [[ -z "$NDK" || ! -f "$NDK/build/cmake/android.toolchain.cmake" ]]; then
+            echo "::error::Android NDK path invalid (ANDROID_NDK_ROOT=${NDK:-empty})"
             exit 1
           fi
           cmake -B build/shared/Release -S . \
