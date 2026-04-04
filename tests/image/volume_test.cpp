@@ -271,6 +271,42 @@ TEST(VolumeTest, NrrdLoaderLoadSmall3dNrrd) {
     EXPECT_EQ(vol.getData()[63], 63);
 }
 
+TEST(VolumeTest, MhdLoaderLoadSmall3dMhd) {
+    // Detached MetaImage in testdata (small3d.mhd + small3d.raw), same 4x4x4 uchar ramp as small3d.nrrd
+    std::string path = getTestdataPath("volumes/small3d.mhd");
+    if (!std::filesystem::exists(path)) {
+        GTEST_SKIP() << "Test volume not found: " << path << " (run from project root with testdata/volumes present)";
+    }
+
+    MhdLoader loader;
+    Volume vol;
+    EXPECT_TRUE(loader.load(path, vol)) << loader.getLastError();
+    EXPECT_FALSE(vol.isEmpty());
+    EXPECT_EQ(vol.width(), 4);
+    EXPECT_EQ(vol.height(), 4);
+    EXPECT_EQ(vol.depth(), 4);
+    EXPECT_EQ(vol.pixel_type, VolumePixelType::eUint8);
+    EXPECT_EQ(vol.voxelCount(), 64u);
+    EXPECT_EQ(vol.getData()[0], 0);
+    EXPECT_EQ(vol.getData()[63], 63);
+}
+
+TEST(VolumeTest, MhdLoaderLoadSmall3dMha) {
+    std::string path = getTestdataPath("volumes/small3d.mha");
+    if (!std::filesystem::exists(path)) {
+        GTEST_SKIP() << "Test volume not found: " << path << " (run from project root with testdata/volumes present)";
+    }
+
+    MhdLoader loader;
+    Volume vol;
+    EXPECT_TRUE(loader.load(path, vol)) << loader.getLastError();
+    EXPECT_EQ(vol.width(), 4);
+    EXPECT_EQ(vol.height(), 4);
+    EXPECT_EQ(vol.depth(), 4);
+    EXPECT_EQ(vol.getData()[0], 0);
+    EXPECT_EQ(vol.getData()[63], 63);
+}
+
 TEST(VolumeTest, MhdLoaderDetachedMinimal) {
     MhdLoader loader;
     const std::string base = "test_mhd_detached";

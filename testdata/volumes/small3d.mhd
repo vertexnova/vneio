@@ -1,0 +1,7 @@
+ObjectType = Image
+NDims = 3
+DimSize = 4 4 4
+ElementType = MET_UCHAR
+ElementSpacing = 1 1 1
+ElementDataFile = small3d.raw
+
