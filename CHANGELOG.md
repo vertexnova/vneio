@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 
-* Updated relase build for android ([#6](https://github.com/vertexnova/vneio/issues/6)) ([2985395](https://github.com/vertexnova/vneio/commit/298539564dfa7aca65c8eb89164ada37d744ca0c))
+* Updated release build for Android ([#6](https://github.com/vertexnova/vneio/issues/6)) ([2985395](https://github.com/vertexnova/vneio/commit/298539564dfa7aca65c8eb89164ada37d744ca0c))
 
 ## [1.1.1](https://github.com/vertexnova/vneio/compare/v1.1.0...v1.1.1) (2026-04-04)
 
