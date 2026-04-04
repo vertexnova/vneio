@@ -195,6 +195,49 @@ if(EXISTS "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/CMakeLists.txt")
         set(BUILD_TESTS ${VNEIO_BUILD_TESTS} CACHE BOOL "" FORCE)
         set(BUILD_EXAMPLES ${VNEIO_BUILD_EXAMPLES} CACHE BOOL "" FORCE)
     endif()
+    # Static VneIo: embed logging via OBJECT sources here so install(EXPORT) does not require
+    # vnelogging. The vnelogging static target still builds (subproject install rules expect
+    # libvnelogging.a); use -DVNEIO_SANITIZE_INSTALL=ON to drop it from release prefixes.
+    if(VNEIO_LIB_TYPE STREQUAL "static" AND TARGET vnelogging)
+        set(_VNEIO_VLR "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src")
+        add_library(vneio_logging_embed OBJECT
+            ${_VNEIO_VLR}/vertexnova/logging/core/console_log_sink.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/file_log_sink.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/log_formatter.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/log_stream.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/text_color.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/log_queue.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/log_queue_worker.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/log_dispatcher.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/logger_controller.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/sync_logger.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/core/async_logger.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/log_manager.cpp
+            ${_VNEIO_VLR}/vertexnova/logging/logging.cpp
+        )
+        target_include_directories(vneio_logging_embed PRIVATE
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
+            "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
+        )
+        target_compile_features(vneio_logging_embed PUBLIC cxx_std_20)
+        target_link_libraries(vneio_logging_embed PRIVATE
+            vne::logging::Warnings
+            vne::logging::BuildSettings
+            vne::common
+        )
+        if(NOT WIN32 AND NOT EMSCRIPTEN)
+            target_link_libraries(vneio_logging_embed PRIVATE Threads::Threads)
+        endif()
+        if(VNE_TARGET_PLATFORM STREQUAL "Android")
+            target_link_libraries(vneio_logging_embed PRIVATE log)
+        elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
+            target_link_options(vneio_logging_embed PRIVATE "-framework" "Foundation")
+        endif()
+        if(MSVC)
+            target_compile_definitions(vneio_logging_embed PRIVATE _CRT_SECURE_NO_WARNINGS)
+        endif()
+    endif()
     set(VNEIO_HAS_LOGGING ON)
     message(STATUS "VneIo: using vnelogging from deps/internal/vnelogging")
 endif()
@@ -252,6 +295,7 @@ if(VNEIO_BUILD_IMAGE)
     set(VNEIO_STB_INCLUDE "")
     if(EXISTS "${VNEIO_EXTERNAL_DIR}/stb_image/CMakeLists.txt")
         set(VNE_TARGET_PLATFORM ${VNE_TARGET_PLATFORM})
+        set(STB_IMAGE_OBJECT_LIBRARY ON CACHE BOOL "Embed stb into vneio_image (VneIo)" FORCE)
         add_subdirectory(deps/external/stb_image deps/external/stb_image)
         set(VNEIO_STB_TARGET stb_image)
         set(VNEIO_STB_INCLUDE "${VNEIO_EXTERNAL_DIR}/stb_image/src")
@@ -259,6 +303,7 @@ if(VNEIO_BUILD_IMAGE)
         # Do not define VNEIO_STB_HEADER_ONLY: we use the library's implementation
     elseif(EXISTS "${VNEIO_THIRD_PARTY_DIR}/stb_image/CMakeLists.txt")
         set(VNE_TARGET_PLATFORM ${VNE_TARGET_PLATFORM})
+        set(STB_IMAGE_OBJECT_LIBRARY ON CACHE BOOL "Embed stb into vneio_image (VneIo)" FORCE)
         add_subdirectory(3rd_party/stb_image 3rd_party/stb_image)
         set(VNEIO_STB_TARGET stb_image)
         set(VNEIO_STB_INCLUDE "${VNEIO_THIRD_PARTY_DIR}/stb_image/src")
@@ -296,12 +341,14 @@ if(VNEIO_BUILD_IMAGE)
         endif()
         # Try nrrdio subdirectory first (if cloned as teem-nrrdio-nrrdio.git)
         if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
+            set(NRRDIO_OBJECT_LIBRARY ON CACHE BOOL "Embed NrrdIO into vneio_image (VneIo)" FORCE)
             add_subdirectory(deps/external/nrrdio/nrrdio deps/external/nrrdio/nrrdio EXCLUDE_FROM_ALL)
             set(VNEIO_NRRDIO_TARGET NrrdIO)
             set(VNEIO_NRRDIO_INCLUDE "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio")
             set(VNEIO_NRRDIO_FOUND ON)
             message(STATUS "VneIo: using nrrdio from deps/external/nrrdio/nrrdio")
         elseif(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt")
+            set(NRRDIO_OBJECT_LIBRARY ON CACHE BOOL "Embed NrrdIO into vneio_image (VneIo)" FORCE)
             add_subdirectory(deps/external/nrrdio deps/external/nrrdio EXCLUDE_FROM_ALL)
             set(VNEIO_NRRDIO_TARGET NrrdIO)
             set(VNEIO_NRRDIO_INCLUDE "${VNEIO_EXTERNAL_DIR}/nrrdio")
@@ -309,6 +356,7 @@ if(VNEIO_BUILD_IMAGE)
             message(STATUS "VneIo: using nrrdio from deps/external/nrrdio")
         endif()
     elseif(EXISTS "${VNEIO_THIRD_PARTY_DIR}/nrrdio/CMakeLists.txt")
+        set(NRRDIO_OBJECT_LIBRARY ON CACHE BOOL "Embed NrrdIO into vneio_image (VneIo)" FORCE)
         add_subdirectory(3rd_party/nrrdio 3rd_party/nrrdio EXCLUDE_FROM_ALL)
         set(VNEIO_NRRDIO_TARGET NrrdIO)
         set(VNEIO_NRRDIO_INCLUDE "${VNEIO_THIRD_PARTY_DIR}/nrrdio")
@@ -354,8 +402,25 @@ if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
         PUBLIC VneIoWarnings VneIoBuildSettings
         PRIVATE ${VNEIO_ASSIMP_TARGET}
     )
-    if(VNEIO_HAS_LOGGING AND TARGET vne::logging)
-        target_link_libraries(vneio_mesh PRIVATE vne::logging)
+    if(VNEIO_HAS_LOGGING)
+        if(_VNEIO_LIB_KIND STREQUAL STATIC AND TARGET vneio_logging_embed)
+            target_sources(vneio_mesh PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
+            add_dependencies(vneio_mesh vneio_logging_embed)
+            target_include_directories(vneio_mesh PRIVATE
+                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
+                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
+                "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
+                "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
+            find_package(Threads REQUIRED)
+            if(NOT WIN32 AND NOT EMSCRIPTEN)
+                target_link_libraries(vneio_mesh PRIVATE Threads::Threads)
+            endif()
+            if(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
+                target_link_options(vneio_mesh PRIVATE "-framework" "Foundation")
+            endif()
+        elseif(TARGET vne::logging)
+            target_link_libraries(vneio_mesh PRIVATE vne::logging)
+        endif()
         target_compile_definitions(vneio_mesh PRIVATE VNEIO_HAS_LOGGING=1)
     endif()
     add_library(vne::io::mesh ALIAS vneio_mesh)
@@ -391,10 +456,30 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     target_link_libraries(vneio_image
         PUBLIC VneIoWarnings VneIoBuildSettings
     )
-    if(VNEIO_STB_TARGET)
-        target_link_libraries(vneio_image PRIVATE ${VNEIO_STB_TARGET})
+    get_target_property(_vneio_nrrd_imported ${VNEIO_NRRDIO_TARGET} IMPORTED)
+    get_target_property(_vneio_nrrd_type ${VNEIO_NRRDIO_TARGET} TYPE)
+    if(_vneio_nrrd_imported OR NOT _vneio_nrrd_type STREQUAL "OBJECT_LIBRARY")
+        target_link_libraries(vneio_image PRIVATE ${VNEIO_NRRDIO_TARGET})
+    else()
+        target_sources(vneio_image PRIVATE $<TARGET_OBJECTS:${VNEIO_NRRDIO_TARGET}>)
+        add_dependencies(vneio_image ${VNEIO_NRRDIO_TARGET})
+        if(NRRDIO_USE_ZLIB AND TARGET ZLIB::ZLIB)
+            target_link_libraries(vneio_image PRIVATE ZLIB::ZLIB)
+        endif()
+        if(NRRDIO_USE_BZIP2 AND TARGET BZip2::BZip2)
+            target_link_libraries(vneio_image PRIVATE BZip2::BZip2)
+        endif()
     endif()
-    target_link_libraries(vneio_image PRIVATE ${VNEIO_NRRDIO_TARGET})
+    if(VNEIO_STB_TARGET)
+        get_target_property(_vneio_stb_imported ${VNEIO_STB_TARGET} IMPORTED)
+        get_target_property(_vneio_stb_type ${VNEIO_STB_TARGET} TYPE)
+        if(_vneio_stb_imported OR NOT _vneio_stb_type STREQUAL "OBJECT_LIBRARY")
+            target_link_libraries(vneio_image PRIVATE ${VNEIO_STB_TARGET})
+        else()
+            target_sources(vneio_image PRIVATE $<TARGET_OBJECTS:${VNEIO_STB_TARGET}>)
+            add_dependencies(vneio_image ${VNEIO_STB_TARGET})
+        endif()
+    endif()
     if(VNEIO_NRRDIO_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
     endif()
@@ -506,14 +591,7 @@ if(TARGET vneio_mesh)
 endif()
 if(TARGET vneio_image)
     list(APPEND VNEIO_INSTALL_TARGETS vneio_image)
-    # stb_image is a link dependency of vneio_image when using deps/external/stb_image; include in export
-    if(TARGET stb_image)
-        list(APPEND VNEIO_INSTALL_TARGETS stb_image)
-    endif()
-    # nrrdio is required by vneio_image; include in export when from subdirectory
-    if(TARGET NrrdIO)
-        list(APPEND VNEIO_INSTALL_TARGETS NrrdIO)
-    endif()
+    # In-tree stb_image / NrrdIO are OBJECT libs merged into vneio_image — not installed.
 endif()
 if(TARGET vneio_asset_io)
     list(APPEND VNEIO_INSTALL_TARGETS vneio_asset_io)
@@ -537,4 +615,33 @@ if(EXISTS "${VNEIO_ROOT}/LICENSE")
 endif()
 if(EXISTS "${VNEIO_ROOT}/CHANGELOG.md")
     install(FILES "${VNEIO_ROOT}/CHANGELOG.md" DESTINATION .)
+endif()
+
+# Strip vnelogging / vnecommon install rules (unchanged under deps/internal) from the prefix.
+# Enable for release tarballs: -DVNEIO_SANITIZE_INSTALL=ON
+option(VNEIO_SANITIZE_INSTALL "Remove vnelogging and vnecommon files from install prefix after install" OFF)
+if(VNEIO_SANITIZE_INSTALL)
+    set(VNEIO_SANITIZE_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+    set(VNEIO_SANITIZE_BINDIR "${CMAKE_INSTALL_BINDIR}")
+    install(CODE "
+        set(_vfx \"\${CMAKE_INSTALL_PREFIX}\")
+        foreach(_vd \"\${_vfx}/include/vertexnova/logging\" \"\${_vfx}/include/vertexnova/common\")
+            if(EXISTS \"\${_vd}\")
+                file(REMOVE_RECURSE \"\${_vd}\")
+            endif()
+        endforeach()
+        foreach(_vc \"\${_vfx}/${VNEIO_SANITIZE_LIBDIR}/cmake/VneLogging\" \"\${_vfx}/${VNEIO_SANITIZE_LIBDIR}/cmake/vnecommon\")
+            if(EXISTS \"\${_vc}\")
+                file(REMOVE_RECURSE \"\${_vc}\")
+            endif()
+        endforeach()
+        file(GLOB _vlg \"\${_vfx}/${VNEIO_SANITIZE_LIBDIR}/*vnelogging*\")
+        if(_vlg)
+            file(REMOVE \${_vlg})
+        endif()
+        file(GLOB _vbg \"\${_vfx}/${VNEIO_SANITIZE_BINDIR}/*vnelogging*\")
+        if(_vbg)
+            file(REMOVE \${_vbg})
+        endif()
+    ")
 endif()
