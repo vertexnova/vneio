@@ -23,7 +23,9 @@ using vne::io::utils::getTestdataPath;
 
 namespace {
 
-bool nearEq(float a, float b, float eps = 5e-4f) {
+constexpr float kNearEqualDefaultEpsilon = 5e-4f;
+
+bool nearEqual(float a, float b, float eps = kNearEqualDefaultEpsilon) {
     return std::fabs(a - b) < eps;
 }
 
@@ -34,11 +36,11 @@ void expectVolumeGeometryNear(const Volume& a, const Volume& b) {
     EXPECT_EQ(a.pixel_type, b.pixel_type);
     EXPECT_EQ(a.components, b.components);
     for (int i = 0; i < 3; ++i) {
-        EXPECT_TRUE(nearEq(a.spacing[i], b.spacing[i])) << "spacing[" << i << "]";
-        EXPECT_TRUE(nearEq(a.origin[i], b.origin[i])) << "origin[" << i << "]";
+        EXPECT_TRUE(nearEqual(a.spacing[i], b.spacing[i])) << "spacing[" << i << "]";
+        EXPECT_TRUE(nearEqual(a.origin[i], b.origin[i])) << "origin[" << i << "]";
     }
     for (int i = 0; i < 9; ++i) {
-        EXPECT_TRUE(nearEq(a.direction[i], b.direction[i])) << "direction[" << i << "]";
+        EXPECT_TRUE(nearEqual(a.direction[i], b.direction[i])) << "direction[" << i << "]";
     }
     ASSERT_EQ(a.data.size(), b.data.size());
     EXPECT_EQ(0, std::memcmp(a.data.data(), b.data.data(), a.data.size()));
@@ -164,15 +166,15 @@ TEST(VolumeTest, NrrdLoaderGeometrySynthetic) {
     }
     ASSERT_TRUE(loader.load(path, vol)) << loader.getLastError();
     EXPECT_TRUE(vol.hasExactBufferSize());
-    EXPECT_TRUE(nearEq(vol.spacing[0], 2.0f));
-    EXPECT_TRUE(nearEq(vol.spacing[1], 3.0f));
-    EXPECT_TRUE(nearEq(vol.spacing[2], 4.0f));
-    EXPECT_TRUE(nearEq(vol.origin[0], 1.0f));
-    EXPECT_TRUE(nearEq(vol.origin[1], 2.0f));
-    EXPECT_TRUE(nearEq(vol.origin[2], 3.0f));
-    EXPECT_TRUE(nearEq(vol.direction[0], 1.0f));
-    EXPECT_TRUE(nearEq(vol.direction[4], 1.0f));
-    EXPECT_TRUE(nearEq(vol.direction[8], 1.0f));
+    EXPECT_TRUE(nearEqual(vol.spacing[0], 2.0f));
+    EXPECT_TRUE(nearEqual(vol.spacing[1], 3.0f));
+    EXPECT_TRUE(nearEqual(vol.spacing[2], 4.0f));
+    EXPECT_TRUE(nearEqual(vol.origin[0], 1.0f));
+    EXPECT_TRUE(nearEqual(vol.origin[1], 2.0f));
+    EXPECT_TRUE(nearEqual(vol.origin[2], 3.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[0], 1.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[4], 1.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[8], 1.0f));
     EXPECT_TRUE(vol.isMetadataValid());
     std::filesystem::remove(path);
 }
@@ -373,14 +375,14 @@ TEST(VolumeTest, MhdLoaderPositionTransformMatrix) {
     }
     Volume vol;
     ASSERT_TRUE(loader.load(mhd_path, vol)) << loader.getLastError();
-    EXPECT_TRUE(nearEq(vol.origin[0], 10.0f));
-    EXPECT_TRUE(nearEq(vol.origin[1], 20.0f));
-    EXPECT_TRUE(nearEq(vol.origin[2], 30.0f));
-    EXPECT_TRUE(nearEq(vol.direction[0], 0.0f));
-    EXPECT_TRUE(nearEq(vol.direction[1], -1.0f));
-    EXPECT_TRUE(nearEq(vol.direction[3], 1.0f));
-    EXPECT_TRUE(nearEq(vol.direction[4], 0.0f));
-    EXPECT_TRUE(nearEq(vol.direction[8], 1.0f));
+    EXPECT_TRUE(nearEqual(vol.origin[0], 10.0f));
+    EXPECT_TRUE(nearEqual(vol.origin[1], 20.0f));
+    EXPECT_TRUE(nearEqual(vol.origin[2], 30.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[0], 0.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[1], -1.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[3], 1.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[4], 0.0f));
+    EXPECT_TRUE(nearEqual(vol.direction[8], 1.0f));
     std::filesystem::remove(mhd_path);
     std::filesystem::remove(raw_path);
 }

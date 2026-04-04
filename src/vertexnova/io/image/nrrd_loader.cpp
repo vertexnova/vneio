@@ -23,7 +23,12 @@ namespace {
 
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.nrrd_loader");
 
-constexpr float kSpaceDirEps = 1e-20f;
+constexpr float kSpaceDirectionMinLength = 1e-20f;
+/** Relative tolerance when comparing NRRD axis spacing to |space direction|. */
+constexpr float kSpacingVersusDirectionLengthRelTol = 1e-3f;
+constexpr float kIdentityDirection3x3[9] = {
+    1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f,
+};
 
 }  // namespace
 
@@ -171,8 +176,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         }
     }
 
-    static const float identity[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-    std::memcpy(out_volume.direction, identity, sizeof(identity));
+    std::memcpy(out_volume.direction, kIdentityDirection3x3, sizeof(kIdentityDirection3x3));
 
     if (nin->spaceDim == 3) {
         for (int i = 0; i < 3; ++i) {
@@ -189,7 +193,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
                 const float fy = static_cast<float>(dy);
                 const float fz = static_cast<float>(dz);
                 const float len = std::sqrt(fx * fx + fy * fy + fz * fz);
-                if (len > kSpaceDirEps) {
+                if (len > kSpaceDirectionMinLength) {
                     out_volume.spacing[i] = len;
                     out_volume.direction[i * 3 + 0] = fx / len;
                     out_volume.direction[i * 3 + 1] = fy / len;
@@ -197,7 +201,7 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
                     const bool spacing_set = !std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0;
                     if (spacing_set) {
                         const float from_axis = static_cast<float>(nin->axis[i].spacing);
-                        if (std::fabs(from_axis - len) > 1e-3f * std::max(len, 1.0f)) {
+                        if (std::fabs(from_axis - len) > kSpacingVersusDirectionLengthRelTol * std::max(len, 1.0f)) {
                             VNE_LOG_WARN << "NrrdLoader: axis " << i
                                          << " spacing field disagrees with |space direction|; using |space direction|="
                                          << len << " (spacing field was " << from_axis << ")";
@@ -208,9 +212,9 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
                     VNE_LOG_WARN << "NrrdLoader: axis " << i
                                  << " space direction near zero; using identity row + axis "
                                     "spacing fallback";
-                    out_volume.direction[i * 3 + 0] = identity[i * 3 + 0];
-                    out_volume.direction[i * 3 + 1] = identity[i * 3 + 1];
-                    out_volume.direction[i * 3 + 2] = identity[i * 3 + 2];
+                    out_volume.direction[i * 3 + 0] = kIdentityDirection3x3[i * 3 + 0];
+                    out_volume.direction[i * 3 + 1] = kIdentityDirection3x3[i * 3 + 1];
+                    out_volume.direction[i * 3 + 2] = kIdentityDirection3x3[i * 3 + 2];
                     if (!std::isnan(nin->axis[i].spacing) && nin->axis[i].spacing > 0) {
                         out_volume.spacing[i] = static_cast<float>(nin->axis[i].spacing);
                     }

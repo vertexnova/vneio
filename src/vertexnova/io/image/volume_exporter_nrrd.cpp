@@ -13,16 +13,22 @@
 #include <fstream>
 #include <filesystem>
 
-namespace vne::image {
-
 namespace {
 
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.volume_export_nrrd");
 
-// Row-major 3x3 direction matrix: dirIdx(row, col) with 0-based row/col.
-constexpr int dirIdx(int row, int col) {
-    return row * 3 + col;
+constexpr int kSpatialDimension3 = 3;
+
+/** Row-major 3×3 direction matrix linear index (0-based row/col). */
+constexpr int directionMatrixIndex(int row, int col) noexcept {
+    return row * kSpatialDimension3 + col;
 }
+
+}  // namespace
+
+namespace vne::image {
+
+namespace {
 
 void setError(std::string* out_error, const std::string& msg) {
     if (out_error) {
@@ -105,20 +111,23 @@ bool exportNrrd(const std::string& nrrd_or_nhdr_path,
                  << "x" << vol.dims[2];
     h << "NRRD0005\n";
     h << "type: " << type << "\n";
-    h << "dimension: 3\n";
+    h << "dimension: " << kSpatialDimension3 << "\n";
     h << "sizes: " << vol.dims[0] << " " << vol.dims[1] << " " << vol.dims[2] << "\n";
     h << "encoding: raw\n";
     h << "endian: little\n";
-    h << "space dimension: 3\n";
+    h << "space dimension: " << kSpatialDimension3 << "\n";
     // Spacing is encoded in the magnitude of each space direction; Teem rejects spacings + space directions together.
     h << "space origin: (" << vol.origin[0] << "," << vol.origin[1] << "," << vol.origin[2] << ")\n";
     // direction cosines (optional)
-    h << "space directions: (" << vol.direction[dirIdx(0, 0)] * vol.spacing[0] << ","
-      << vol.direction[dirIdx(0, 1)] * vol.spacing[0] << "," << vol.direction[dirIdx(0, 2)] * vol.spacing[0] << ") "
-      << "(" << vol.direction[dirIdx(1, 0)] * vol.spacing[1] << "," << vol.direction[dirIdx(1, 1)] * vol.spacing[1]
-      << "," << vol.direction[dirIdx(1, 2)] * vol.spacing[1] << ") "
-      << "(" << vol.direction[dirIdx(2, 0)] * vol.spacing[2] << "," << vol.direction[dirIdx(2, 1)] * vol.spacing[2]
-      << "," << vol.direction[dirIdx(2, 2)] * vol.spacing[2] << ")\n";
+    h << "space directions: (" << vol.direction[directionMatrixIndex(0, 0)] * vol.spacing[0] << ","
+      << vol.direction[directionMatrixIndex(0, 1)] * vol.spacing[0] << ","
+      << vol.direction[directionMatrixIndex(0, 2)] * vol.spacing[0] << ") "
+      << "(" << vol.direction[directionMatrixIndex(1, 0)] * vol.spacing[1] << ","
+      << vol.direction[directionMatrixIndex(1, 1)] * vol.spacing[1] << ","
+      << vol.direction[directionMatrixIndex(1, 2)] * vol.spacing[1] << ") "
+      << "(" << vol.direction[directionMatrixIndex(2, 0)] * vol.spacing[2] << ","
+      << vol.direction[directionMatrixIndex(2, 1)] * vol.spacing[2] << ","
+      << vol.direction[directionMatrixIndex(2, 2)] * vol.spacing[2] << ")\n";
 
     if (detached || writing_nhdr) {
         h << "data file: " << raw_name << "\n";

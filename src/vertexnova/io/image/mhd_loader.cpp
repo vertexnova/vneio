@@ -16,13 +16,19 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <sstream>
 
 namespace {
 
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.mhd_loader");
+
+constexpr float kIdentityDirection3x3[9] = {
+    1.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f, 0.f, 1.f,
+};
+/** Minimum axis length before treating a TransformMatrix row as degenerate. */
+constexpr float kTransformAxisMinLength = 1e-20f;
 
 std::string trim(const std::string& s) {
     auto start = s.find_first_not_of(" \t\r\n");
@@ -99,7 +105,7 @@ bool normalizeDirectionRows(float d[9], float min_det) {
         float y = d[b + 1];
         float z = d[b + 2];
         float len = std::sqrt(x * x + y * y + z * z);
-        if (!std::isfinite(len) || len < 1e-20f) {
+        if (!std::isfinite(len) || len < kTransformAxisMinLength) {
             return false;
         }
         d[b + 0] = x / len;
@@ -333,17 +339,16 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
         float d0 = std::fabs(origin_from_position[0] - origin_from_offset[0]);
         float d1 = std::fabs(origin_from_position[1] - origin_from_offset[1]);
         float d2 = std::fabs(origin_from_position[2] - origin_from_offset[2]);
-        if (d0 > 1e-4f || d1 > 1e-4f || d2 > 1e-4f) {
+        if (d0 > kVolumeDirectionEpsilon || d1 > kVolumeDirectionEpsilon || d2 > kVolumeDirectionEpsilon) {
             VNE_LOG_WARN << "MhdLoader: Position and Offset differ; using Position";
         }
     }
 
-    static const float identity[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
-    std::memcpy(out_volume.direction, identity, sizeof(identity));
+    std::memcpy(out_volume.direction, kIdentityDirection3x3, sizeof(kIdentityDirection3x3));
     if (have_transform) {
         float tm[9];
         std::memcpy(tm, transform_matrix, sizeof(tm));
-        if (normalizeDirectionRows(tm, 1e-4f)) {
+        if (normalizeDirectionRows(tm, kVolumeDirectionMinDeterminant)) {
             std::memcpy(out_volume.direction, tm, sizeof(tm));
             VNE_LOG_INFO << "MhdLoader: loaded TransformMatrix (rows normalized)";
         } else {

@@ -13,11 +13,17 @@
 #include <fstream>
 #include <filesystem>
 
-namespace vne::image {
-
 namespace {
 
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.volume_export_mhd");
+
+constexpr int kMetaImageSpatialDims = 3;
+
+}  // namespace
+
+namespace vne::image {
+
+namespace {
 
 void setError(std::string* out_error, const std::string& msg) {
     if (out_error) {
@@ -98,7 +104,7 @@ bool exportMhd(const std::string& mhd_or_mha_path,
                  << vol.dims[2];
 
     h << "ObjectType = Image\n";
-    h << "NDims = 3\n";
+    h << "NDims = " << kMetaImageSpatialDims << "\n";
     h << "DimSize = " << vol.dims[0] << " " << vol.dims[1] << " " << vol.dims[2] << "\n";
     h << "ElementType = " << et << "\n";
     h << "ElementSpacing = " << vol.spacing[0] << " " << vol.spacing[1] << " " << vol.spacing[2] << "\n";

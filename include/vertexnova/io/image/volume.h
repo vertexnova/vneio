@@ -50,6 +50,12 @@ constexpr int kBytesPerFloat64 = 8;
 
 /** Epsilon for direction / metadata checks. */
 constexpr float kVolumeDirectionEpsilon = 1e-4f;
+/** Minimum acceptable row length before treating a direction row as degenerate. */
+constexpr float kVolumeDirectionRowMinLen = 0.01f;
+/** Maximum deviation of row length from 1 for @ref isMetadataValid. */
+constexpr float kVolumeDirectionRowUnitSlack = 0.02f;
+/** Minimum |det(direction)| for a well-conditioned basis in @ref isMetadataValid. */
+constexpr float kVolumeDirectionMinDeterminant = 1e-4f;
 
 /**
  * @brief Bytes per voxel for the given VolumePixelType.
@@ -172,7 +178,7 @@ struct VNEIO_API Volume {
                 return false;
             }
         }
-        auto rowLen = [this](int row) {
+        auto row_len = [this](int row) {
             int b = row * 3;
             float x = direction[b + 0];
             float y = direction[b + 1];
@@ -180,8 +186,9 @@ struct VNEIO_API Volume {
             return std::sqrt(x * x + y * y + z * z);
         };
         for (int r = 0; r < 3; ++r) {
-            float len = rowLen(r);
-            if (!std::isfinite(len) || len < 0.01f || std::fabs(len - 1.0f) > 0.02f) {
+            float len = row_len(r);
+            if (!std::isfinite(len) || len < kVolumeDirectionRowMinLen
+                || std::fabs(len - 1.0f) > kVolumeDirectionRowUnitSlack) {
                 return false;
             }
         }
@@ -195,7 +202,7 @@ struct VNEIO_API Volume {
         float d7 = direction[7];
         float d8 = direction[8];
         float det = d0 * (d4 * d8 - d5 * d7) - d1 * (d3 * d8 - d5 * d6) + d2 * (d3 * d7 - d4 * d6);
-        if (!std::isfinite(det) || std::fabs(det) < 1e-4f) {
+        if (!std::isfinite(det) || std::fabs(det) < kVolumeDirectionMinDeterminant) {
             return false;
         }
         return true;
