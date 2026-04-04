@@ -32,7 +32,7 @@ class VNEIO_API IDicomLoader : public vne::io::IAssetLoader {
    public:
     ~IDicomLoader() override = default;
 
-    bool canLoad(const vne::io::LoadRequest& request) const override;
+    [[nodiscard]] bool canLoad(const vne::io::LoadRequest& request) const override;
 
     /**
      * @brief Load a DICOM series from the given request (AssetIO registry API).
@@ -66,7 +66,7 @@ class VNEIO_API IDicomLoader : public vne::io::IAssetLoader {
     [[nodiscard]] virtual std::string getLastError() const = 0;
 };
 
-[[nodiscard]] inline bool IDicomLoader::canLoad(const vne::io::LoadRequest& request) const {
+inline bool IDicomLoader::canLoad(const vne::io::LoadRequest& request) const {
     return request.asset_type == vne::io::AssetType::eDicomSeries && !request.uri.empty();
 }
 
