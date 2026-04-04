@@ -27,7 +27,7 @@
 
 ## Introduction
 
-These coding guidelines establish standards for writing C++ and Objective-C++ code in the VertexNova engine project. The guidelines prioritize:
+These coding guidelines establish standards for writing C++ and Objective-C++ code in VertexNova projects (including the **VneIo** library). The guidelines prioritize:
 
 - **Clarity and Readability**: Code should be self-documenting and easy to understand
 - **Modern C++**: Leverage C++17/20 features for safety, performance, and expressiveness

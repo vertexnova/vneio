@@ -105,6 +105,10 @@ if (!img.isEmpty()) {
 - `deps/external/assimp`, `deps/external/stb_image` – mesh/image dependencies (assimp is submodule, stb_image is a copy)
 - `tests/`, `examples/` – optional
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [CODING_GUIDELINES.md](CODING_GUIDELINES.md). PRs use [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md); releases and changelog are driven by [release-please](https://github.com/googleapis/release-please) (Conventional Commits).
+
 ## License
 
-Apache-2.0. Same as the original VertexNova core code.
+Licensed under the Apache License, Version 2.0 — see [LICENSE](LICENSE).
