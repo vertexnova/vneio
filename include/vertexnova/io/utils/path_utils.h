@@ -10,8 +10,6 @@
  * ----------------------------------------------------------------------
  */
 
-#include "vertexnova/io/export.h"
-
 #include <string>
 
 namespace vne {
@@ -32,7 +30,7 @@ namespace utils {
  * Include directory for the build must contain the generated vneio_config.h (VNEIO_TESTDATA_DIR).
  * @return Testdata resources root path, or empty string if not defined.
  */
-VNEIO_API std::string getTestdataRoot();
+std::string getTestdataRoot();
 
 /**
  * @brief Returns the absolute path to a file or subdirectory under the testdata resources root.
@@ -41,7 +39,7 @@ VNEIO_API std::string getTestdataRoot();
  * @param subpath Relative path under testdata resources (e.g. "meshes/teapot.stl", "textures/container.jpg").
  * @return Full path, or subpath unchanged if getTestdataRoot() is empty.
  */
-VNEIO_API std::string getTestdataPath(const std::string& subpath);
+std::string getTestdataPath(const std::string& subpath);
 
 }  // namespace utils
 }  // namespace io
