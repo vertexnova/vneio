@@ -18,7 +18,7 @@ Published files:
 | **macos**        | When both parse: `macos{productVersion}-xcode{xcodeVersion}-{uname -m}` with **dots preserved** (`sw_vers -productVersion`, `xcodebuild` second field), e.g. **14.2.1**, **26.0**. If **product version** is missing, empty, or the literal `unknown` (any case), the `macos{version}` segment is **omitted** — e.g. `macos-xcode{…}-{arch}` or `macos-{arch}` — never `macosunknown-…`. If Xcode does not parse, the `xcode{…}` segment is omitted with a notice. |
 | **windows**      | `vs2022-x64` (fixed). |
 | **web-emscripten** | `emcc{emcc -dumpversion}-{uname -m}`; fails the job if the version is missing or `unknown`. |
-| **ios-static**   | `xcode{xcodebuild version}-arm64` with **dots preserved** (e.g. **26.0**). The job **fails early** if Xcode is missing or the version cannot be read. |
+| **ios-static**   | `xcode{xcodebuild version}-arm64` with **dots preserved** (e.g. **26.0**). The Xcode version must be readable from `xcodebuild -version`; there is **no** generic fallback suffix (e.g. `ios-arm64`) if parsing fails. |
 | **android**      | `android{API}-ndk{NDK Pkg.Revision}-arm64v8a` with **NDK revision dots preserved**, or `android{API}-arm64v8a` if NDK revision cannot be read. |
 
 Examples (runner-dependent; version segments keep **dots** as reported by the OS/tooling):
@@ -53,7 +53,7 @@ This means the install step did not place any `.a` files under `install/`, or th
 
 ### Xcode / artifact suffix errors
 
-If `xcodebuild -version` is missing or unusable (wrong `DEVELOPER_DIR`, Xcode not selected, broken image), the **iOS** publish job fails in **Verify Xcode (iOS release)** with a clear error instead of producing an invalid tarball name.
+If `xcodebuild -version` is missing or unusable (wrong `DEVELOPER_DIR`, Xcode not selected, broken image), the **iOS** publish job stops with an error from **Verify Xcode (iOS release)** or, defensively, from **Compute artifact detail suffix** — consistent with the table: no ambiguous `ios-arm64`-only suffix.
 
 macOS desktop jobs avoid embedding the literal `unknown` in `ARTIFACT_DETAIL` when OS or Xcode metadata is missing.
 
