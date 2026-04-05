@@ -606,10 +606,15 @@ if(TARGET vneio_image AND TARGET vneio_mesh)
 endif()
 
 # =============================================================================
-# Target: vneio_dicom (optional GDCM/DCMTK or stub registry)
+# Target: vneio_dicom — INTERFACE only (no in-tree DICOM .cpp)
+#
+# Ships include/vertexnova/io/dicom/*.h (IDicomLoader, DicomSeries). When
+# VNEIO_WITH_GDCM or VNEIO_WITH_DCMTK is ON, adds INTERFACE compile definitions
+# and TODO placeholders for future find_package/link; there is no bundled GDCM/DCMTK
+# implementation yet. Otherwise same headers-only target for AssetIO + external loaders.
 # =============================================================================
 if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
-    # Placeholder: add concrete backend sources here when GDCM/DCMTK are integrated.
+    # TODO: add concrete backend sources and find_package when GDCM/DCMTK are integrated.
     add_library(vneio_dicom INTERFACE)
     target_include_directories(vneio_dicom
         INTERFACE
