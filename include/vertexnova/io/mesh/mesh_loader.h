@@ -22,7 +22,7 @@ namespace mesh {
 
 /**
  * @file mesh_loader.h
- * @brief Interface for loading 3D meshes from file; use MeshLoaderRegistry by extension.
+ * @brief Interface for loading 3D meshes from file; register with AssetIO for unified dispatch.
  */
 
 /**
@@ -30,8 +30,8 @@ namespace mesh {
  * @brief Interface for loading 3D meshes; register with AssetIO for dispatch.
  *
  * Implement loadMesh() and isExtensionSupported(). Register with
- * AssetIO::registerMeshLoader() — the registry calls canLoad() and
- * dispatches to the first matching loader.
+ * AssetIO::registerMeshLoader(); AssetIO calls canLoad() and dispatches to
+ * the first matching loader.
  */
 class VNEIO_API IMeshLoader : public vne::io::IAssetLoader {
    public:
