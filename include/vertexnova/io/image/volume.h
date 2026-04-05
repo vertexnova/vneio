@@ -47,6 +47,14 @@ enum class VolumePixelType : int {
 /** Number of elements in a 3x3 direction matrix (row-major). */
 constexpr int kVolumeDirectionMatrixElements = 9;
 
+/** Spatial axis count (MetaImage / NRRD-style 3D volumes). */
+constexpr int kVolumeSpatialDim = 3;
+
+/** Row-major linear index into @c Volume::direction; @a row and @a col are in `[0, kVolumeSpatialDim)`. */
+[[nodiscard]] constexpr int volumeDirectionIndex(int row, int col) noexcept {
+    return row * kVolumeSpatialDim + col;
+}
+
 /** Bytes per voxel for VolumePixelType::eFloat64. */
 constexpr int kBytesPerFloat64 = 8;
 
@@ -157,9 +165,15 @@ struct VNEIO_API Volume {
     /** True if @a direction is approximately the 3×3 identity. */
     [[nodiscard]] bool hasIdentityDirection() const {
         const float e = kVolumeDirectionEpsilon;
-        return std::fabs(direction[0] - 1.0f) < e && std::fabs(direction[1]) < e && std::fabs(direction[2]) < e
-               && std::fabs(direction[3]) < e && std::fabs(direction[4] - 1.0f) < e && std::fabs(direction[5]) < e
-               && std::fabs(direction[6]) < e && std::fabs(direction[7]) < e && std::fabs(direction[8] - 1.0f) < e;
+        for (int r = 0; r < kVolumeSpatialDim; ++r) {
+            for (int c = 0; c < kVolumeSpatialDim; ++c) {
+                const float expected = (r == c) ? 1.0f : 0.0f;
+                if (std::fabs(direction[volumeDirectionIndex(r, c)] - expected) >= e) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -202,7 +216,7 @@ struct VNEIO_API Volume {
         if (!hasExactBufferSize() || !hasScalarVoxels()) {
             return false;
         }
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < kVolumeSpatialDim; ++i) {
             if (!std::isfinite(spacing[i]) || spacing[i] <= 0.0f) {
                 return false;
             }
@@ -211,29 +225,23 @@ struct VNEIO_API Volume {
             }
         }
         auto row_len = [this](int row) {
-            int b = row * 3;
-            float x = direction[b + 0];
-            float y = direction[b + 1];
-            float z = direction[b + 2];
+            const int b = row * kVolumeSpatialDim;
+            const float x = direction[b + 0];
+            const float y = direction[b + 1];
+            const float z = direction[b + 2];
             return std::sqrt(x * x + y * y + z * z);
         };
-        for (int r = 0; r < 3; ++r) {
+        for (int r = 0; r < kVolumeSpatialDim; ++r) {
             float len = row_len(r);
             if (!std::isfinite(len) || len < kVolumeDirectionRowMinLen
                 || std::fabs(len - 1.0f) > kVolumeDirectionRowUnitSlack) {
                 return false;
             }
         }
-        float d0 = direction[0];
-        float d1 = direction[1];
-        float d2 = direction[2];
-        float d3 = direction[3];
-        float d4 = direction[4];
-        float d5 = direction[5];
-        float d6 = direction[6];
-        float d7 = direction[7];
-        float d8 = direction[8];
-        float det = d0 * (d4 * d8 - d5 * d7) - d1 * (d3 * d8 - d5 * d6) + d2 * (d3 * d7 - d4 * d6);
+        const auto dir = [this](int row, int col) { return direction[volumeDirectionIndex(row, col)]; };
+        const float det = dir(0, 0) * (dir(1, 1) * dir(2, 2) - dir(1, 2) * dir(2, 1))
+                          - dir(0, 1) * (dir(1, 0) * dir(2, 2) - dir(1, 2) * dir(2, 0))
+                          + dir(0, 2) * (dir(1, 0) * dir(2, 1) - dir(1, 1) * dir(2, 0));
         if (!std::isfinite(det) || std::fabs(det) < kVolumeDirectionMinDeterminant) {
             return false;
         }

@@ -109,9 +109,11 @@ bool exportMhd(const std::string& mhd_or_mha_path,
     h << "ElementType = " << et << "\n";
     h << "ElementSpacing = " << vol.spacing[0] << " " << vol.spacing[1] << " " << vol.spacing[2] << "\n";
     h << "Position = " << vol.origin[0] << " " << vol.origin[1] << " " << vol.origin[2] << "\n";
-    h << "TransformMatrix = " << vol.direction[0] << " " << vol.direction[1] << " " << vol.direction[2] << " "
-      << vol.direction[3] << " " << vol.direction[4] << " " << vol.direction[5] << " " << vol.direction[6] << " "
-      << vol.direction[7] << " " << vol.direction[8] << "\n";
+    h << "TransformMatrix = " << vol.direction[volumeDirectionIndex(0, 0)] << " "
+      << vol.direction[volumeDirectionIndex(0, 1)] << " " << vol.direction[volumeDirectionIndex(0, 2)] << " "
+      << vol.direction[volumeDirectionIndex(1, 0)] << " " << vol.direction[volumeDirectionIndex(1, 1)] << " "
+      << vol.direction[volumeDirectionIndex(1, 2)] << " " << vol.direction[volumeDirectionIndex(2, 0)] << " "
+      << vol.direction[volumeDirectionIndex(2, 1)] << " " << vol.direction[volumeDirectionIndex(2, 2)] << "\n";
     h << "ElementByteOrderMSB = False\n";
 
     if (writing_mha) {

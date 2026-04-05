@@ -27,7 +27,14 @@ namespace {
 
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.mhd_loader");
 
-constexpr float kIdentityDirection3x3[9] = {
+using vne::image::kVolumeDirectionMatrixElements;
+using vne::image::kVolumeSpatialDim;
+
+constexpr int mat3Index(int row, int col) noexcept {
+    return row * kVolumeSpatialDim + col;
+}
+
+constexpr float kIdentityDirection3x3[kVolumeDirectionMatrixElements] = {
     1.0f,
     0.0f,
     0.0f,
@@ -100,9 +107,9 @@ bool parseThreeFloats(const std::string& value, float out[3]) {
     return true;
 }
 
-bool parseNineFloats(const std::string& value, float m[9]) {
+bool parseNineFloats(const std::string& value, float m[kVolumeDirectionMatrixElements]) {
     std::istringstream iss(value);
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < kVolumeDirectionMatrixElements; ++i) {
         if (!(iss >> m[i]) || !std::isfinite(m[i])) {
             return false;
         }
@@ -124,14 +131,16 @@ void byteSwapVolumeData(vne::image::Volume& vol, vne::image::VolumePixelType pix
     }
 }
 
-float determinant3(const float d[9]) {
-    return d[0] * (d[4] * d[8] - d[5] * d[7]) - d[1] * (d[3] * d[8] - d[5] * d[6]) + d[2] * (d[3] * d[7] - d[4] * d[6]);
+float determinant3(const float d[kVolumeDirectionMatrixElements]) {
+    return d[mat3Index(0, 0)] * (d[mat3Index(1, 1)] * d[mat3Index(2, 2)] - d[mat3Index(1, 2)] * d[mat3Index(2, 1)])
+           - d[mat3Index(0, 1)] * (d[mat3Index(1, 0)] * d[mat3Index(2, 2)] - d[mat3Index(1, 2)] * d[mat3Index(2, 0)])
+           + d[mat3Index(0, 2)] * (d[mat3Index(1, 0)] * d[mat3Index(2, 1)] - d[mat3Index(1, 1)] * d[mat3Index(2, 0)]);
 }
 
 /** Normalize rows of 3×3 row-major matrix in place; returns false if any row degenerate or |det| tiny. */
-bool normalizeDirectionRows(float d[9], float min_det) {
-    for (int row = 0; row < 3; ++row) {
-        int b = row * 3;
+bool normalizeDirectionRows(float d[kVolumeDirectionMatrixElements], float min_det) {
+    for (int row = 0; row < kVolumeSpatialDim; ++row) {
+        const int b = row * kVolumeSpatialDim;
         float x = d[b + 0];
         float y = d[b + 1];
         float z = d[b + 2];
@@ -232,18 +241,18 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     }
 
     int ndims = 0;
-    int dims[3] = {0, 0, 0};
+    int dims[kVolumeSpatialDim] = {0, 0, 0};
     VolumePixelType pixel_type = VolumePixelType::eUnknown;
-    float spacing[3] = {1.0f, 1.0f, 1.0f};
+    float spacing[kVolumeSpatialDim] = {1.0f, 1.0f, 1.0f};
     std::string element_data_file;
     bool msb = false;
     std::string line;
 
-    float origin_from_position[3] = {0, 0, 0};
-    float origin_from_offset[3] = {0, 0, 0};
+    float origin_from_position[kVolumeSpatialDim] = {0, 0, 0};
+    float origin_from_offset[kVolumeSpatialDim] = {0, 0, 0};
     bool have_position = false;
     bool have_offset = false;
-    float transform_matrix[9] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+    float transform_matrix[kVolumeDirectionMatrixElements] = {1, 0, 0, 0, 1, 0, 0, 0, 1};
     bool have_transform = false;
     int element_channels = 1;
     bool have_element_channels = false;
@@ -292,7 +301,7 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
                 return false;
             }
         } else if (key == "DIMSIZE") {
-            if (!parseDimSize(val, dims, 3)) {
+            if (!parseDimSize(val, dims, kVolumeSpatialDim)) {
                 last_error_ = "MhdLoader: invalid DimSize";
                 VNE_LOG_ERROR << last_error_;
                 return false;
@@ -305,7 +314,7 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
                 return false;
             }
         } else if (key == "ELEMENTSPACING") {
-            parseElementSpacing(val, spacing, (ndims > 0) ? ndims : 3);
+            parseElementSpacing(val, spacing, (ndims > 0) ? ndims : kVolumeSpatialDim);
         } else if (key == "ELEMENTDATAFILE") {
             element_data_file = trim(val);
         } else if (key == "ELEMENTBYTEORDERMSB") {
@@ -385,7 +394,7 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
 
     std::memcpy(out_volume.direction, kIdentityDirection3x3, sizeof(kIdentityDirection3x3));
     if (have_transform) {
-        float tm[9];
+        float tm[kVolumeDirectionMatrixElements];
         std::memcpy(tm, transform_matrix, sizeof(tm));
         if (normalizeDirectionRows(tm, kVolumeDirectionMinDeterminant)) {
             std::memcpy(out_volume.direction, tm, sizeof(tm));
