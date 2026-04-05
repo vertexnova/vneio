@@ -13,19 +13,27 @@
 cmake_minimum_required(VERSION 3.16)
 project(VneIoExamples)
 
+set(_VNEIO_EXAMPLES_CONFIGURE TRUE)
 # Disable on mobile / web
 if(DEFINED VNE_TARGET_PLATFORM AND
    (VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "Web"))
     message(STATUS "VneIo examples disabled for ${VNE_TARGET_PLATFORM}")
-    return()
+    set(_VNEIO_EXAMPLES_CONFIGURE FALSE)
 endif()
-
 if(NOT TARGET vneio_asset_io)
     message(STATUS "VneIo examples require vneio_asset_io; skipping.")
-    return()
+    set(_VNEIO_EXAMPLES_CONFIGURE FALSE)
 endif()
 
+if(_VNEIO_EXAMPLES_CONFIGURE)
 set(VNEIO_EXAMPLES_COMMON_DIR ${CMAKE_CURRENT_SOURCE_DIR}/common)
+
+# Shared libvneio_* does not re-export vnelogging; detect from the actual target (not only VNEIO_LIB_TYPE).
+set(_VNEIO_EXAMPLES_NEEDS_VNE_LOGGING FALSE)
+get_target_property(_VNEIO_EX_ASSET_IO_TYPE vneio_asset_io TYPE)
+if(_VNEIO_EX_ASSET_IO_TYPE STREQUAL "SHARED_LIBRARY")
+    set(_VNEIO_EXAMPLES_NEEDS_VNE_LOGGING TRUE)
+endif()
 
 # Logging include path (embedded in library; examples only need the headers)
 set(_VNEIO_EX_LOGGING_INCLUDES "")
@@ -59,7 +67,7 @@ macro(vne_add_example target_name)
         # object files end up in the dylib. LoggingGuard needs Logging::configureLogger etc.,
         # so link vnelogging into the executable for shared VneIo builds only (static embeds
         # already include those symbols in libvneio_*).
-        if(TARGET vne::logging AND DEFINED VNEIO_LIB_TYPE AND VNEIO_LIB_TYPE STREQUAL "shared")
+        if(TARGET vne::logging AND _VNEIO_EXAMPLES_NEEDS_VNE_LOGGING)
             target_link_libraries(${target_name} PRIVATE vne::logging)
         endif()
     endif()
@@ -79,3 +87,5 @@ add_subdirectory(04_volume_export)
 add_subdirectory(05_mesh_loading)
 add_subdirectory(06_asset_registry)
 add_subdirectory(07_performance)
+
+endif()

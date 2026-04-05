@@ -12,18 +12,19 @@ cmake_minimum_required(VERSION 3.16)
 
 project(TestVneIo)
 
+set(_VNEIO_TESTS_CONFIGURE TRUE)
 # Disable tests for iOS and Web
 if(DEFINED VNE_TARGET_PLATFORM AND (VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "Web"))
     message(STATUS "VneIo tests disabled for ${VNE_TARGET_PLATFORM}")
-    return()
+    set(_VNEIO_TESTS_CONFIGURE FALSE)
 endif()
-
 # Require both mesh and image components
 if(NOT TARGET vneio_mesh OR NOT TARGET vneio_image)
     message(STATUS "VneIo tests require VNEIO_BUILD_MESH and VNEIO_BUILD_IMAGE; skipping.")
-    return()
+    set(_VNEIO_TESTS_CONFIGURE FALSE)
 endif()
 
+if(_VNEIO_TESTS_CONFIGURE)
 #-----------------------------------------------------------------------------
 # Google Test (deps/external submodule, stable v1.14.0)
 #-----------------------------------------------------------------------------
@@ -80,9 +81,12 @@ list(APPEND TEST_SOURCES ${VNEIO_ROOT}/src/vertexnova/io/utils/path_utils.cpp)
 add_executable(TestVneIo ${TEST_SOURCES})
 
 # Shared DLL + tests: consumers see VNEIO_DLL / dllimport; MSVC C4251 on STL in exported
-# classes is expected (same as vneio targets' /wd4251 /wd4275).
-if(MSVC AND DEFINED VNEIO_LIB_TYPE AND VNEIO_LIB_TYPE STREQUAL "shared")
-    target_compile_options(TestVneIo PRIVATE /wd4251 /wd4275)
+# classes is expected (same as vneio targets' /wd4251 /wd4275). Match actual vneio_asset_io TYPE.
+if(MSVC AND TARGET vneio_asset_io)
+    get_target_property(_VNEIO_TEST_ASSET_IO_TYPE vneio_asset_io TYPE)
+    if(_VNEIO_TEST_ASSET_IO_TYPE STREQUAL "SHARED_LIBRARY")
+        target_compile_options(TestVneIo PRIVATE /wd4251 /wd4275)
+    endif()
 endif()
 
 target_include_directories(TestVneIo
@@ -121,3 +125,5 @@ target_compile_definitions(TestVneIo PRIVATE "VNEIO_TESTDATA_DIR=\"${VNEIO_TESTD
 # Run from project root so testdata paths resolve; testdata root is absolute from config
 add_test(NAME vneio.test COMMAND TestVneIo)
 set_tests_properties(vneio.test PROPERTIES WORKING_DIRECTORY ${VNEIO_ROOT})
+
+endif()

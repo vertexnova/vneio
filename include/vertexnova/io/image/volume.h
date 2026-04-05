@@ -99,10 +99,12 @@ constexpr float kVolumeDirectionMinDeterminant = 1e-4f;
  *
  * Dimensions (width, height, depth), spacing, origin, pixel type, and contiguous raw buffer.
  *
- * **Typed access:** @c std::vector<uint8_t> storage is only byte-aligned. Do not
- * @c reinterpret_cast the buffer to @c T* and dereference for multi-byte @c T — that can be UB on
- * strict-alignment platforms. Use @ref readVoxelAt for scalar reads, @ref byteSpan / @ref getData
- * for raw bytes, or copy out via @c memcpy in your own code.
+ * **Typed access:** @c std::vector<uint8_t> storage is only byte-aligned. There is no @c dataAs()
+ * returning @c T* (that pattern was removed). Do not @c reinterpret_cast the buffer to @c T* and
+ * dereference for multi-byte @c T — that can be UB on strict-alignment platforms. Use @ref
+ * readVoxelAt for @c memcpy-based scalar reads, @ref byteSpan / @ref rawByteSpan / @ref getData for
+ * raw bytes, or @c memcpy in your own code. An aligned custom allocator for @c data is optional
+ * and not required when using @ref readVoxelAt.
  */
 struct VNEIO_API Volume {
     int dims[3] = {0, 0, 0};                //!< Width (x), height (y), depth (z).
@@ -164,6 +166,11 @@ struct VNEIO_API Volume {
      * @brief Read-only view of the raw voxel bytes (no alignment claim beyond byte-sized elements).
      */
     [[nodiscard]] std::span<const std::uint8_t> byteSpan() const noexcept { return {data.data(), data.size()}; }
+
+    /**
+     * @brief Same buffer as @ref byteSpan as @c std::byte (object-representation view).
+     */
+    [[nodiscard]] std::span<const std::byte> rawByteSpan() const noexcept { return std::as_bytes(byteSpan()); }
 
     /**
      * @brief Copy one stored value of type @a T from the raw buffer at logical index @a linear_index.

@@ -14,7 +14,7 @@
 
 #include <vertexnova/logging/logging.h>
 
-CREATE_VNE_LOGGER_CATEGORY("vneio.examples")
+CREATE_VNE_LOGGER_CATEGORY("vneio.examples");
 
 namespace vne::io::examples {
 

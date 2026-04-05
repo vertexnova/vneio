@@ -417,9 +417,11 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
         const auto bytes_read = f.gcount();
         if (bytes_read != static_cast<std::streamsize>(num_bytes)) {
             if (f.bad()) {
-                last_error_ = "MhdLoader: failed to read inline data (ElementDataFile = LOCAL)";
+                last_error_ = "MhdLoader: failed to read inline data (ElementDataFile = LOCAL) from \"" + path + "\"";
             } else {
-                last_error_ = "MhdLoader: short read inline data (expected " + std::to_string(num_bytes) + " bytes)";
+                last_error_ = "MhdLoader: short read inline data in \"" + path + "\" (got " +
+                              std::to_string(static_cast<unsigned long long>(bytes_read)) + " of " +
+                              std::to_string(num_bytes) + " bytes)";
             }
             VNE_LOG_ERROR << last_error_;
             return false;
@@ -465,9 +467,11 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
     const auto bytes_read = df.gcount();
     if (bytes_read != static_cast<std::streamsize>(num_bytes)) {
         if (df.bad()) {
-            last_error_ = "MhdLoader: failed to read data file";
+            last_error_ = "MhdLoader: failed to read data file \"" + data_path + "\"";
         } else {
-            last_error_ = "MhdLoader: short read data file (expected " + std::to_string(num_bytes) + " bytes)";
+            last_error_ = "MhdLoader: short read data file \"" + data_path + "\" (got " +
+                          std::to_string(static_cast<unsigned long long>(bytes_read)) + " of " +
+                          std::to_string(num_bytes) + " bytes)";
         }
         VNE_LOG_ERROR << last_error_;
         return false;

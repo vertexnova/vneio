@@ -69,6 +69,8 @@ else()
 endif()
 
 message(STATUS "VneIo: VNEIO_LIB_TYPE=${VNEIO_LIB_TYPE} — typical -B build/${VNEIO_LIB_TYPE}/Release or .../Debug")
+# Subdirectories that branch on static vs shared should use get_target_property(TYPE vneio_asset_io)
+# (SHARED_LIBRARY vs STATIC_LIBRARY), not only this cache variable, so behavior matches real targets.
 
 # =============================================================================
 # Helper: visibility / DLL export for shared component libs

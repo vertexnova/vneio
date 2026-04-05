@@ -46,9 +46,20 @@ namespace binaryio {
     }
     f.seekg(0, std::ios::beg);
     out.resize(static_cast<size_t>(size));
-    if (!out.empty() && !f.read(reinterpret_cast<char*>(out.data()), size)) {
-        out.clear();
-        return Status::make(ErrorCode::eFileReadFailed, "Failed to read file", path, "BinaryIO");
+    if (!out.empty()) {
+        f.read(reinterpret_cast<char*>(out.data()), size);
+        const std::streamsize n = f.gcount();
+        if (n != size) {
+            out.clear();
+            if (f.bad()) {
+                return Status::make(ErrorCode::eFileReadFailed, "Failed to read file", path, "BinaryIO");
+            }
+            return Status::make(ErrorCode::eDataTruncated,
+                                "Short read (" + std::to_string(static_cast<unsigned long long>(n)) + " of " +
+                                    std::to_string(static_cast<unsigned long long>(size)) + " bytes)",
+                                path,
+                                "BinaryIO");
+        }
     }
     return Status::okStatus();
 }
