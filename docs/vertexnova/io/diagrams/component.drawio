@@ -17,16 +17,16 @@
                 <mxCell id="common_h" value="common/&#10;status.h&#10;binary_io.h&#10;load_request.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
                     <mxGeometry x="180" y="50" width="150" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="mesh_pub" value="mesh/&#10;mesh.h · assimp_loader.h&#10;mesh_loader.h · mesh_exporter.h&#10;mesh_loader_registry.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
+                <mxCell id="mesh_pub" value="mesh/&#10;mesh.h · assimp_loader.h&#10;mesh_loader.h · mesh_exporter.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
                     <mxGeometry x="365" y="50" width="220" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="image_pub" value="image/&#10;image.h · volume.h&#10;stb_image_loader.h&#10;nrrd_loader.h · mhd_loader.h&#10;volume_exporter.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
                     <mxGeometry x="620" y="45" width="220" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="dicom_pub" value="dicom/&#10;dicom_series.h&#10;dicom_loader.h&#10;dicom_loader_registry.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
+                <mxCell id="dicom_pub" value="dicom/&#10;dicom_series.h&#10;dicom_loader.h" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
                     <mxGeometry x="875" y="50" width="200" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="assetio_pub" value="asset_io.h&#10;asset_loader.h&#10;(unified registry)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#E8622A;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
+                <mxCell id="assetio_pub" value="asset_io.h&#10;loader interfaces&#10;(AssetIO entry point)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#E8622A;fontSize=11;fontColor=#EBEBF0;" parent="bg_pub" vertex="1">
                     <mxGeometry x="1110" y="60" width="170" height="70" as="geometry"/>
                 </mxCell>
 
@@ -34,14 +34,14 @@
                     <mxGeometry x="30" y="290" width="1320" height="210" as="geometry"/>
                 </mxCell>
 
-                <mxCell id="assimp_cpp" value="mesh/&#10;assimp_loader.cpp&#10;mesh_loader_registry.cpp&#10;mesh_exporter_obj.cpp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;fontSize=11;fontColor=#EBEBF0;" parent="bg_impl" vertex="1">
-                    <mxGeometry x="20" y="50" width="220" height="90" as="geometry"/>
+                <mxCell id="assimp_cpp" value="mesh/&#10;assimp_loader.cpp&#10;mesh_exporter_obj.cpp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;fontSize=11;fontColor=#EBEBF0;" parent="bg_impl" vertex="1">
+                    <mxGeometry x="20" y="55" width="220" height="75" as="geometry"/>
                 </mxCell>
                 <mxCell id="image_cpp" value="image/&#10;image.cpp&#10;stb_image_loader.cpp&#10;nrrd_loader.cpp · mhd_loader.cpp&#10;volume_exporter_nrrd.cpp&#10;volume_exporter_mhd.cpp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;fontSize=11;fontColor=#EBEBF0;" parent="bg_impl" vertex="1">
                     <mxGeometry x="280" y="45" width="240" height="110" as="geometry"/>
                 </mxCell>
-                <mxCell id="dicom_cpp" value="dicom/&#10;dicom_loader_registry.cpp&#10;(+ optional GDCM / DCMTK adapter)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;" parent="bg_impl" vertex="1">
-                    <mxGeometry x="560" y="55" width="260" height="80" as="geometry"/>
+                <mxCell id="dicom_cpp" value="dicom/&#10;(no .cpp in tree)&#10;IDicomLoader impl external" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;" parent="bg_impl" vertex="1">
+                    <mxGeometry x="560" y="55" width="260" height="75" as="geometry"/>
                 </mxCell>
                 <mxCell id="assetio_cpp" value="asset_io.cpp&#10;(routes requests to loaders)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;fontSize=11;fontColor=#EBEBF0;" parent="bg_impl" vertex="1">
                     <mxGeometry x="860" y="60" width="220" height="70" as="geometry"/>
@@ -63,7 +63,7 @@
                 <mxCell id="dep_nrrd" value="NrrdIO&#10;(NRRD / MHD + optional zlib)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;fontSize=11;fontColor=#EBEBF0;" parent="bg_ext" vertex="1">
                     <mxGeometry x="680" y="40" width="240" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="dep_dicom" value="GDCM / DCMTK&#10;(optional DICOM backends)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;strokeWidth=2;dashed=1;" parent="bg_ext" vertex="1">
+                <mxCell id="dep_dicom" value="GDCM / DCMTK&#10;(optional — not wired in-tree)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;fontSize=11;fontColor=#EBEBF0;strokeWidth=2;dashed=1;" parent="bg_ext" vertex="1">
                     <mxGeometry x="980" y="40" width="240" height="60" as="geometry"/>
                 </mxCell>
 
