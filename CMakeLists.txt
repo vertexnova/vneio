@@ -57,7 +57,24 @@ if(EXISTS "${VNEIO_ROOT}/cmake/vnecmake/modules")
 endif()
 list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake")
 
-if(EXISTS "${VNEIO_ROOT}/cmake/GitSubmodule.cmake")
+# Optional configure-time git submodule update (top-level VneIo only). Off by default so
+# add_subdirectory/FetchContent consumers are not hit with git side effects or marker fatals.
+option(VNEIO_UPDATE_SUBMODULES
+    "Top-level VneIo: run git submodule update and submodule path checks at configure time"
+    OFF)
+set(_VNEIO_RUN_GIT_SUBMODULE FALSE)
+if(VNEIO_UPDATE_SUBMODULES)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
+        if(PROJECT_IS_TOP_LEVEL)
+            set(_VNEIO_RUN_GIT_SUBMODULE TRUE)
+        endif()
+    else()
+        if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+            set(_VNEIO_RUN_GIT_SUBMODULE TRUE)
+        endif()
+    endif()
+endif()
+if(_VNEIO_RUN_GIT_SUBMODULE AND EXISTS "${VNEIO_ROOT}/cmake/GitSubmodule.cmake")
     include(GitSubmodule)
 endif()
 
