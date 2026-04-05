@@ -15,7 +15,8 @@
 #include <vneio_config.h>
 
 #include <filesystem>
-#include <cstring>
+#include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -182,13 +183,13 @@ TEST_F(ImageTest, FlipVertically) {
     const int width = 4;
     const int height = 4;
     const int channels = 3;
-    const size_t total = static_cast<size_t>(width * height * channels);
-    const size_t lastRowStart = static_cast<size_t>((height - 1) * width * channels);
+    const auto total = static_cast<size_t>(width * height * channels);
+    const auto last_row_start = static_cast<size_t>((height - 1) * width * channels);
     std::vector<uint8_t> data(total);
     for (size_t i = 0; i < static_cast<size_t>(width * channels); ++i) {
         data[i] = 255;
     }
-    for (size_t i = lastRowStart; i < total; ++i) {
+    for (size_t i = last_row_start; i < total; ++i) {
         data[i] = 0;
     }
 

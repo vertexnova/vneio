@@ -2,14 +2,21 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Example 04: Volume export round-trip — synthesise a volume and prove
- * it survives all four export / reload paths:
- *   .nrrd (attached)  |  .nhdr + .raw (detached NRRD)
- *   .mhd  + .raw      |  .mha (inline MHD)
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
  *
- * Each variant checks geometry metadata and full voxel payload equality
- * to guard against silent truncation or byte-order bugs.
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file 04_example.cpp
+ * @brief Example 04: Volume export round-trip — synthesise a volume and prove it survives all four export / reload
+ * paths.
+ *
+ * Paths: .nrrd (attached); .nhdr + .raw (detached NRRD); .mhd + .raw; .mha (inline MHD).
+ * Each variant checks geometry metadata and full voxel payload equality to guard against
+ * silent truncation or byte-order bugs.
  */
 
 #include "04_example.h"

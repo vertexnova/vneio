@@ -22,15 +22,16 @@ namespace mesh {
 
 /**
  * @file mesh_loader.h
- * @brief Interface for loading 3D meshes from file; use MeshLoaderRegistry by extension.
+ * @brief Interface for loading 3D meshes from file; register with AssetIO for unified dispatch.
  */
 
 /**
  * @class IMeshLoader
- * @brief Interface for loading 3D meshes from file.
+ * @brief Interface for loading 3D meshes; register with AssetIO for dispatch.
  *
- * Implementations (e.g. AssimpLoader) load supported formats into Mesh.
- * Use MeshLoaderRegistry::getLoaderFor(path) to obtain a loader by file extension.
+ * Implement loadMesh() and isExtensionSupported(). Register with
+ * AssetIO::registerMeshLoader(); AssetIO calls canLoad() and dispatches to
+ * the first matching loader.
  */
 class VNEIO_API IMeshLoader : public vne::io::IAssetLoader {
    public:
@@ -39,19 +40,11 @@ class VNEIO_API IMeshLoader : public vne::io::IAssetLoader {
     [[nodiscard]] bool canLoad(const vne::io::LoadRequest& request) const override;
 
     /**
-     * @brief Load a mesh from the given request (AssetIO registry API)
+     * @brief Load a mesh from the given request.
      * @param request Load request (uri = file path, hint_format optional)
      * @return Load result with Mesh on success, Status on failure
      */
     [[nodiscard]] virtual vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) = 0;
-
-    /**
-     * @brief Load a mesh from file (legacy API, unchanged)
-     * @param path Path to the mesh file
-     * @param out_mesh Mesh to fill
-     * @return true if loading succeeded, false otherwise (see getLastError())
-     */
-    [[nodiscard]] virtual bool loadFile(const std::string& path, Mesh& out_mesh) = 0;
 
     /**
      * @brief Check if this loader supports the given file (by extension)

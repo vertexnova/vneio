@@ -5,6 +5,13 @@
 # Author:    Ajeet Singh Yadav
 # Created:   January 2026
 #
+# Autodoc:   yes
+# =============================================================================
+
+# =============================================================================
+# Description: CMake build system for VneIo — core library, mesh, image.
+# =============================================================================
+
 # VneIo — mesh and image I/O (VertexNova core)
 #
 # File map (top to bottom):
@@ -19,8 +26,8 @@
 #   9. Aggregate target vneio
 #  10. Tests & examples
 #  11. Install, LICENSE/CHANGELOG, optional install-tree sanitize
-# =============================================================================
 
+# =============================================================================
 cmake_minimum_required(VERSION 3.16)
 project(vneio VERSION 1.0.0 LANGUAGES CXX)
 
@@ -49,6 +56,27 @@ if(EXISTS "${VNEIO_ROOT}/cmake/vnecmake/modules")
     list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake/vnecmake/modules")
 endif()
 list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake")
+
+# Optional configure-time git submodule update (top-level VneIo only). Off by default so
+# add_subdirectory/FetchContent consumers are not hit with git side effects or marker fatals.
+option(VNEIO_UPDATE_SUBMODULES
+    "Top-level VneIo: run git submodule update and submodule path checks at configure time"
+    OFF)
+set(_VNEIO_RUN_GIT_SUBMODULE FALSE)
+if(VNEIO_UPDATE_SUBMODULES)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
+        if(PROJECT_IS_TOP_LEVEL)
+            set(_VNEIO_RUN_GIT_SUBMODULE TRUE)
+        endif()
+    else()
+        if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+            set(_VNEIO_RUN_GIT_SUBMODULE TRUE)
+        endif()
+    endif()
+endif()
+if(_VNEIO_RUN_GIT_SUBMODULE AND EXISTS "${VNEIO_ROOT}/cmake/GitSubmodule.cmake")
+    include(GitSubmodule)
+endif()
 
 # =============================================================================
 # Library type — one of static or shared for all VneIo component libraries
@@ -139,8 +167,6 @@ option(ENABLE_ASAN "Enable AddressSanitizer + UndefinedBehaviorSanitizer (Clang/
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
 option(VNEIO_BUILD_IMAGE "Build image component" ON)
 option(VNEIO_USE_STB_IMAGE_RESIZE "Enable stb_image_resize for higher-quality resizing" OFF)
-option(VNEIO_WITH_GDCM "Enable DICOM support via GDCM" OFF)
-option(VNEIO_WITH_DCMTK "Enable DICOM support via DCMTK" OFF)
 
 if(VNEIO_CI)
     set(VNEIO_DEV OFF CACHE BOOL "" FORCE)
@@ -477,7 +503,6 @@ endif()
 if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
     add_library(vneio_mesh ${_VNEIO_LIB_KIND}
         src/vertexnova/io/mesh/assimp_loader.cpp
-        src/vertexnova/io/mesh/mesh_loader_registry.cpp
         src/vertexnova/io/mesh/mesh_exporter_obj.cpp
     )
     vneio_target_apply_shared_export(vneio_mesh)
@@ -579,50 +604,19 @@ if(TARGET vneio_image AND TARGET vneio_mesh)
 endif()
 
 # =============================================================================
-# Target: vneio_dicom (optional GDCM/DCMTK or stub registry)
+# Target: vneio_dicom — INTERFACE only (DICOM headers; no in-tree backend)
+#
+# Ships include/vertexnova/io/dicom/*.h (IDicomLoader, DicomSeries). There is no
+# bundled GDCM/DCMTK implementation; register an external IDicomLoader with AssetIO.
+# Reintroduce CMake options and find_package/link here when a backend is added in-tree.
 # =============================================================================
-if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
-    add_library(vneio_dicom ${_VNEIO_LIB_KIND}
-        src/vertexnova/io/dicom/dicom_loader_registry.cpp
-    )
-    vneio_target_apply_shared_export(vneio_dicom)
-    set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
-    target_include_directories(vneio_dicom
-        PUBLIC
-            $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
-            $<BUILD_INTERFACE:${VNEIO_SRC_DIR}>
-            $<INSTALL_INTERFACE:include>
-    )
-    target_link_libraries(vneio_dicom
-        PUBLIC VneIoWarnings VneIoBuildSettings
-    )
-    if(VNEIO_WITH_GDCM)
-        target_compile_definitions(vneio_dicom PRIVATE VNEIO_WITH_GDCM)
-        # TODO: find_package(GDCM) and link
-    endif()
-    if(VNEIO_WITH_DCMTK)
-        target_compile_definitions(vneio_dicom PRIVATE VNEIO_WITH_DCMTK)
-        # TODO: find_package(DCMTK) and link
-    endif()
-    add_library(vne::io::dicom ALIAS vneio_dicom)
-else()
-    # Always build dicom_loader_registry.cpp (null loader) so the interface is available
-    add_library(vneio_dicom ${_VNEIO_LIB_KIND}
-        src/vertexnova/io/dicom/dicom_loader_registry.cpp
-    )
-    vneio_target_apply_shared_export(vneio_dicom)
-    set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
-    target_include_directories(vneio_dicom
-        PUBLIC
-            $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
-            $<BUILD_INTERFACE:${VNEIO_SRC_DIR}>
-            $<INSTALL_INTERFACE:include>
-    )
-    target_link_libraries(vneio_dicom
-        PUBLIC VneIoWarnings VneIoBuildSettings
-    )
-    add_library(vne::io::dicom ALIAS vneio_dicom)
-endif()
+add_library(vneio_dicom INTERFACE)
+target_include_directories(vneio_dicom
+    INTERFACE
+        $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include>
+)
+add_library(vne::io::dicom ALIAS vneio_dicom)
 
 # =============================================================================
 # Aggregate interface target: vneio

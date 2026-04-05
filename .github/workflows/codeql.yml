@@ -5,10 +5,12 @@
 # Author:    Ajeet Singh Yadav
 # Created:   February 2026
 #
+# Autodoc:   yes
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
 # Description: CodeQL security analysis for C++. Runs on push/PR to main and
 # weekly (to catch newly discovered patterns).
-#
-# Autodoc:   yes
 # ----------------------------------------------------------------------
 
 name: CodeQL

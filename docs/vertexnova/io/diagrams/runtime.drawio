@@ -1,0 +1,159 @@
+<mxfile host="app.diagrams.net" modified="2026-04-05T00:00:00.000Z" agent="vneio-docs" version="22.0.0" type="device">
+  <diagram id="runtime_pipeline" name="1. Asset load pipeline">
+    <mxGraphModel dx="1100" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0" background="#1C1C1E">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- VertexNova visual style — learnvertexnova.com/docs/docs/misc/visual-style/ -->
+
+        <mxCell id="rp_title" value="vneio — asset load pipeline (single call)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontStyle=1;fontSize=15;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="200" y="20" width="720" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rp_req" value="LoadRequest&#10;(asset_type, uri, hint_format)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="80" width="360" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rp_assetio" value="AssetIO&#10;(registry — routes by asset_type + extension)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="180" width="360" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rp_loader" value="Concrete Loader&#10;AssimpLoader · StbImageLoader · NrrdLoader · MhdLoader" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#F28C5E;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="280" width="360" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rp_ext" value="External Library&#10;Assimp · stb_image · NrrdIO · GDCM/DCMTK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#48484A;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="380" width="360" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rp_data" value="Data Struct&#10;Mesh · Image · Volume · DicomSeries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="480" width="360" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rp_result" value="LoadResult&lt;T&gt;&#10;T value + Status (ErrorCode, message, path)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="580" width="360" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rp_e1" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="rp_req" target="rp_assetio" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rp_e1l" value="loadMesh / loadImage / loadVolume / loadDicomSeries" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#EBEBF0;labelBackgroundColor=#2C2C2E;" parent="rp_e1" connectable="0" vertex="1">
+          <mxGeometry x="-0.05" relative="1" as="geometry"><mxPoint y="-8" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="rp_e2" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="rp_assetio" target="rp_loader" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rp_e2l" value="dispatches to first matching registered loader" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#AEAEB2;labelBackgroundColor=#2C2C2E;" parent="rp_e2" connectable="0" vertex="1">
+          <mxGeometry x="-0.05" relative="1" as="geometry"><mxPoint y="-8" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="rp_e3" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="rp_loader" target="rp_ext" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rp_e3l" value="file I/O + decode" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#AEAEB2;labelBackgroundColor=#2C2C2E;" parent="rp_e3" connectable="0" vertex="1">
+          <mxGeometry x="-0.05" relative="1" as="geometry"><mxPoint y="-8" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="rp_e4" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="rp_ext" target="rp_data" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rp_e4l" value="raw bytes → typed struct" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#AEAEB2;labelBackgroundColor=#2C2C2E;" parent="rp_e4" connectable="0" vertex="1">
+          <mxGeometry x="-0.05" relative="1" as="geometry"><mxPoint y="-8" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="rp_e5" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#E8622A;" parent="1" source="rp_data" target="rp_result" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="rp_e5l" value="wrapped in LoadResult&lt;T&gt; with Status" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#AEAEB2;labelBackgroundColor=#2C2C2E;" parent="rp_e5" connectable="0" vertex="1">
+          <mxGeometry x="-0.05" relative="1" as="geometry"><mxPoint y="-8" as="offset"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="rp_side" value="Direct loader pattern (no AssetIO):&#10;AssimpLoader loader;&#10;loader.loadFile(path, mesh);  // legacy bool return&#10;loader.loadMesh(request);    // → LoadResult&lt;Mesh&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#48484A;strokeWidth=1;fontSize=11;fontColor=#AEAEB2;align=left;spacingLeft=10;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="40" y="180" width="300" height="80" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="mesh_sequence" name="2. Mesh load (AssimpLoader)">
+    <mxGraphModel dx="1100" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0" background="#1C1C1E">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="m_title" value="Mesh load sequence (AssimpLoader → Assimp → Mesh)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontStyle=1;fontSize=15;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="200" y="20" width="720" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="m1" value="1 · App&#10;loadFile(path, mesh) or loadMesh(LoadRequest)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="80" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="m2" value="2 · AssimpLoader&#10;aiImportFile(path, flags)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#E8622A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="160" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="m3" value="3 · Assimp (external)&#10;parse OBJ / STL / FBX / glTF / PLY / DAE → aiScene" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#48484A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="240" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="m4" value="4 · AssimpLoader&#10;flatten aiScene → Mesh vertices / indices / parts / materials" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#F28C5E;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="320" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="m5" value="5 · Optional post-process&#10;gen normals / tangents, normalize to unit sphere, barycentrics" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="400" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="m6" value="6 · return Mesh / LoadResult&lt;Mesh&gt;&#10;+ Status (eOk or error code + message)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="480" width="360" height="52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ma1" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="m1" target="m2" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ma2" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="m2" target="m3" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ma3" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="m3" target="m4" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ma4" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="m4" target="m5" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="ma5" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#E8622A;" parent="1" source="m5" target="m6" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="volume_sequence" name="3. Volume load (NrrdLoader / MhdLoader)">
+    <mxGraphModel dx="1100" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0" background="#1C1C1E">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="v_title" value="Volume load sequence (NrrdLoader / MhdLoader → Volume)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontStyle=1;fontSize=15;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="200" y="20" width="720" height="36" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="v1" value="1 · App&#10;loadVolume(LoadRequest{uri=&quot;scan.nrrd&quot;})" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="80" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="v2" value="2 · NrrdLoader or MhdLoader&#10;open file, validate magic bytes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#E8622A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="160" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="v3" value="3 · NrrdIO (external)&#10;parse header: dims, spacing, origin, direction, pixel_type" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#48484A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="240" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="v4" value="4 · NrrdIO&#10;decompress voxel data (optional zlib / bzip2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#48484A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="320" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="v5" value="5 · Loader&#10;fill Volume: dims, spacing, origin, direction, data[]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2E1A07;strokeColor=#F28C5E;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="400" width="360" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="v6" value="6 · return LoadResult&lt;Volume&gt;&#10;access voxels via readVoxelAt&lt;T&gt;(x,y,z)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontSize=11;fontColor=#EBEBF0;" parent="1" vertex="1">
+          <mxGeometry x="385" y="480" width="360" height="52" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="va1" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="v1" target="v2" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="va2" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="v2" target="v3" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="va3" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="v3" target="v4" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="va4" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#48484A;" parent="1" source="v4" target="v5" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="va5" style="endArrow=blockThin;endFill=1;html=1;strokeWidth=2;strokeColor=#E8622A;" parent="1" source="v5" target="v6" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="v_note" value="MhdLoader: same flow but reads .mhd text header + separate .raw binary data file." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#48484A;strokeWidth=1;fontSize=11;fontColor=#AEAEB2;align=left;spacingLeft=10;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="40" y="320" width="300" height="56" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

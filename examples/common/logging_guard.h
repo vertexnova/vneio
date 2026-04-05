@@ -3,11 +3,20 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Common logging configuration for VneIo examples (headless I/O demos).
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file logging_guard.h
+ * @brief Common logging configuration for VneIo examples (headless I/O demos).
+ *
  * Mirrors vneinteraction/examples/common/logging_guard.h; requires
  * VNEIO_EXAMPLES_HAS_LOGGING when using the real implementation (set by
  * examples CMake when vnelogging headers are available).
- * ----------------------------------------------------------------------
  */
 
 #if defined(VNEIO_EXAMPLES_HAS_LOGGING)

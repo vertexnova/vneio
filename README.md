@@ -1,4 +1,10 @@
-# VertexNova I/O (vneio)
+<p align="center">
+  <img src="icons/vertexnova_logo_medallion_with_text.svg" alt="VertexNova I/O" width="320"/>
+</p>
+
+<p align="center">
+  <strong>Mesh, image, volume, and DICOM I/O library for the VertexNova ecosystem</strong>
+</p>
 
 <p align="center">
   <a href="https://github.com/vertexnova/vneio/actions/workflows/ci.yml">
@@ -11,77 +17,127 @@
   <img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"/>
 </p>
 
-Mesh and Image library extracted from VertexNova core, structured like **vneevents** / **vnelogging** / **vnemath**. It provides:
+---
 
-- **Mesh** – Load 3D meshes (Assimp), with vertex attributes, materials, submeshes, optional normalization and barycentrics.
-- **Image** – Load/save images (stb_image), resize, flip, raw pixel access.
-- **Volume** – Load 3D volumes (NRRD, MHD), with spacing, origin, direction matrix. NRRD loading uses Teem nrrdio (required; supports compressed and advanced formats).
+## About
 
-Namespaces: `vne::Mesh`, `vne::Image`. Includes live under `vertexnova/io/`.
+**vneio** is a C++20 asset I/O library extracted from VertexNova core. It does **not** provide rendering, windowing, or GPU state — your application loads files and receives plain C++ structs (`Mesh`, `Image`, `Volume`, `DicomSeries`) ready for upload or further processing.
 
-## Requirements
+It is independent of **vnescene**, **vnemath**, and **vneevents**. **vnelogging** and **vnecommon** are required; they follow the same `deps/internal` layout as other VertexNova repos.
 
-- C++20
-- CMake 3.16+
-- **Mesh:** [Assimp](https://github.com/assimp/assimp) (optional; add under `3rd_party/assimp` or use `find_package(assimp)`)
-- **Image:** [stb](https://github.com/nothings/stb) (fetched automatically if `3rd_party/stb_image` is not present)
-- **Volume (NRRD):** [Teem nrrdio](https://teem.sourceforge.net/nrrd/lib.html) (required for image component; add under `deps/external/nrrdio/` or `3rd_party/nrrdio/` or use `find_package(nrrdio)`).
-- **Logging (optional):** [vnelogging](https://github.com/vertexnova/vnelogging) and [vnecommon](https://github.com/vertexnova/vnecommon) under `deps/internal/` for mesh load logging
+## Features
 
-## Build
+- **Mesh** — `AssimpLoader` wraps the [Assimp](https://github.com/assimp/assimp) import library. The **default vendored Assimp** build disables all importers by default and enables **OBJ, STL, and PLY** only (see root `CMakeLists.txt` Assimp flags). FBX, glTF 2.0, Collada, and other formats require enabling additional Assimp importers or linking another Assimp build. `AssimpLoaderOptions` (`assimp_loader.h`) controls triangulation, normals/tangents, UV flip, winding, barycentrics, and normalization. OBJ export included.
+- **Image** — `StbImageLoader` and the `Image` class wrap [stb_image](https://github.com/nothings/stb); supports PNG, JPG, BMP, TGA, HDR. `Image` provides resize, flip, and raw pixel access for GPU upload.
+- **Volume** — `NrrdLoader` and `MhdLoader` implement `IVolumeLoader` using [Teem NrrdIO](https://teem.sourceforge.net/nrrd/lib.html); loads 3D voxel data with full spatial metadata (dims, spacing, origin, direction matrix, pixel type). NRRD export and MHD export included.
+- **DICOM** — `vneio` ships the `IDicomLoader` interface and `DicomSeries` type (Volume + metadata map). No GDCM/DCMTK or other DICOM decoder is built in-tree. Use `AssetIO::registerDicomLoader()` to register an externally provided backend if your project supplies one.
+- **Unified registry** — `AssetIO` registers any combination of loaders and routes `LoadRequest` by asset type and file extension.
+- **Stable error model** — Every call returns `LoadResult<T>` with `Status` (stable `ErrorCode` enum, message, path, subsystem). No exceptions.
+- **Cross-platform** — Linux, macOS, Windows; mobile and Web follow vnescene / vnemath toolchains where those targets are enabled.
 
-Clone with submodules (for vnecmake, deps/internal, deps/external/assimp, deps/external/googletest):
+System, class, component, and runtime pipeline diagrams live in [Architecture & usage](docs/vertexnova/io/vneio.md) (sources under [`docs/vertexnova/io/diagrams/`](docs/vertexnova/io/diagrams/)).
+
+## Installation
+
+### Option 1: Git Submodule (Recommended)
+
+```bash
+git submodule add https://github.com/vertexnova/vneio.git deps/vneio
+# Ensure Assimp, stb_image, and NrrdIO are available (see deps/external/ layout).
+```
+
+In your `CMakeLists.txt`:
+
+```cmake
+add_subdirectory(deps/vneio)
+target_link_libraries(your_target PRIVATE vne::io)
+# Or selectively: vne::io::mesh, vne::io::image
+```
+
+### Option 2: FetchContent
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+    vneio
+    GIT_REPOSITORY https://github.com/vertexnova/vneio.git
+    GIT_TAG main
+)
+set(VNEIO_BUILD_EXAMPLES OFF)
+FetchContent_MakeAvailable(vneio)
+target_link_libraries(your_target PRIVATE vne::io)
+```
+
+### Option 3: System Install
 
 ```bash
 git clone --recursive https://github.com/vertexnova/vneio.git
 cd vneio
-# Or, if already cloned: git submodule update --init --recursive
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build build
+cmake --install build
 ```
 
-**Test data (for `VNEIO_BUILD_TESTS=ON`):** Minimal assets live in `testdata/` (e.g. `meshes/minimal.stl`, `textures/sample.png`). No LFS or extra submodules required. If you had the old `testdata/vneresources` submodule, run `git submodule deinit testdata/vneresources` and remove the folder if desired.
-
-Then build:
+## Building
 
 ```bash
-mkdir build && cd build
-cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON
-cmake --build .
-
-# With tests (requires deps/external/googletest; testdata/ is in repo):
-# cmake .. -DVNEIO_BUILD_MESH=ON -DVNEIO_BUILD_IMAGE=ON -DVNEIO_BUILD_TESTS=ON
-# cmake --build . && ctest --output-on-failure
+git clone --recursive https://github.com/vertexnova/vneio.git
+cd vneio
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 ```
 
-- **VNEIO_BUILD_MESH** – build mesh component (default ON; needs Assimp).
-- **VNEIO_BUILD_IMAGE** – build image component (default ON; stb fetched if needed).
-- **VNEIO_BUILD_TESTS** – build tests (default OFF). Enable with `-DVNEIO_BUILD_TESTS=ON`.
-- **VNEIO_BUILD_EXAMPLES** – build examples (default OFF). Enable with `-DVNEIO_BUILD_EXAMPLES=ON`.
-- **ENABLE_COVERAGE** – enable code coverage (default OFF). Use with Debug + GCC/Clang and lcov for reports.
+For local development (examples + tests enabled):
 
-To use a local Assimp or stb_image, place them under `3rd_party/assimp` and `3rd_party/stb_image` with their own `CMakeLists.txt` so that `add_subdirectory(3rd_party/...)` works.
-
-## Usage
-
-Link against `vne::io` (or `vne::io::mesh` / `vne::io::image`). Include:
-
-```cpp
-#include <vertexnova/io/vneio.h>
-// or
-#include <vertexnova/io/mesh/mesh.h>
-#include <vertexnova/io/mesh/assimp_loader.h>
-#include <vertexnova/io/image/image.h>
+```bash
+cmake -B build -DVNEIO_DEV=ON
+cmake --build build
 ```
+
+Helper scripts (Linux, macOS, Windows): see [scripts/README.md](scripts/README.md).
+
+### CMake Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `VNEIO_BUILD_MESH` | `ON` | Build mesh component (requires Assimp) |
+| `VNEIO_BUILD_IMAGE` | `ON` | Build image + volume component (stb_image + NrrdIO) |
+| `VNEIO_BUILD_TESTS` | `OFF` | Build unit tests (GoogleTest) |
+| `VNEIO_BUILD_EXAMPLES` | `OFF` | Build headless example programs |
+| `VNEIO_DEV` | `ON` (top-level) | Dev preset: tests and examples ON |
+| `VNEIO_CI` | `OFF` | CI preset: tests ON, examples OFF |
+| `VNEIO_LIB_TYPE` | `static` | Library type: `static` or `shared` |
+| `VNEIO_USE_STB_IMAGE_RESIZE` | `OFF` | stb_image_resize for quality resize |
+| `ENABLE_DOXYGEN` | `OFF` | Build API documentation (Doxygen) |
+| `ENABLE_COVERAGE` | `OFF` | Enable code coverage reporting |
+| `ENABLE_ASAN` | `OFF` | AddressSanitizer + UBSan (GCC/Clang, Linux/macOS) |
+
+## Library type
+
+Default is **`static`** (`VNEIO_LIB_TYPE=static`). Use **`shared`** for a separate dylib/DLL. In static mode, `vnelogging` is embedded in the archive when the submodule is present.
+
+## Quick Start
 
 ### Mesh
 
 ```cpp
-#include <vertexnova/io/mesh/assimp_loader.h>
+#include <vertexnova/io/vneio.h>
 
-vne::Mesh::AssimpLoader loader;
-vne::Mesh::Mesh mesh;
-if (loader.loadFile("model.obj", mesh)) {
-    // mesh.vertices, mesh.indices, mesh.parts, mesh.materials
+vne::io::AssetIO io;
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
+
+auto result = io.loadMesh(vne::io::LoadRequest{vne::io::AssetType::eMesh, "model.obj"});
+if (result.ok()) {
+    // result.value: mesh.vertices, mesh.indices, mesh.parts, mesh.materials
 }
+```
+
+With loader options:
+
+```cpp
+vne::mesh::AssimpLoaderOptions opts;
+opts.generate_barycentrics = true;
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>(opts));
 ```
 
 ### Image
@@ -89,35 +145,103 @@ if (loader.loadFile("model.obj", mesh)) {
 ```cpp
 #include <vertexnova/io/image/image.h>
 
-vne::Image::Image img("texture.png");
+vne::image::Image img("texture.png");
 if (!img.isEmpty()) {
     int w = img.getWidth(), h = img.getHeight();
-    const uint8_t* data = img.getData();
+    const uint8_t* data = img.getData(); // ready for GPU upload
 }
 ```
 
-## Layout (like vneevents/vnelogging)
+### Volume
 
-- `include/vertexnova/io/` – public headers (mesh/, image/, vneio.h)
-- `src/vertexnova/io/` – implementation (mesh/, image/)
-- `cmake/vnecmake/` – shared CMake modules (submodule)
-- `deps/internal/vnecommon/`, `deps/internal/vnelogging/` – submodules used for logging (when present)
-- `deps/external/assimp`, `deps/external/stb_image` – mesh/image dependencies (assimp is submodule, stb_image is a copy)
-- `tests/`, `examples/` – optional
+```cpp
+#include <vertexnova/io/image/nrrd_loader.h>
+
+vne::image::NrrdLoader loader;
+auto result = loader.loadVolume(vne::io::LoadRequest{vne::io::AssetType::eVolume, "scan.nrrd"});
+if (result.ok()) {
+    const auto& vol = result.value;
+    float voxel = vol.readVoxelAt<float>(x, y, z);
+}
+```
+
+### Unified registry
+
+```cpp
+#include <vertexnova/io/vneio.h>
+
+vne::io::AssetIO io;
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
+io.registerImageLoader(std::make_unique<vne::image::StbImageLoader>());
+io.registerVolumeLoader(std::make_unique<vne::image::NrrdLoader>());
+
+auto mesh  = io.loadMesh(vne::io::LoadRequest{vne::io::AssetType::eMesh,  "robot.glb"});
+auto image = io.loadImage(vne::io::LoadRequest{vne::io::AssetType::eImage, "albedo.png"});
+```
+
+See [examples/01_library_info](examples/01_library_info) for format and capability listing, and [examples/README.md](examples/README.md) for the full numbered index.
+
+## Examples (headless)
+
+All examples are **headless** (no window or GPU required). Each folder has its own `main.cpp` and a shared header.
+
+| Example | Description |
+|---------|-------------|
+| [01_library_info](examples/01_library_info) | Enumerate supported formats, pixel types, and error codes |
+| [02_image_loading](examples/02_image_loading) | Load, inspect, resize, and save 2D images |
+| [03_volume_loading](examples/03_volume_loading) | Load NRRD/MHD volumes and inspect metadata |
+| [04_volume_export](examples/04_volume_export) | Save volumes to NRRD and MHD formats |
+| [05_mesh_loading](examples/05_mesh_loading) | Load meshes, inspect geometry, export OBJ, round-trip |
+| [06_asset_registry](examples/06_asset_registry) | Multi-loader `AssetIO` registry pattern |
+| [07_performance](examples/07_performance) | Benchmarking load times across formats |
+
+Build examples with:
+
+```bash
+cmake -B build -DVNEIO_BUILD_EXAMPLES=ON
+cmake --build build
+```
+
+## Documentation
+
+- [Architecture & usage](docs/vertexnova/io/vneio.md) — Module design, diagrams, integration, and build configuration.
+- [API documentation](docs/README.md) — Doxygen template and how to generate HTML; optional `doc_doxygen` target when `enable_doxygen()` is wired (see `docs/README.md`).
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines.
+- [CODING_GUIDELINES.md](CODING_GUIDELINES.md) — Project conventions (aligned with other VertexNova libraries).
 
 ## Prebuilt binaries (GitHub Releases)
 
-Each tagged release publishes install trees as `vneio-v{VERSION}-{platform}.tar.gz` (same semver for every platform). Stable **`platform`** slugs are:
+Each tagged release publishes install trees as `vneio-v{VERSION}-{platform}.tar.gz`.
 
-| `platform` | Contents (high level) |
-|------------|------------------------|
+| `platform` | Contents |
+|------------|----------|
 | `linux-gcc` | Shared library, headers, LICENSE, CHANGELOG |
 | `macos` | Shared library, headers, LICENSE, CHANGELOG |
-| `windows` | Shared library / DLL as applicable, headers, LICENSE, CHANGELOG |
-| `web-emscripten` | Emscripten build (shared); mesh disabled in CI/release to match CI |
-| `ios-static` | Static `.a`, headers, LICENSE, CHANGELOG (device arm64; mirrors CI) |
+| `windows` | Shared library / DLL, headers, LICENSE, CHANGELOG |
+| `web-emscripten` | Emscripten build (mesh disabled in CI/release) |
+| `ios-static` | Static `.a`, headers, LICENSE, CHANGELOG (arm64) |
 
-Example URL pattern: `https://github.com/<org>/<repo>/releases/download/v1.2.3/vneio-v1.2.3-linux-gcc.tar.gz`. A single app can map runtime OS or target to one slug and download the matching archive for that release version.
+## Platform Support
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| Linux | Supported | GCC 10+, Clang 10+ |
+| macOS | Supported | Xcode 12+, Apple Clang |
+| Windows | Supported | MSVC 2019+, MinGW |
+| iOS / visionOS | Supported | Via vnescene / vnemath toolchain |
+| Android / Web | Experimental | Via vnescene / vnemath |
+
+## Requirements
+
+- **C++20**
+- **CMake** 3.16+
+- **Compiler**: GCC 10+, Clang 10+, MSVC 2019+
+- **[Assimp](https://github.com/assimp/assimp)** (mesh component; submodule or system install)
+- **[NrrdIO](https://teem.sourceforge.net/nrrd/lib.html)** (image/volume component; submodule or system install)
+- **[stb_image](https://github.com/nothings/stb)** (image component; auto-fetched if absent)
+- **Google Test** (tests; vendored via `deps/external/googletest`)
+- **[vnecommon](https://github.com/vertexnova/vnecommon)** (common utilities and shared infrastructure)
+- **[vnelogging](https://github.com/vertexnova/vnelogging)** (logging utilities)
 
 ## Contributing
 
@@ -125,4 +249,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## License
 
-Licensed under the Apache License, Version 2.0 — see [LICENSE](LICENSE).
+Apache License 2.0 — see [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  Part of the <a href="https://github.com/vertexnova">VertexNova</a> project
+</p>

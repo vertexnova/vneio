@@ -1,6 +1,11 @@
 /* ---------------------------------------------------------------------
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   January 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
  */
 
@@ -73,6 +78,32 @@ TEST(AssetIOTest, LoadMeshViaRegistry) {
     LoadResult<vne::mesh::Mesh> result = io.loadMesh(request);
     ASSERT_TRUE(result.ok()) << result.status.message;
     EXPECT_FALSE(result.value.isEmpty());
+}
+
+TEST(AssetIOTest, LoadMeshViaRegistryWithOptions) {
+    vne::mesh::AssimpLoaderOptions opts;
+    opts.triangulate = true;
+    opts.calc_normals_if_missing = true;
+    opts.pre_transform_vertices = false;
+    opts.flip_uvs = false;
+    opts.gen_tangents = false;
+
+    AssetIO io;
+    io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>(opts));
+
+    std::string path = getTestdataPath("meshes/minimal.stl");
+    if (!std::filesystem::exists(path)) {
+        GTEST_SKIP() << "Test mesh not found: " << path;
+    }
+
+    LoadRequest request;
+    request.asset_type = AssetType::eMesh;
+    request.uri = path;
+
+    LoadResult<vne::mesh::Mesh> result = io.loadMesh(request);
+    ASSERT_TRUE(result.ok()) << result.status.message;
+    EXPECT_FALSE(result.value.isEmpty());
+    EXPECT_GT(result.value.getVertexCount(), 0u);
 }
 
 TEST(AssetIOTest, NoLoaderReturnsError) {

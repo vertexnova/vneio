@@ -51,8 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Refine artifact presence checks in release workflow ([1a1aa02](https://github.com/vertexnova/vneio/commit/1a1aa028cd021a15aab00d45f4152da2a194ec99))
 * Update clang formatter usage in configuration and documentation ([7e4819e](https://github.com/vertexnova/vneio/commit/7e4819e9c55a9120284294f4af4fbc9a23a4920b))
 
-## [Unreleased]
-
 ## [1.0.0](https://github.com/vertexnova/vneio/releases/tag/v1.0.0) (2026-04-03)
 
 ### Added

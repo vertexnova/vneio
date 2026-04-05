@@ -2,13 +2,20 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Example 06: Unified AssetIO registry — register all loaders, load
- * image / volume / mesh through a single interface, demonstrate the
- * LoadResult<T> pattern, and verify error codes on negative paths.
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
  *
- * This is the pattern a multibackend renderer host would use to load
- * all scene assets before uploading to GPU.
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file 06_example.cpp
+ * @brief Example 06: Unified AssetIO registry — register all loaders, load image / volume / mesh through a single
+ * interface.
+ *
+ * Demonstrates the LoadResult<T> pattern and verifies error codes on negative paths.
+ * Pattern a multibackend renderer host would use to load all scene assets before uploading to GPU.
  */
 
 #include "06_example.h"
