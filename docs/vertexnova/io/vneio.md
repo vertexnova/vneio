@@ -308,12 +308,9 @@ Assimp, stb_image, and NrrdIO can each be provided in three ways (checked in ord
 
 ## API documentation (Doxygen)
 
-```bash
-cmake -DENABLE_DOXYGEN=ON -B build
-cmake --build build --target vneio_doc_doxygen
-```
+Template: `docs/doxyfile.in`. See [**docs/README.md**](../README.md) for an index of this folder, manual generation steps, and how the optional **`doc_doxygen`** target fits in once `enable_doxygen()` from `cmake/vnecmake/modules/Doxygen.cmake` is hooked into the top-level build.
 
-HTML output is written under `build/docs/html/`.
+HTML output (when generated) lands under `${CMAKE_BINARY_DIR}/docs/html/` by default.
 
 ## Testing
 

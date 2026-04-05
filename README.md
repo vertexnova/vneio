@@ -207,7 +207,7 @@ cmake --build build
 ## Documentation
 
 - [Architecture & usage](docs/vertexnova/io/vneio.md) — Module design, diagrams, integration, and build configuration.
-- [API documentation](docs/README.md) — Doxygen (`ENABLE_DOXYGEN`, target `vneio_doc_doxygen`).
+- [API documentation](docs/README.md) — Doxygen template and how to generate HTML; optional `doc_doxygen` target when `enable_doxygen()` is wired (see `docs/README.md`).
 - [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines.
 - [CODING_GUIDELINES.md](CODING_GUIDELINES.md) — Project conventions (aligned with other VertexNova libraries).
 
