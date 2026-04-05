@@ -66,13 +66,25 @@ class VNEIO_API AssimpLoader : public IMeshLoader {
     [[nodiscard]] vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) override;
 
     /**
+     * @fn bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh)
      * @brief Load a mesh from file directly (bypasses AssetIO).
+     *
+     * Uses the loader options from construction (`AssimpLoaderOptions` passed to
+     * `AssimpLoader(AssimpLoaderOptions)`, or default-constructed options for `AssimpLoader()`).
      * @param path Path to the mesh file.
-     * @param out_mesh Mesh to fill.
-     * @param opts Loader options; defaults to options set at construction.
-     * @return true on success, false otherwise (see getLastError()).
+     * @param out_mesh Mesh to fill on success.
+     * @return `true` on success, `false` on failure; see getLastError() for a diagnostic message.
      */
     [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh);
+
+    /**
+     * @fn bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts)
+     * @brief Load a mesh from file directly (bypasses AssetIO) with per-call options.
+     * @param path Path to the mesh file.
+     * @param out_mesh Mesh to fill on success.
+     * @param opts Assimp loader options for this call only (does not change construction-time defaults).
+     * @return `true` on success, `false` on failure; see getLastError() for a diagnostic message.
+     */
     [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts);
 
     [[nodiscard]] bool isExtensionSupported(const std::string& path) const override;
