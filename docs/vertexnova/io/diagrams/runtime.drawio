@@ -11,7 +11,7 @@
           <mxGeometry x="200" y="20" width="720" height="36" as="geometry"/>
         </mxCell>
 
-        <mxCell id="rp_req" value="LoadRequest&#10;(asset_type, uri, hint_format, options)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
+        <mxCell id="rp_req" value="LoadRequest&#10;(asset_type, uri, hint_format)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#48484A;strokeWidth=2;fontStyle=1;fontSize=12;fontColor=#EBEBF0;" parent="1" vertex="1">
           <mxGeometry x="385" y="80" width="360" height="56" as="geometry"/>
         </mxCell>
 

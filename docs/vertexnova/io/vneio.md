@@ -51,7 +51,7 @@ Export `diagrams/class.drawio` → `diagrams/class.png`.
 
 | Stage | Role |
 |-------|------|
-| LoadRequest | Caller constructs a request: `asset_type`, `uri`, optional `hint_format`, loader-specific `options`. |
+| LoadRequest | Caller sets `asset_type`, `uri`, optional `hint_format`, and optional flags (`generate_mips`, `force_srgb`, `prefer_16bit`); mesh options are set on the loader (e.g. `AssimpLoader`), not on `LoadRequest`. |
 | AssetIO | Looks up the registered loader(s) matching the extension or hint; dispatches to the first match. |
 | Concrete Loader | Opens the file via the appropriate external library; validates format. |
 | External Library | Decodes raw bytes (Assimp, stb_image, NrrdIO, or DICOM backend). |
