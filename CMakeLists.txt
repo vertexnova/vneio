@@ -42,6 +42,7 @@ set(VNEIO_TESTDATA_DIR "${VNEIO_ROOT}/testdata")
 
 # vneio_config.h (note: vnelogging may use config.h in its own build dir)
 set(VNEIO_TEST_OUTPUT_DIR "${CMAKE_BINARY_DIR}/test_output")
+file(MAKE_DIRECTORY "${VNEIO_TEST_OUTPUT_DIR}")
 configure_file(${VNEIO_ROOT}/config/config.h.in ${CMAKE_BINARY_DIR}/vneio_config.h @ONLY)
 
 if(EXISTS "${VNEIO_ROOT}/cmake/vnecmake/modules")

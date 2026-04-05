@@ -20,8 +20,16 @@
 
 #include "logging_guard.h"
 
+#include <vneio_config.h>
+
+#include <algorithm>
+#include <chrono>
+#include <filesystem>
+#include <iomanip>
+#include <numeric>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace vne::io::examples {
 
@@ -29,6 +37,10 @@ namespace vne::io::examples {
 
 inline void printSection(const char* title) {
     VNE_LOG_INFO << "=== " << title << " ===";
+}
+
+inline void printSection(const std::string& title) {
+    printSection(title.c_str());
 }
 
 // ── Status ────────────────────────────────────────────────────────────────────
@@ -148,16 +160,15 @@ inline void printMeshInfo(const vne::mesh::Mesh& m, const char* label = "Mesh") 
                  << "  uv0: " << (m.has_uv0 ? "yes" : "no");
 }
 
-// ── Temp path ─────────────────────────────────────────────────────────────────
+// ── Writable example artifacts (same dir as TestVneIo) ───────────────────────
 
+// Synthetic outputs under CMAKE_BINARY_DIR/test_output (not OS temp).
 inline std::string tmpPath(const std::string& filename) {
-#if defined(_WIN32)
-    char buf[512] = {};
-    GetTempPathA(static_cast<DWORD>(sizeof(buf)), buf);
-    return std::string(buf) + filename;
-#else
-    return std::string("/tmp/") + filename;
-#endif
+    namespace fs = std::filesystem;
+    fs::path base(VNEIO_TEST_OUTPUT_DIR);
+    std::error_code ec;
+    fs::create_directories(base, ec);
+    return (base / filename).string();
 }
 
 // ── Simple assertion ──────────────────────────────────────────────────────────
@@ -169,6 +180,50 @@ inline bool check(bool condition, const char* description) {
         VNE_LOG_ERROR << "[FAIL] " << description;
     }
     return condition;
+}
+
+// ── Benchmark timer ───────────────────────────────────────────────────────────
+
+struct BenchTimer {
+    using clock = std::chrono::high_resolution_clock;
+    clock::time_point t0;
+    void start() { t0 = clock::now(); }
+    double elapsedMs() const {
+        return std::chrono::duration<double, std::milli>(clock::now() - t0).count();
+    }
+};
+
+/// Run @p fn n times, return elapsed milliseconds for each iteration.
+template <typename Fn>
+inline std::vector<double> timeN(int n, Fn&& fn) {
+    std::vector<double> times;
+    times.reserve(static_cast<std::size_t>(n));
+    BenchTimer t;
+    for (int i = 0; i < n; ++i) {
+        t.start();
+        fn();
+        times.push_back(t.elapsedMs());
+    }
+    return times;
+}
+
+/// Print avg time and optional throughput (bytes → MB/s).  Also logs min/max.
+inline void reportBench(const char* label, const std::vector<double>& times, std::size_t bytes = 0) {
+    double sum = std::accumulate(times.begin(), times.end(), 0.0);
+    double avg = sum / static_cast<double>(times.size());
+    double mn  = *std::min_element(times.begin(), times.end());
+    double mx  = *std::max_element(times.begin(), times.end());
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(3);
+    oss << "  [BENCH] " << label << "  avg=" << avg << " ms";
+    if (bytes > 0 && avg > 0.0) {
+        double mb = static_cast<double>(bytes) / (1024.0 * 1024.0);
+        double throughput = mb / (avg / 1000.0);
+        oss << "  (" << mb << " MB @ " << std::setprecision(1) << throughput << " MB/s)";
+    }
+    oss << std::setprecision(3) << "  [min=" << mn << " max=" << mx << " n=" << times.size() << "]";
+    VNE_LOG_INFO << oss.str();
 }
 
 }  // namespace vne::io::examples
