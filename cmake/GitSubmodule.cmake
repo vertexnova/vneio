@@ -9,9 +9,10 @@
 
 include_guard(GLOBAL)
 
-option(GIT_SUBMODULE "Run git submodule update --init --recursive and verify VneIo submodule trees" ON)
+option(VNEIO_GIT_SUBMODULE
+    "VneIo: run git submodule update --init --recursive and verify expected submodule paths" ON)
 
-if(NOT GIT_SUBMODULE)
+if(NOT VNEIO_GIT_SUBMODULE)
     return()
 endif()
 
@@ -21,7 +22,13 @@ if(NOT GIT_FOUND)
     return()
 endif()
 
-get_filename_component(_VNEIO_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+# Never use CMAKE_SOURCE_DIR here: when vneio is add_subdirectory'd, it is the parent
+# project root. Prefer VNEIO_ROOT (set in vneio/CMakeLists.txt before this include).
+if(DEFINED VNEIO_ROOT)
+    set(_VNEIO_ROOT_DIR "${VNEIO_ROOT}")
+else()
+    get_filename_component(_VNEIO_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+endif()
 
 if(NOT EXISTS "${_VNEIO_ROOT_DIR}/.git")
     message(STATUS "GitSubmodule: not a git checkout — skipping submodule update")
@@ -37,7 +44,7 @@ execute_process(
 if(NOT _VNEIO_SUBMODULE_RESULT EQUAL "0")
     message(FATAL_ERROR
         "git submodule update --init --recursive failed (${_VNEIO_SUBMODULE_RESULT}). "
-        "Fix your clone or pass -DGIT_SUBMODULE=OFF if dependencies are provided elsewhere (e.g. 3rd_party).")
+        "Fix your clone or pass -DVNEIO_GIT_SUBMODULE=OFF if dependencies are provided elsewhere (e.g. 3rd_party).")
 endif()
 
 # Registered in .gitmodules — expected after a successful update
@@ -53,7 +60,7 @@ foreach(_VNEIO_SM ${_VNEIO_SUBMODULE_MARKERS})
         message(FATAL_ERROR
             "VneIo submodule tree incomplete — missing:\n  ${_VNEIO_SM}\n"
             "Run from the repo root: git submodule update --init --recursive\n"
-            "Or configure with -DGIT_SUBMODULE=OFF if you use 3rd_party/ or other layouts.")
+            "Or configure with -DVNEIO_GIT_SUBMODULE=OFF if you use 3rd_party/ or other layouts.")
     endif()
 endforeach()
 
@@ -66,5 +73,5 @@ if(NOT EXISTS "${_VNEIO_ROOT_DIR}/deps/external/nrrdio/CMakeLists.txt"
         "or\n"
         "  deps/external/nrrdio/nrrdio/CMakeLists.txt\n"
         "Run: git submodule update --init --recursive\n"
-        "Or use -DGIT_SUBMODULE=OFF with nrrdio supplied under 3rd_party/ or install tree.")
+        "Or use -DVNEIO_GIT_SUBMODULE=OFF with nrrdio supplied under 3rd_party/ or install tree.")
 endif()
