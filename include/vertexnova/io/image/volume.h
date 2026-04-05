@@ -163,9 +163,7 @@ struct VNEIO_API Volume {
     /**
      * @brief Read-only view of the raw voxel bytes (no alignment claim beyond byte-sized elements).
      */
-    [[nodiscard]] std::span<const std::uint8_t> byteSpan() const noexcept {
-        return {data.data(), data.size()};
-    }
+    [[nodiscard]] std::span<const std::uint8_t> byteSpan() const noexcept { return {data.data(), data.size()}; }
 
     /**
      * @brief Copy one stored value of type @a T from the raw buffer at logical index @a linear_index.
