@@ -23,7 +23,7 @@
 
 **vneio** is a C++20 asset I/O library extracted from VertexNova core. It does **not** provide rendering, windowing, or GPU state — your application loads files and receives plain C++ structs (`Mesh`, `Image`, `Volume`, `DicomSeries`) ready for upload or further processing.
 
-It is independent of **vnescene**, **vnemath**, and **vneevents**. **vnelogging** and **vnecommon** are optional; they follow the same `deps/internal` layout as other VertexNova repos.
+It is independent of **vnescene**, **vnemath**, and **vneevents**. **vnelogging** and **vnecommon** are required; they follow the same `deps/internal` layout as other VertexNova repos.
 
 ## Features
 
@@ -233,8 +233,8 @@ Each tagged release publishes install trees as `vneio-v{VERSION}-{platform}.tar.
 - **[NrrdIO](https://teem.sourceforge.net/nrrd/lib.html)** (image/volume component; submodule or system install)
 - **[stb_image](https://github.com/nothings/stb)** (image component; auto-fetched if absent)
 - **Google Test** (tests; vendored via `deps/external/googletest`)
-- **[vnecommon](https://github.com/vertexnova/vnecommon)** (optional; logging utilities)
-- **[vnelogging](https://github.com/vertexnova/vnelogging)** (optional; diagnostics)
+- **[vnecommon](https://github.com/vertexnova/vnecommon)** (utilities)
+- **[vnelogging](https://github.com/vertexnova/vnelogging)** (logging)
 
 ## Contributing
 
