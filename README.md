@@ -30,7 +30,7 @@ It is independent of **vnescene**, **vnemath**, and **vneevents**. **vnelogging*
 - **Mesh** — `AssimpLoader` wraps the [Assimp](https://github.com/assimp/assimp) import library; supports OBJ, STL, PLY, FBX, glTF 2.0, Collada, and more. `AssimpLoaderOptions` controls triangulation, normal/tangent generation, UV flip, barycentrics, and normalization. OBJ export included.
 - **Image** — `StbImageLoader` and the `Image` class wrap [stb_image](https://github.com/nothings/stb); supports PNG, JPG, BMP, TGA, HDR. `Image` provides resize, flip, and raw pixel access for GPU upload.
 - **Volume** — `NrrdLoader` and `MhdLoader` implement `IVolumeLoader` using [Teem NrrdIO](https://teem.sourceforge.net/nrrd/lib.html); loads 3D voxel data with full spatial metadata (dims, spacing, origin, direction matrix, pixel type). NRRD export and MHD export included.
-- **DICOM** — `DicomLoaderRegistry` with optional GDCM or DCMTK backends (`-DVNEIO_WITH_GDCM=ON` / `-DVNEIO_WITH_DCMTK=ON`). Returns `DicomSeries` (Volume + metadata map).
+- **DICOM** — `IDicomLoader` interface with optional GDCM or DCMTK backends (`-DVNEIO_WITH_GDCM=ON` / `-DVNEIO_WITH_DCMTK=ON`). Returns `DicomSeries` (Volume + metadata map). Register the loader with `AssetIO::registerDicomLoader()`.
 - **Unified registry** — `AssetIO` registers any combination of loaders and routes `LoadRequest` by asset type and file extension.
 - **Stable error model** — Every call returns `LoadResult<T>` with `Status` (stable `ErrorCode` enum, message, path, subsystem). No exceptions.
 - **Cross-platform** — Linux, macOS, Windows; mobile and Web follow vnescene / vnemath toolchains where those targets are enabled.
@@ -123,14 +123,23 @@ Default is **`static`** (`VNEIO_LIB_TYPE=static`). Use **`shared`** for a separa
 ### Mesh
 
 ```cpp
-#include <vertexnova/io/mesh/assimp_loader.h>
+#include <vertexnova/io/vneio.h>
 
-vne::mesh::AssimpLoader loader;
-vne::mesh::Mesh mesh;
-if (loader.loadFile("model.obj", mesh)) {
-    // mesh.vertices, mesh.indices, mesh.parts, mesh.materials
-    // mesh.has_normals, mesh.has_uv0, mesh.aabb_min, mesh.aabb_max
+vne::io::AssetIO io;
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
+
+auto result = io.loadMesh(vne::io::LoadRequest{vne::io::AssetType::eMesh, "model.obj"});
+if (result.ok()) {
+    // result.value: mesh.vertices, mesh.indices, mesh.parts, mesh.materials
 }
+```
+
+With loader options:
+
+```cpp
+vne::mesh::AssimpLoaderOptions opts;
+opts.generate_barycentrics = true;
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>(opts));
 ```
 
 ### Image

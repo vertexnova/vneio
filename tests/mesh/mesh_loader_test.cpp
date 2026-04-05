@@ -9,10 +9,10 @@
  * ----------------------------------------------------------------------
  */
 
+#include "vertexnova/io/asset_io.h"
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
-#include "vertexnova/io/mesh/mesh_loader_registry.h"
 #include "vertexnova/io/utils/path_utils.h"
 
 #include <filesystem>
@@ -226,30 +226,51 @@ TEST_F(MeshLoaderTest, MultipleLoads) {
     EXPECT_EQ(mesh1.getSubmeshCount(), mesh2.getSubmeshCount());
 }
 
-TEST_F(MeshLoaderTest, LoadViaIMeshLoader) {
-    AssimpLoader loader;
-    IMeshLoader* iface = &loader;
-    Mesh mesh;
+TEST_F(MeshLoaderTest, LoadViaAssetIO) {
+    vne::io::AssetIO io;
+    io.registerMeshLoader(std::make_unique<AssimpLoader>());
+
+    vne::io::LoadRequest request;
+    request.asset_type = vne::io::AssetType::eMesh;
+    request.uri = kMeshPath;
+
+    auto result = io.loadMesh(request);
+    ASSERT_TRUE(result.ok()) << result.status.message;
+    EXPECT_FALSE(result.value.isEmpty());
+    EXPECT_GT(result.value.getVertexCount(), 0u);
+}
+
+TEST_F(MeshLoaderTest, LoadViaAssetIOWithOptions) {
     AssimpLoaderOptions opts;
     opts.triangulate = true;
     opts.calc_normals_if_missing = true;
     opts.pre_transform_vertices = false;
     opts.flip_uvs = false;
     opts.gen_tangents = false;
-    EXPECT_TRUE(iface->loadFile(kMeshPath, mesh));
-    EXPECT_FALSE(mesh.isEmpty());
-    EXPECT_GT(mesh.getVertexCount(), 0u);
+
+    vne::io::AssetIO io;
+    io.registerMeshLoader(std::make_unique<AssimpLoader>(opts));
+
+    vne::io::LoadRequest request;
+    request.asset_type = vne::io::AssetType::eMesh;
+    request.uri = kMeshPath;
+
+    auto result = io.loadMesh(request);
+    ASSERT_TRUE(result.ok()) << result.status.message;
+    EXPECT_FALSE(result.value.isEmpty());
+    EXPECT_GT(result.value.getVertexCount(), 0u);
+    EXPECT_GT(result.value.getIndexCount(), 0u);
 }
 
-TEST_F(MeshLoaderTest, RegistryReturnsLoaderForSupportedPath) {
-    auto loader = MeshLoaderRegistry::getLoaderFor(kMeshPath);
-    ASSERT_NE(loader, nullptr);
-    Mesh mesh;
-    EXPECT_TRUE(loader->loadFile(kMeshPath, mesh));
-    EXPECT_FALSE(mesh.isEmpty());
-}
+TEST_F(MeshLoaderTest, AssetIOUnsupportedFormatReturnsError) {
+    vne::io::AssetIO io;
+    io.registerMeshLoader(std::make_unique<AssimpLoader>());
 
-TEST_F(MeshLoaderTest, RegistryReturnsNullForUnsupportedPath) {
-    auto loader = MeshLoaderRegistry::getLoaderFor("file.xyz");
-    EXPECT_EQ(loader, nullptr);
+    vne::io::LoadRequest request;
+    request.asset_type = vne::io::AssetType::eMesh;
+    request.uri = "model.xyz_unknown";
+
+    auto result = io.loadMesh(request);
+    EXPECT_FALSE(result.ok());
+    EXPECT_EQ(result.status.code, vne::io::ErrorCode::eUnsupportedFormat);
 }

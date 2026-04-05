@@ -8,8 +8,8 @@ The **VertexNova I/O** library (`vneio`) provides modular, production-ready asse
 
 - **Component-modular** — Mesh, Image, Volume, and DICOM subsystems are independently buildable (`VNEIO_BUILD_MESH`, `VNEIO_BUILD_IMAGE`). Link only what you need via `vne::io::mesh`, `vne::io::image`, or the aggregate `vne::io`.
 - **Stable error model** — Every load returns a `LoadResult<T>` carrying a `Status` with a stable `ErrorCode` enum, message, file path, and subsystem string. No exceptions required.
-- **Registry pattern** — `AssetIO` holds lists of registered `IMeshLoader`, `IImageLoader`, `IVolumeLoader`, and `IDicomLoader` instances; it routes each `LoadRequest` to the first matching loader by extension or format hint.
-- **Direct loader pattern** — Loaders such as `AssimpLoader` and `StbImageLoader` are also usable standalone without `AssetIO`; `loadFile()` provides a legacy `bool` return for minimal friction.
+- **Single entry point** — `AssetIO` is the canonical API. Register loaders once, then call `loadMesh` / `loadImage` / `loadVolume` / `loadDicomSeries`. The registry routes each `LoadRequest` to the first registered loader that claims support for the extension.
+- **Options at construction** — Loader-specific options (e.g. `AssimpLoaderOptions`) are baked into the loader at construction, keeping `LoadRequest` format-agnostic.
 - **Pluggable backends** — DICOM support is opt-in at configure time (`-DVNEIO_WITH_GDCM=ON` / `-DVNEIO_WITH_DCMTK=ON`); no DICOM symbol is included in the default build.
 
 ![System context](diagrams/context.png)
@@ -39,14 +39,13 @@ If a PNG does not load, export the matching `.drawio` from [diagrams.net](https:
 |-------|-------|
 | Interfaces | `IAssetLoader` (base), `IMeshLoader`, `IImageLoader`, `IVolumeLoader`, `IDicomLoader`. |
 | Concrete loaders | `AssimpLoader`, `StbImageLoader`, `NrrdLoader`, `MhdLoader`. |
-| Registries | `MeshLoaderRegistry`, `DicomLoaderRegistry`. |
-| Unified registry | `AssetIO` — registers and dispatches all loader types. |
+| Registry | `AssetIO` — registers and dispatches all loader types. |
 | Data structures | `Mesh`, `Image`, `Volume`, `DicomSeries`. |
 | Error types | `Status`, `LoadResult<T>`, `ErrorCode`. |
 
 Export `diagrams/class.drawio` → `diagrams/class.png`.
 
-![Runtime pipeline](diagrams/runtime-pipeline.png)
+![Runtime pipeline](diagrams/runtime.png)
 
 **Figure 3 — Runtime pipeline (single asset load call)**
 
@@ -90,7 +89,7 @@ Export `diagrams/component.drawio` → `diagrams/component.png`.
 
 - **`ErrorCode`** — Stable enum values: `eOk`, `eFileNotFound`, `eUnsupportedFormat`, `eReadError`, `eInvalidData`, `eOutOfMemory`, and more. Use codes in switch statements; do not match on message strings.
 - **`Status`** — Bundles `code`, `message`, `path`, `subsystem`. Returned from every loader call via `LoadResult<T>`.
-- **`LoadResult<T>`** — Template wrapper: holds a `T value` and a `Status`. Call `.ok()` to check success; access `.value` and `.status` directly. Loaders that expose `loadFile(path, Mesh&)` return a plain `bool` for backward compatibility; `getLastError()` retrieves the matching `Status`.
+- **`LoadResult<T>`** — Template wrapper: holds a `T value` and a `Status`. Call `.ok()` to check success; access `.value` and `.status` directly.
 
 ```cpp
 auto result = assetIO.loadMesh(LoadRequest{AssetType::eMesh, "model.glb"});
@@ -106,7 +105,15 @@ const vne::mesh::Mesh& mesh = result.value;
 
 #### `AssimpLoader`
 
-Wraps the Assimp 3D import library. `loadFile(path, Mesh&)` is the legacy entry point; `loadMesh(LoadRequest)` returns `LoadResult<Mesh>`.
+Wraps the Assimp 3D import library. Register with `AssetIO` using `loadMesh(LoadRequest)` → `LoadResult<Mesh>`. Pass loader options at construction so `AssetIO` callers stay format-agnostic:
+
+```cpp
+AssimpLoaderOptions opts;
+opts.generate_barycentrics = true;
+io.registerMeshLoader(std::make_unique<AssimpLoader>(opts));
+```
+
+For direct use without `AssetIO`, `loadFile(path, Mesh&)` and `loadFile(path, Mesh&, opts)` are available on the concrete class.
 
 **`AssimpLoaderOptions`** controls post-processing:
 
@@ -121,10 +128,6 @@ Wraps the Assimp 3D import library. `loadFile(path, Mesh&)` is the legacy entry 
 | `generate_barycentrics` | false | Compute barycentric coordinates per vertex. |
 
 **Supported formats** (depends on Assimp build flags): OBJ, STL, PLY, FBX, glTF 2.0, Collada (DAE), and more.
-
-#### `MeshLoaderRegistry`
-
-Holds zero or more `IMeshLoader` instances. `loadMesh(LoadRequest)` iterates registered loaders and delegates to the first that claims support for the requested extension.
 
 #### `MeshExporter`
 
@@ -170,10 +173,6 @@ Exporters for NRRD (`VolumeExporterNrrd`) and MHD (`VolumeExporterMhd`) are incl
 
 Contains a reconstructed `Volume` plus DICOM metadata: `series_uid`, `study_uid`, `patient_id`, `modality`, and a `meta` string map for additional tags.
 
-#### `DicomLoaderRegistry`
-
-Same registry pattern as `MeshLoaderRegistry`. Concrete loaders backed by GDCM or DCMTK are linked when the respective CMake option is enabled. Applications using neither backend can still instantiate `DicomLoaderRegistry` but must register their own `IDicomLoader`.
-
 ### Unified registry (`AssetIO`)
 
 `AssetIO` is the top-level facade:
@@ -208,23 +207,26 @@ auto volume = io.loadVolume(LoadRequest{AssetType::eVolume, "ct.nrrd"});
 ### Mesh
 
 ```cpp
-#include <vertexnova/io/mesh/assimp_loader.h>
+#include <vertexnova/io/vneio.h>
 
-vne::mesh::AssimpLoader loader;
-vne::mesh::Mesh mesh;
-if (loader.loadFile("model.obj", mesh)) {
-    // mesh.vertices, mesh.indices, mesh.parts, mesh.materials
-    // mesh.has_normals, mesh.has_uv0, mesh.aabb_min, mesh.aabb_max
-}
-```
+vne::io::AssetIO io;
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
 
-Or with error handling via `LoadResult`:
-
-```cpp
-auto result = loader.loadMesh(vne::io::LoadRequest{vne::io::AssetType::eMesh, "model.glb"});
+auto result = io.loadMesh(vne::io::LoadRequest{vne::io::AssetType::eMesh, "model.glb"});
 if (!result.ok()) {
     fprintf(stderr, "Load failed: %s\n", result.status.message.c_str());
+    return;
 }
+// result.value: mesh.vertices, mesh.indices, mesh.parts, mesh.materials
+```
+
+With custom options:
+
+```cpp
+vne::mesh::AssimpLoaderOptions opts;
+opts.generate_barycentrics = true;
+opts.normalize_to_unit_sphere = true;
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>(opts));
 ```
 
 ### Image
@@ -252,14 +254,6 @@ if (result.ok()) {
     float voxel = vol.readVoxelAt<float>(x, y, z);
 }
 ```
-
-### Loading pattern choice
-
-| Pattern | When to use |
-|---------|-------------|
-| Direct loader (`loadFile`) | Quick integration; single file type; no registry overhead. |
-| Direct loader (`loadMesh(LoadRequest)`) | Need stable `LoadResult<T>` error reporting from a single loader. |
-| `AssetIO` registry | Multiple asset types from one facade; plug-in loaders at runtime; format-agnostic pipelines. |
 
 ## Integration with other VertexNova modules
 
