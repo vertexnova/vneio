@@ -10,6 +10,13 @@
 
 # ----------------------------------------------------------------------
 # Description: Release Please + publish prebuilt install trees per platform.
+# Stage 1 — release-please opens/updates the Release PR; auto-merge when CI allows.
+# Stage 2 — on tag/release, publish platform tarballs (see docs below).
+#
+# Repo settings (one-time):
+#   Settings -> General -> Pull Requests -> "Allow auto-merge" — ON
+#   REPO_ACCESS_TOKEN (optional): PAT for higher API limits; else github.token.
+#
 # Artifact naming, install layout, troubleshooting:
 #   .github/docs/release-please-publish.md
 # ----------------------------------------------------------------------
