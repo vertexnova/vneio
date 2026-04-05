@@ -4,20 +4,20 @@
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="IAssetLoader" value="«interface»&#10;IAssetLoader&#10;────────────────&#10;+loadAsset(LoadRequest)&#10;+getSupportedExtensions()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
-                    <mxGeometry x="650" y="16" width="230" height="100" as="geometry"/>
+                <mxCell id="IAssetLoader" value="«interface»&#10;IAssetLoader&#10;────────────────&#10;+canLoad(const LoadRequest&amp;) const" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="16" width="280" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="IMeshLoader" value="«interface»&#10;IMeshLoader&#10;────────────────&#10;+loadFile(path, mesh)&#10;+loadMesh(LoadRequest)&#10;+isExtensionSupported(ext)&#10;+getLastError()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
-                    <mxGeometry x="360" y="236" width="220" height="120" as="geometry"/>
+                <mxCell id="IMeshLoader" value="«interface»&#10;IMeshLoader&#10;────────────────&#10;+canLoad(const LoadRequest&amp;) const&#10;+loadMesh(const LoadRequest&amp;) → LoadResult&lt;Mesh&gt;&#10;+loadFile(const std::string&amp; path, Mesh&amp; out_mesh) → bool&#10;+isExtensionSupported(const std::string&amp; path) const → bool&#10;+getLastError() const → const std::string&amp;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="226" width="400" height="145" as="geometry"/>
                 </mxCell>
-                <mxCell id="IImageLoader" value="«interface»&#10;IImageLoader&#10;────────────────&#10;+loadImage(LoadRequest)&#10;+isExtensionSupported(ext)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
-                    <mxGeometry x="620" y="236" width="220" height="100" as="geometry"/>
+                <mxCell id="IImageLoader" value="«interface»&#10;IImageLoader&#10;────────────────&#10;+loadImage(const LoadRequest&amp;) → LoadResult&lt;Image&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="246" width="320" height="85" as="geometry"/>
                 </mxCell>
-                <mxCell id="IVolumeLoader" value="«interface»&#10;IVolumeLoader&#10;────────────────&#10;+loadVolume(LoadRequest)&#10;+isExtensionSupported(ext)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
-                    <mxGeometry x="880" y="236" width="220" height="100" as="geometry"/>
+                <mxCell id="IVolumeLoader" value="«interface»&#10;IVolumeLoader&#10;────────────────&#10;+loadVolume(const LoadRequest&amp;) → LoadResult&lt;Volume&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
+                    <mxGeometry x="1040" y="246" width="340" height="85" as="geometry"/>
                 </mxCell>
-                <mxCell id="IDicomLoader" value="«interface»&#10;IDicomLoader&#10;────────────────&#10;+loadDicomSeries(LoadRequest)&#10;+isExtensionSupported(ext)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
-                    <mxGeometry x="1140" y="236" width="220" height="100" as="geometry"/>
+                <mxCell id="IDicomLoader" value="«interface»&#10;IDicomLoader&#10;────────────────&#10;+canLoad(const LoadRequest&amp;) const&#10;+loadDicomSeries(const LoadRequest&amp;) → LoadResult&lt;DicomSeries&gt;&#10;+loadDirectory(const std::string&amp; directory_path, DicomSeries&amp; out_series) → bool&#10;+loadDirectorySeries(const std::string&amp; directory_path, const std::string&amp; series_uid, DicomSeries&amp; out_series) → bool&#10;+getLastError() const → std::string" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2C2C2E;strokeColor=#E8622A;strokeWidth=2;fontStyle=1;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
+                    <mxGeometry x="1280" y="216" width="460" height="145" as="geometry"/>
                 </mxCell>
                 <mxCell id="AssimpLoader" value="AssimpLoader&#10;────────────────&#10;-options_ : AssimpLoaderOptions&#10;-last_error_ : string&#10;────────────────&#10;+loadFile(path, Mesh&amp;) → bool&#10;+loadMesh(LoadRequest) → LoadResult&#10;+setOptions(AssimpLoaderOptions)&#10;+getLastError()" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3A3A3C;strokeColor=#F28C5E;strokeWidth=2;fontSize=11;align=left;spacingLeft=6;fontColor=#EBEBF0;" parent="1" vertex="1">
                     <mxGeometry x="320" y="386" width="280" height="170" as="geometry"/>

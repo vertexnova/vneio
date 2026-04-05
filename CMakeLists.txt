@@ -57,7 +57,9 @@ if(EXISTS "${VNEIO_ROOT}/cmake/vnecmake/modules")
 endif()
 list(APPEND CMAKE_MODULE_PATH "${VNEIO_ROOT}/cmake")
 
-include(GitSubmodule)
+if(EXISTS "${VNEIO_ROOT}/cmake/GitSubmodule.cmake")
+    include(GitSubmodule)
+endif()
 
 # =============================================================================
 # Library type — one of static or shared for all VneIo component libraries

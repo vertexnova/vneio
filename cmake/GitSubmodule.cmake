@@ -21,7 +21,9 @@ if(NOT GIT_FOUND)
     return()
 endif()
 
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/.git")
+get_filename_component(_VNEIO_ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+
+if(NOT EXISTS "${_VNEIO_ROOT_DIR}/.git")
     message(STATUS "GitSubmodule: not a git checkout — skipping submodule update")
     return()
 endif()
@@ -29,7 +31,7 @@ endif()
 message(STATUS "GitSubmodule: git submodule update --init --recursive")
 execute_process(
     COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    WORKING_DIRECTORY "${_VNEIO_ROOT_DIR}"
     RESULT_VARIABLE _VNEIO_SUBMODULE_RESULT
 )
 if(NOT _VNEIO_SUBMODULE_RESULT EQUAL "0")
@@ -40,11 +42,11 @@ endif()
 
 # Registered in .gitmodules — expected after a successful update
 set(_VNEIO_SUBMODULE_MARKERS
-    "${CMAKE_SOURCE_DIR}/cmake/vnecmake/modules/ProjectWarnings.cmake"
-    "${CMAKE_SOURCE_DIR}/deps/internal/vnecommon/CMakeLists.txt"
-    "${CMAKE_SOURCE_DIR}/deps/internal/vnelogging/CMakeLists.txt"
-    "${CMAKE_SOURCE_DIR}/deps/external/assimp/CMakeLists.txt"
-    "${CMAKE_SOURCE_DIR}/deps/external/googletest/CMakeLists.txt"
+    "${_VNEIO_ROOT_DIR}/cmake/vnecmake/modules/ProjectWarnings.cmake"
+    "${_VNEIO_ROOT_DIR}/deps/internal/vnecommon/CMakeLists.txt"
+    "${_VNEIO_ROOT_DIR}/deps/internal/vnelogging/CMakeLists.txt"
+    "${_VNEIO_ROOT_DIR}/deps/external/assimp/CMakeLists.txt"
+    "${_VNEIO_ROOT_DIR}/deps/external/googletest/CMakeLists.txt"
 )
 foreach(_VNEIO_SM ${_VNEIO_SUBMODULE_MARKERS})
     if(NOT EXISTS "${_VNEIO_SM}")
@@ -56,8 +58,8 @@ foreach(_VNEIO_SM ${_VNEIO_SUBMODULE_MARKERS})
 endforeach()
 
 # nrrdio: submodule may be flat (CMakeLists.txt at root) or nested (nrrdio/nrrdio)
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/deps/external/nrrdio/CMakeLists.txt"
-    AND NOT EXISTS "${CMAKE_SOURCE_DIR}/deps/external/nrrdio/nrrdio/CMakeLists.txt")
+if(NOT EXISTS "${_VNEIO_ROOT_DIR}/deps/external/nrrdio/CMakeLists.txt"
+    AND NOT EXISTS "${_VNEIO_ROOT_DIR}/deps/external/nrrdio/nrrdio/CMakeLists.txt")
     message(FATAL_ERROR
         "VneIo nrrdio submodule missing. Expected:\n"
         "  deps/external/nrrdio/CMakeLists.txt\n"

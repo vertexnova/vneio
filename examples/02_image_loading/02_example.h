@@ -19,6 +19,7 @@
 
 namespace vne::io::examples {
 
+/** Run the image loading example; returns 0 on success, non-zero on failure. */
 [[nodiscard]] int runImageLoadingExample();
 
 }  // namespace vne::io::examples

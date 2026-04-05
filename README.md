@@ -164,9 +164,9 @@ if (result.ok()) {
 #include <vertexnova/io/vneio.h>
 
 vne::io::AssetIO io;
-io.registerMeshLoader(std::make_shared<vne::mesh::AssimpLoader>());
-io.registerImageLoader(std::make_shared<vne::image::StbImageLoader>());
-io.registerVolumeLoader(std::make_shared<vne::image::NrrdLoader>());
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
+io.registerImageLoader(std::make_unique<vne::image::StbImageLoader>());
+io.registerVolumeLoader(std::make_unique<vne::image::NrrdLoader>());
 
 auto mesh  = io.loadMesh(vne::io::LoadRequest{vne::io::AssetType::eMesh,  "robot.glb"});
 auto image = io.loadImage(vne::io::LoadRequest{vne::io::AssetType::eImage, "albedo.png"});
@@ -233,8 +233,8 @@ Each tagged release publishes install trees as `vneio-v{VERSION}-{platform}.tar.
 - **[NrrdIO](https://teem.sourceforge.net/nrrd/lib.html)** (image/volume component; submodule or system install)
 - **[stb_image](https://github.com/nothings/stb)** (image component; auto-fetched if absent)
 - **Google Test** (tests; vendored via `deps/external/googletest`)
-- **[vnecommon](https://github.com/vertexnova/vnecommon)** (utilities)
-- **[vnelogging](https://github.com/vertexnova/vnelogging)** (logging)
+- **[vnecommon](https://github.com/vertexnova/vnecommon)** (common utilities and shared infrastructure)
+- **[vnelogging](https://github.com/vertexnova/vnelogging)** (logging utilities)
 
 ## Contributing
 

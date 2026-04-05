@@ -2,7 +2,7 @@
 
 Headless (no window, no GPU) programs that exercise **VertexNova I/O** through the public API: images, volumes, meshes, and the unified `AssetIO` registry. Each example uses a thin `main.cpp` plus `NN_example.h` / `NN_example.cpp` (matching the folder number), with runnable logic in `namespace vne::io::examples`, and builds as a **standalone executable**.
 
-Small fixtures live under [`testdata/`](../testdata/); see [`testdata/README.md`](../testdata/README.md) for layout and path rules. Example **07** uses only synthetic files under `/tmp` and does not need `testdata/`.
+Small fixtures live under [`testdata/`](../testdata/); see [`testdata/README.md`](../testdata/README.md) for layout and path rules. Example **07** uses only synthetic files under **`VNEIO_TEST_OUTPUT_DIR`** (typically `CMAKE_BINARY_DIR/test_output`), via `tmpPath()` in [`common/example_utils.h`](common/example_utils.h), and does not need `testdata/`.
 
 ## Building
 
@@ -47,7 +47,7 @@ If `testdata/` is missing or paths are wrong, several examples **soft-skip** fil
 | 04 | [`04_volume_export`](04_volume_export) | `04_VolumeExport` | `VolumeExporter` round-trip: attached NRRD, detached NRRD (`.nhdr` + `.raw`), MHD + RAW, inline MHA |
 | 05 | [`05_mesh_loading`](05_mesh_loading) | `05_MeshLoading` | `AssimpLoader`, `Mesh` inspection, AABB, OBJ export + reload; `testdata/meshes/minimal.stl` |
 | 06 | [`06_asset_registry`](06_asset_registry) | `06_AssetRegistry` | `AssetIO` registry, `LoadRequest`, `LoadResult<T>` for image / volume / mesh |
-| 07 | [`07_performance`](07_performance) | `07_Performance` | Load-time benchmarks with **synthetic** assets under `/tmp` — **no `testdata` required** |
+| 07 | [`07_performance`](07_performance) | `07_Performance` | Load-time benchmarks with **synthetic** assets under **`VNEIO_TEST_OUTPUT_DIR`** (`CMAKE_BINARY_DIR/test_output`) — **no `testdata` required** |
 
 Each numbered folder has its own **README.md** with a short description of scope and dependencies.
 

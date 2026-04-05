@@ -13,8 +13,8 @@
  * @file 07_example.cpp
  * @brief Example 07: Load-time performance benchmark.
  *
- * All assets are generated synthetically and written to /tmp so the benchmark is fully self-contained
- * (no testdata directory required).
+ * All assets are generated synthetically and written under VNEIO_TEST_OUTPUT_DIR (CMAKE_BINARY_DIR/test_output)
+ * via tmpPath() in example_utils.h so the benchmark is fully self-contained (no testdata directory required).
  *
  * Sections:
  * - Volume NRRD load throughput (64³ uint16, N=10)

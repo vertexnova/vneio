@@ -180,9 +180,9 @@ Same registry pattern as `MeshLoaderRegistry`. Concrete loaders backed by GDCM o
 
 ```cpp
 vne::io::AssetIO io;
-io.registerMeshLoader(std::make_shared<vne::mesh::AssimpLoader>());
-io.registerImageLoader(std::make_shared<vne::image::StbImageLoader>());
-io.registerVolumeLoader(std::make_shared<vne::image::NrrdLoader>());
+io.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
+io.registerImageLoader(std::make_unique<vne::image::StbImageLoader>());
+io.registerVolumeLoader(std::make_unique<vne::image::NrrdLoader>());
 
 auto mesh   = io.loadMesh(LoadRequest{AssetType::eMesh,   "robot.glb"});
 auto image  = io.loadImage(LoadRequest{AssetType::eImage,  "albedo.png"});

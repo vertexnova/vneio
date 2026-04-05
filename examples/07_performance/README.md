@@ -9,7 +9,7 @@
 - Mesh OBJ load baseline vs post-processed path
 - Optional `AssetIO` dispatch overhead section
 
-Assets are written under **`/tmp`** (or the platform temp directory) for the duration of the run.
+Synthetic artifacts are written under **`VNEIO_TEST_OUTPUT_DIR`** (typically `CMAKE_BINARY_DIR/test_output`) via `tmpPath()` in [`examples/common/example_utils.h`](../common/example_utils.h) for the duration of the run.
 
 ## Run
 

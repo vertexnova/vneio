@@ -11,7 +11,7 @@ Builds a small synthetic volume and proves it survives **export and reload** acr
 
 ## Dependencies
 
-Builds a **synthetic** reference volume in memory, writes exports under the **system temp directory**, and reloads with `NrrdLoader` / `MhdLoader`. **No `testdata/` required.**
+Builds a **synthetic** reference volume in memory, writes exports under **`VNEIO_TEST_OUTPUT_DIR`** (typically `CMAKE_BINARY_DIR/test_output`) via the `tmpPath()` helper in [`examples/common/example_utils.h`](../common/example_utils.h), and reloads with `NrrdLoader` / `MhdLoader`. **No `testdata/` required.**
 
 ## Run
 
