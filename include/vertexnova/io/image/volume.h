@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -97,6 +98,11 @@ constexpr float kVolumeDirectionMinDeterminant = 1e-4f;
  * `direction[row] * spacing[row]`. Loaders must normalize NRRD space directions into this form.
  *
  * Dimensions (width, height, depth), spacing, origin, pixel type, and contiguous raw buffer.
+ *
+ * **Typed access:** @c std::vector<uint8_t> storage is only byte-aligned. Do not
+ * @c reinterpret_cast the buffer to @c T* and dereference for multi-byte @c T — that can be UB on
+ * strict-alignment platforms. Use @ref readVoxelAt for scalar reads, @ref byteSpan / @ref getData
+ * for raw bytes, or copy out via @c memcpy in your own code.
  */
 struct VNEIO_API Volume {
     int dims[3] = {0, 0, 0};                //!< Width (x), height (y), depth (z).
@@ -155,11 +161,18 @@ struct VNEIO_API Volume {
     }
 
     /**
+     * @brief Read-only view of the raw voxel bytes (no alignment claim beyond byte-sized elements).
+     */
+    [[nodiscard]] std::span<const std::uint8_t> byteSpan() const noexcept {
+        return {data.data(), data.size()};
+    }
+
+    /**
      * @brief Copy one stored value of type @a T from the raw buffer at logical index @a linear_index.
      *
-     * Interprets the buffer as a contiguous array of `T` (stride `sizeof(T)` bytes). The same indexing
-     * applies as for a former `dataAs<T>()[i]` view: for scalar volumes, @a linear_index is the flat
-     * voxel index; multi-component layouts are the caller's responsibility.
+     * Interprets the buffer as a contiguous array of `T` (stride `sizeof(T)` bytes). For scalar
+     * volumes, @a linear_index is the flat voxel index; multi-component layouts are the caller's
+     * responsibility.
      *
      * Uses `memcpy`, so no alignment requirement on `data.data()`. If the slice would extend past
      * `data.size()`, returns a value-initialized `T`.

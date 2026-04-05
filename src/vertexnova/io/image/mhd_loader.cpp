@@ -14,10 +14,13 @@
 #include "vertexnova/logging/logging.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cmath>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <limits>
 #include <sstream>
 
 namespace {
@@ -45,6 +48,26 @@ std::string trim(const std::string& s) {
     }
     auto end = s.find_last_not_of(" \t\r\n");
     return s.substr(start, end == std::string::npos ? std::string::npos : end - start + 1);
+}
+
+/** Parse a base-10 integer from the entire string (after trim). No exceptions. */
+bool parseIntField(const std::string& value, int& out) {
+    if (value.empty()) {
+        return false;
+    }
+    const char* s = value.c_str();
+    char* end = nullptr;
+    errno = 0;
+    const long v = std::strtol(s, &end, 10);
+    if (errno == ERANGE || end == s || *end != '\0') {
+        return false;
+    }
+    if (v > static_cast<long>(std::numeric_limits<int>::max())
+        || v < static_cast<long>(std::numeric_limits<int>::min())) {
+        return false;
+    }
+    out = static_cast<int>(v);
+    return true;
 }
 
 bool parseDimSize(const std::string& value, int dims[3], int ndims) {
@@ -258,7 +281,11 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
         });
 
         if (key == "NDIMS") {
-            ndims = std::stoi(val);
+            if (!parseIntField(val, ndims)) {
+                last_error_ = "MhdLoader: invalid NDims: " + val;
+                VNE_LOG_ERROR << last_error_;
+                return false;
+            }
             if (ndims != 3) {
                 last_error_ = "MhdLoader: only NDims 3 is supported, got " + std::to_string(ndims);
                 VNE_LOG_ERROR << last_error_;
@@ -297,7 +324,11 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
                 have_transform = true;
             }
         } else if (key == "ELEMENTNUMBEROFCHANNELS") {
-            element_channels = std::stoi(val);
+            if (!parseIntField(val, element_channels)) {
+                last_error_ = "MhdLoader: invalid ElementNumberOfChannels: " + val;
+                VNE_LOG_ERROR << last_error_;
+                return false;
+            }
             have_element_channels = true;
         }
     }
@@ -382,13 +413,15 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
         f.clear();
         f.seekg(data_start_offset, std::ios::beg);
         out_volume.data.resize(num_bytes);
-        if (!f.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
-            last_error_ = "MhdLoader: failed to read inline data (ElementDataFile = LOCAL)";
-            VNE_LOG_ERROR << last_error_;
-            return false;
-        }
-        if (f.gcount() != static_cast<std::streamsize>(num_bytes)) {
-            last_error_ = "MhdLoader: short read inline data (expected " + std::to_string(num_bytes) + " bytes)";
+        f.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes));
+        const auto bytes_read = f.gcount();
+        if (bytes_read != static_cast<std::streamsize>(num_bytes)) {
+            if (f.bad()) {
+                last_error_ = "MhdLoader: failed to read inline data (ElementDataFile = LOCAL)";
+            } else {
+                last_error_ =
+                    "MhdLoader: short read inline data (expected " + std::to_string(num_bytes) + " bytes)";
+            }
             VNE_LOG_ERROR << last_error_;
             return false;
         }
@@ -429,13 +462,14 @@ bool MhdLoader::load(const std::string& path, Volume& out_volume) {
         return false;
     }
     out_volume.data.resize(num_bytes);
-    if (!df.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes))) {
-        last_error_ = "MhdLoader: failed to read data file";
-        VNE_LOG_ERROR << last_error_;
-        return false;
-    }
-    if (df.gcount() != static_cast<std::streamsize>(num_bytes)) {
-        last_error_ = "MhdLoader: short read data file (expected " + std::to_string(num_bytes) + " bytes)";
+    df.read(reinterpret_cast<char*>(out_volume.data.data()), static_cast<std::streamsize>(num_bytes));
+    const auto bytes_read = df.gcount();
+    if (bytes_read != static_cast<std::streamsize>(num_bytes)) {
+        if (df.bad()) {
+            last_error_ = "MhdLoader: failed to read data file";
+        } else {
+            last_error_ = "MhdLoader: short read data file (expected " + std::to_string(num_bytes) + " bytes)";
+        }
         VNE_LOG_ERROR << last_error_;
         return false;
     }

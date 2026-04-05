@@ -394,7 +394,10 @@ TEST(VolumeTest, MhdLoaderMsbUshortInline) {
     Volume vol;
     ASSERT_TRUE(loader.load(path, vol)) << loader.getLastError();
     EXPECT_EQ(vol.pixel_type, VolumePixelType::eUint16);
-    EXPECT_EQ(vol.readVoxelAt<uint16_t>(0), 258u);
+    ASSERT_GE(vol.data.size(), sizeof(uint16_t));
+    uint16_t value = 0;
+    std::memcpy(&value, vol.getData(), sizeof(value));
+    EXPECT_EQ(value, 258u);
     std::filesystem::remove(path);
 }
 
@@ -480,6 +483,27 @@ TEST(VolumeTest, MhdLoaderShortRawFile) {
     EXPECT_FALSE(loader.load(mhd_path, vol));
     std::filesystem::remove(mhd_path);
     std::filesystem::remove(raw_path);
+}
+
+TEST(VolumeTest, MhdLoaderInvalidElementNumberOfChannels) {
+    MhdLoader loader;
+    const std::string path = "test_mhd_bad_channels.mhd";
+    {
+        std::ofstream mh(path);
+        ASSERT_TRUE(mh);
+        mh << "ObjectType = Image\n";
+        mh << "NDims = 3\n";
+        mh << "DimSize = 1 1 1\n";
+        mh << "ElementType = MET_UCHAR\n";
+        mh << "ElementSpacing = 1 1 1\n";
+        mh << "ElementNumberOfChannels = not_an_int\n";
+        mh << "ElementDataFile = LOCAL\n\n";
+        mh << static_cast<char>(0);
+    }
+    Volume vol;
+    EXPECT_FALSE(loader.load(path, vol));
+    EXPECT_NE(loader.getLastError().find("ElementNumberOfChannels"), std::string::npos);
+    std::filesystem::remove(path);
 }
 
 TEST(VolumeTest, MhdLoaderRejectMultiChannel) {
