@@ -5,12 +5,13 @@
 # Author:    Ajeet Singh Yadav
 # Created:   April 2026
 #
-# Description: Reusable workflow for VneIo — configure, build, test, optional coverage.
-# Called only by ci.yml.
-#
 # Autodoc:   yes
 # ----------------------------------------------------------------------
 
+# ----------------------------------------------------------------------
+# Description: Reusable workflow for VneIo — configure, build, test, optional coverage.
+# Called only by ci.yml.
+# ----------------------------------------------------------------------
 name: "Build and Test (Reusable)"
 
 on:

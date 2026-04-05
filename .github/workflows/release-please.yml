@@ -5,12 +5,13 @@
 # Author:    Ajeet Singh Yadav
 # Created:   February 2026
 #
+# Autodoc:   yes
+# ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
 # Description: Release Please + publish prebuilt install trees per platform.
-#
 # Artifact naming, install layout, troubleshooting:
 #   .github/docs/release-please-publish.md
-#
-# Autodoc:   yes
 # ----------------------------------------------------------------------
 
 name: Release Please
