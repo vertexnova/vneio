@@ -188,13 +188,11 @@ struct BenchTimer {
     using clock = std::chrono::high_resolution_clock;
     clock::time_point t0;
     void start() { t0 = clock::now(); }
-    double elapsedMs() const {
-        return std::chrono::duration<double, std::milli>(clock::now() - t0).count();
-    }
+    double elapsedMs() const { return std::chrono::duration<double, std::milli>(clock::now() - t0).count(); }
 };
 
 /// Run @p fn n times, return elapsed milliseconds for each iteration.
-template <typename Fn>
+template<typename Fn>
 inline std::vector<double> timeN(int n, Fn&& fn) {
     std::vector<double> times;
     times.reserve(static_cast<std::size_t>(n));
@@ -211,8 +209,8 @@ inline std::vector<double> timeN(int n, Fn&& fn) {
 inline void reportBench(const char* label, const std::vector<double>& times, std::size_t bytes = 0) {
     double sum = std::accumulate(times.begin(), times.end(), 0.0);
     double avg = sum / static_cast<double>(times.size());
-    double mn  = *std::min_element(times.begin(), times.end());
-    double mx  = *std::max_element(times.begin(), times.end());
+    double mn = *std::min_element(times.begin(), times.end());
+    double mx = *std::max_element(times.begin(), times.end());
 
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(3);

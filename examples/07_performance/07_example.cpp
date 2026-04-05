@@ -43,25 +43,25 @@ namespace vne::io::examples {
 // ── Benchmark parameters ──────────────────────────────────────────────────────
 
 static constexpr int kVolumeReps = 10;
-static constexpr int kImageReps  = 10;
-static constexpr int kMeshReps   = 5;
+static constexpr int kImageReps = 10;
+static constexpr int kMeshReps = 5;
 
 // Volume: 64×64×64 uint16 — 512 KB
-static constexpr int   kVolDim     = 64;
-static constexpr int   kImgWidth   = 512;
-static constexpr int   kImgHeight  = 512;
-static constexpr int   kImgChannels = 4;   // RGBA
-static constexpr int   kMeshGrid   = 100;  // 100×100 quads → ~10k verts, ~20k triangles
+static constexpr int kVolDim = 64;
+static constexpr int kImgWidth = 512;
+static constexpr int kImgHeight = 512;
+static constexpr int kImgChannels = 4;  // RGBA
+static constexpr int kMeshGrid = 100;   // 100×100 quads → ~10k verts, ~20k triangles
 
 // ── Synthetic data builders ───────────────────────────────────────────────────
 
 static vne::image::Volume makeSyntheticVolume() {
     vne::image::Volume v;
     v.dims[0] = v.dims[1] = v.dims[2] = kVolDim;
-    v.pixel_type  = vne::image::VolumePixelType::eUint16;
-    v.components  = 1;
-    v.spacing[0]  = v.spacing[1] = v.spacing[2] = 1.0f;
-    v.origin[0]   = v.origin[1] = v.origin[2]   = 0.0f;
+    v.pixel_type = vne::image::VolumePixelType::eUint16;
+    v.components = 1;
+    v.spacing[0] = v.spacing[1] = v.spacing[2] = 1.0f;
+    v.origin[0] = v.origin[1] = v.origin[2] = 0.0f;
     v.direction[0] = v.direction[4] = v.direction[8] = 1.0f;  // identity
     v.data.resize(v.byteCount());
     auto* p = reinterpret_cast<uint16_t*>(v.data.data());
@@ -80,13 +80,13 @@ static vne::mesh::Mesh makeSyntheticMesh(int n = kMeshGrid) {
     int idx = 0;
     for (int y = 0; y <= n; ++y) {
         for (int x = 0; x <= n; ++x) {
-            auto& v       = mesh.vertices[static_cast<std::size_t>(idx++)];
+            auto& v = mesh.vertices[static_cast<std::size_t>(idx++)];
             v.position[0] = static_cast<float>(x);
             v.position[1] = static_cast<float>(y);
             v.position[2] = 0.0f;
-            v.normal[0]   = 0.0f;
-            v.normal[1]   = 0.0f;
-            v.normal[2]   = 1.0f;
+            v.normal[0] = 0.0f;
+            v.normal[1] = 0.0f;
+            v.normal[2] = 1.0f;
             v.texcoord0[0] = static_cast<float>(x) / static_cast<float>(n);
             v.texcoord0[1] = static_cast<float>(y) / static_cast<float>(n);
         }
@@ -99,18 +99,22 @@ static vne::mesh::Mesh makeSyntheticMesh(int n = kMeshGrid) {
             auto tr = tl + 1u;
             auto bl = tl + static_cast<uint32_t>(n + 1);
             auto br = bl + 1u;
-            mesh.indices.push_back(tl); mesh.indices.push_back(bl); mesh.indices.push_back(br);
-            mesh.indices.push_back(tl); mesh.indices.push_back(br); mesh.indices.push_back(tr);
+            mesh.indices.push_back(tl);
+            mesh.indices.push_back(bl);
+            mesh.indices.push_back(br);
+            mesh.indices.push_back(tl);
+            mesh.indices.push_back(br);
+            mesh.indices.push_back(tr);
         }
     }
 
     vne::mesh::Submesh sub;
-    sub.first_index    = 0;
-    sub.index_count    = static_cast<uint32_t>(mesh.indices.size());
+    sub.first_index = 0;
+    sub.index_count = static_cast<uint32_t>(mesh.indices.size());
     sub.material_index = 0;
     mesh.parts.push_back(sub);
     mesh.has_normals = true;
-    mesh.has_uv0     = true;
+    mesh.has_uv0 = true;
     mesh.aabb_min[0] = mesh.aabb_min[1] = mesh.aabb_min[2] = 0.0f;
     mesh.aabb_max[0] = mesh.aabb_max[1] = static_cast<float>(n);
     mesh.aabb_max[2] = 0.0f;
@@ -123,30 +127,26 @@ int runPerformanceExample() {
     LoggingGuard logging_guard;
 
     VNE_LOG_INFO << "07_performance: all assets are synthetic (no testdata required)";
-    VNE_LOG_INFO << "  volume: " << kVolDim << "^3 uint16 = "
-                 << (kVolDim * kVolDim * kVolDim * 2 / 1024) << " KB";
+    VNE_LOG_INFO << "  volume: " << kVolDim << "^3 uint16 = " << (kVolDim * kVolDim * kVolDim * 2 / 1024) << " KB";
     VNE_LOG_INFO << "  image:  " << kImgWidth << "x" << kImgHeight
                  << " RGBA = " << (kImgWidth * kImgHeight * kImgChannels / 1024) << " KB";
-    VNE_LOG_INFO << "  mesh:   " << kMeshGrid << "x" << kMeshGrid
-                 << " grid = " << ((kMeshGrid + 1) * (kMeshGrid + 1)) << " verts  "
-                 << (kMeshGrid * kMeshGrid * 2) << " triangles";
+    VNE_LOG_INFO << "  mesh:   " << kMeshGrid << "x" << kMeshGrid << " grid = " << ((kMeshGrid + 1) * (kMeshGrid + 1))
+                 << " verts  " << (kMeshGrid * kMeshGrid * 2) << " triangles";
 
     // ── Prepare synthetic volume files ────────────────────────────────────────
     const vne::image::Volume src_vol = makeSyntheticVolume();
     const std::string nrrd_path = tmpPath("vneio_bench_vol.nrrd");
-    const std::string mha_path  = tmpPath("vneio_bench_vol.mha");
+    const std::string mha_path = tmpPath("vneio_bench_vol.mha");
     {
         std::string err;
         vne::image::NrrdExportOptions nrrd_opts;
-        if (!check(vne::image::exportNrrd(nrrd_path, src_vol, nrrd_opts, &err),
-                   "export synthetic volume as .nrrd")) {
+        if (!check(vne::image::exportNrrd(nrrd_path, src_vol, nrrd_opts, &err), "export synthetic volume as .nrrd")) {
             VNE_LOG_ERROR << err;
             return 1;
         }
         vne::image::MhdExportOptions mhd_opts;
         mhd_opts.inline_data = true;
-        if (!check(vne::image::exportMhd(mha_path, src_vol, mhd_opts, &err),
-                   "export synthetic volume as .mha")) {
+        if (!check(vne::image::exportMhd(mha_path, src_vol, mhd_opts, &err), "export synthetic volume as .mha")) {
             VNE_LOG_ERROR << err;
             return 1;
         }
@@ -161,8 +161,8 @@ int runPerformanceExample() {
         std::vector<uint8_t> pixels(static_cast<std::size_t>(kImgHeight) * stride);
         for (int y = 0; y < kImgHeight; ++y) {
             for (int x = 0; x < kImgWidth; ++x) {
-                uint8_t* px = pixels.data() + static_cast<std::size_t>(y) * stride
-                              + static_cast<std::size_t>(x) * kImgChannels;
+                uint8_t* px =
+                    pixels.data() + static_cast<std::size_t>(y) * stride + static_cast<std::size_t>(x) * kImgChannels;
                 px[0] = static_cast<uint8_t>(x & 0xFF);
                 px[1] = static_cast<uint8_t>(y & 0xFF);
                 px[2] = 128;
@@ -181,16 +181,15 @@ int runPerformanceExample() {
         const vne::mesh::Mesh src_mesh = makeSyntheticMesh();
         std::string err;
         vne::mesh::ObjExportOptions obj_opts;
-        obj_opts.write_normals   = true;
+        obj_opts.write_normals = true;
         obj_opts.write_texcoords = true;
-        obj_opts.write_mtl       = false;
-        if (!check(vne::mesh::exportObj(obj_path, src_mesh, obj_opts, &err),
-                   "export synthetic mesh as .obj")) {
+        obj_opts.write_mtl = false;
+        if (!check(vne::mesh::exportObj(obj_path, src_mesh, obj_opts, &err), "export synthetic mesh as .obj")) {
             VNE_LOG_ERROR << err;
             return 1;
         }
-        VNE_LOG_INFO << "  OBJ written: " << src_mesh.getVertexCount() << " verts  "
-                     << src_mesh.getIndexCount() / 3 << " triangles";
+        VNE_LOG_INFO << "  OBJ written: " << src_mesh.getVertexCount() << " verts  " << src_mesh.getIndexCount() / 3
+                     << " triangles";
     }
 
     // ── Section 1: Volume NRRD ────────────────────────────────────────────────
@@ -219,8 +218,7 @@ int runPerformanceExample() {
     printSection("Benchmark 3: StbImageLoader PNG (N=" + std::to_string(kImageReps) + ")");
     {
         vne::image::StbImageLoader loader;
-        const std::size_t img_bytes =
-            static_cast<std::size_t>(kImgWidth * kImgHeight * kImgChannels);
+        const std::size_t img_bytes = static_cast<std::size_t>(kImgWidth * kImgHeight * kImgChannels);
 
         // Verify PNG was written before timing
         vne::io::LoadRequest req;
@@ -228,8 +226,7 @@ int runPerformanceExample() {
         req.uri = png_path;
         auto probe = loader.loadImage(req);
         if (!probe.ok()) {
-            VNE_LOG_WARN << "PNG not available (" << errorCodeName(probe.status.code)
-                         << ") — skipping image benchmark";
+            VNE_LOG_WARN << "PNG not available (" << errorCodeName(probe.status.code) << ") — skipping image benchmark";
         } else {
             auto times = timeN(kImageReps, [&] {
                 vne::image::Image img;
@@ -241,7 +238,7 @@ int runPerformanceExample() {
 
     // ── Section 4: Mesh baseline ──────────────────────────────────────────────
     printSection("Benchmark 4: AssimpLoader OBJ — default options (N=" + std::to_string(kMeshReps) + ")");
-    std::size_t mesh_vertex_count   = 0;
+    std::size_t mesh_vertex_count = 0;
     std::size_t mesh_triangle_count = 0;
     {
         vne::mesh::AssimpLoader loader;
@@ -249,12 +246,12 @@ int runPerformanceExample() {
         // defaults: flip_uvs=true, gen_tangents=true, triangulate=true, pre_transform=true
         // normalize and barycentrics both off
         opts.normalize_to_unit_sphere = false;
-        opts.generate_barycentrics    = false;
+        opts.generate_barycentrics = false;
 
         auto times = timeN(kMeshReps, [&] {
             vne::mesh::Mesh m;
             static_cast<void>(loader.loadFile(obj_path, m, opts));
-            mesh_vertex_count   = m.getVertexCount();
+            mesh_vertex_count = m.getVertexCount();
             mesh_triangle_count = m.getIndexCount() / 3;
         });
         VNE_LOG_INFO << "  vertices=" << mesh_vertex_count << "  triangles=" << mesh_triangle_count;
@@ -267,7 +264,7 @@ int runPerformanceExample() {
         vne::mesh::AssimpLoader loader;
         vne::mesh::AssimpLoaderOptions opts;
         opts.normalize_to_unit_sphere = true;
-        opts.generate_barycentrics    = true;
+        opts.generate_barycentrics = true;
 
         std::size_t expanded_verts = 0;
         auto times = timeN(kMeshReps, [&] {
@@ -296,18 +293,16 @@ int runPerformanceExample() {
         vne::io::LoadRequest req;
         req.asset_type = vne::io::AssetType::eVolume;
         req.uri = nrrd_path;
-        auto registry_times = timeN(kVolumeReps, [&] {
-            registry.loadVolume(req);
-        });
+        auto registry_times = timeN(kVolumeReps, [&] { registry.loadVolume(req); });
 
-        reportBench("NrrdLoader (direct)",   direct_times,   vol_bytes);
+        reportBench("NrrdLoader (direct)", direct_times, vol_bytes);
         reportBench("AssetIO registry (NRRD)", registry_times, vol_bytes);
 
-        double direct_avg   = std::accumulate(direct_times.begin(),   direct_times.end(),   0.0) / direct_times.size();
-        double registry_avg = std::accumulate(registry_times.begin(), registry_times.end(), 0.0) / registry_times.size();
+        double direct_avg = std::accumulate(direct_times.begin(), direct_times.end(), 0.0) / direct_times.size();
+        double registry_avg =
+            std::accumulate(registry_times.begin(), registry_times.end(), 0.0) / registry_times.size();
         double overhead_pct = (registry_avg - direct_avg) / direct_avg * 100.0;
-        VNE_LOG_INFO << "  registry dispatch overhead: "
-                     << std::fixed << std::setprecision(1) << overhead_pct << "%"
+        VNE_LOG_INFO << "  registry dispatch overhead: " << std::fixed << std::setprecision(1) << overhead_pct << "%"
                      << "  (expected ~0 — dominated by I/O)";
     }
 

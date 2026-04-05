@@ -142,8 +142,8 @@ int runImageLoadingExample() {
     // ── Construct from raw data ───────────────────────────────────────────────
     printSection("Construct Image from raw data buffer");
     {
-        constexpr int kWidth    = 4;
-        constexpr int kHeight   = 4;
+        constexpr int kWidth = 4;
+        constexpr int kHeight = 4;
         constexpr int kChannels = 4;
         uint8_t buf[kWidth * kHeight * kChannels] = {};
         for (int i = 0; i < kWidth * kHeight; ++i) {
