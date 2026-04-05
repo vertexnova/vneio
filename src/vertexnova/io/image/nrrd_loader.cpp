@@ -94,10 +94,10 @@ bool NrrdLoader::load(const std::string& path, Volume& out_volume) {
         if (err) {
             free(err);
         }
-        VNE_LOG_ERROR << "NrrdLoader: load failed for \"" << path
-                      << "\": " << (last_error_.size() > kNrrdLoadErrorLogMaxChars
-                                        ? last_error_.substr(0, kNrrdLoadErrorLogMaxChars) + "..."
-                                        : last_error_);
+        VNE_LOG_ERROR << "NrrdLoader: load failed for \"" << path << "\": "
+                      << (last_error_.size() > kNrrdLoadErrorLogMaxChars
+                              ? last_error_.substr(0, kNrrdLoadErrorLogMaxChars) + "..."
+                              : last_error_);
         nrrdNuke(nin);
         return false;
     }
