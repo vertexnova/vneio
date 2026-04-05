@@ -5,14 +5,13 @@
 # Author:    Ajeet Singh Yadav
 # Created:   April 2026
 #
-# Description: VneIo CI — staged, gated, concurrency (aligned with vneinteraction).
+# Autodoc:   yes
+# ----------------------------------------------------------------------
+
 # Stage 1 — Pre-checks: clang-format (gate). Commit-lint warnings only.
 # Stage 2+3 — Build+Test: Linux GCC/Clang/static, ASan, macOS, Windows.
 # Stage 4 — Analysis: clang-tidy (Clang build cache).
 # Stage 5 — CI Gate: single required status for branch protection.
-#
-# Autodoc:   yes
-# ----------------------------------------------------------------------
 
 name: CI
 
@@ -162,7 +161,7 @@ jobs:
       enable_coverage:    true
       warnings_as_errors: true
     secrets:
-      codecov_token: ${{ secrets.CODECOV_TOKEN_VNE_IO }}
+      codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
   build-linux-clang:
     name: "Build+Test / Linux Clang"
