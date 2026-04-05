@@ -59,7 +59,8 @@ class VNEIO_API AssimpLoader : public IMeshLoader {
    public:
     AssimpLoader() = default;
     /** @brief Construct with options applied to every load call. */
-    explicit AssimpLoader(AssimpLoaderOptions opts) : options_(std::move(opts)) {}
+    explicit AssimpLoader(AssimpLoaderOptions opts)
+        : options_(std::move(opts)) {}
     ~AssimpLoader() override = default;
 
     [[nodiscard]] vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) override;
