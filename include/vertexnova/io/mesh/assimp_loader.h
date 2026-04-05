@@ -47,26 +47,38 @@ struct VNEIO_API AssimpLoaderOptions {
 /**
  * @class AssimpLoader
  * @brief Loader for 3D meshes using Assimp (implements IMeshLoader).
+ *
+ * Construct with options pre-baked and register with AssetIO:
+ * @code
+ * AssimpLoaderOptions opts;
+ * opts.generate_barycentrics = true;
+ * io.registerMeshLoader(std::make_unique<AssimpLoader>(opts));
+ * @endcode
  */
 class VNEIO_API AssimpLoader : public IMeshLoader {
    public:
     AssimpLoader() = default;
+    /** @brief Construct with options applied to every load call. */
+    explicit AssimpLoader(AssimpLoaderOptions opts) : options_(std::move(opts)) {}
     ~AssimpLoader() override = default;
 
     [[nodiscard]] vne::io::LoadResult<Mesh> loadMesh(const vne::io::LoadRequest& request) override;
-    [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh) override;
+
     /**
-     * @brief Load a mesh from file with options.
+     * @brief Load a mesh from file directly (bypasses AssetIO).
      * @param path Path to the mesh file.
      * @param out_mesh Mesh to fill.
-     * @param opts Loader options (UV flip, tangents, triangulation, etc.).
+     * @param opts Loader options; defaults to options set at construction.
      * @return true on success, false otherwise (see getLastError()).
      */
+    [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh);
     [[nodiscard]] bool loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts);
+
     [[nodiscard]] bool isExtensionSupported(const std::string& path) const override;
     [[nodiscard]] const std::string& getLastError() const override { return last_error_; }
 
    private:
+    AssimpLoaderOptions options_{};
     std::string last_error_;
 };
 

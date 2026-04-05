@@ -488,7 +488,6 @@ endif()
 if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
     add_library(vneio_mesh ${_VNEIO_LIB_KIND}
         src/vertexnova/io/mesh/assimp_loader.cpp
-        src/vertexnova/io/mesh/mesh_loader_registry.cpp
         src/vertexnova/io/mesh/mesh_exporter_obj.cpp
     )
     vneio_target_apply_shared_export(vneio_mesh)
@@ -593,44 +592,30 @@ endif()
 # Target: vneio_dicom (optional GDCM/DCMTK or stub registry)
 # =============================================================================
 if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
-    add_library(vneio_dicom ${_VNEIO_LIB_KIND}
-        src/vertexnova/io/dicom/dicom_loader_registry.cpp
-    )
-    vneio_target_apply_shared_export(vneio_dicom)
-    set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
+    # Placeholder: add concrete backend sources here when GDCM/DCMTK are integrated.
+    add_library(vneio_dicom INTERFACE)
     target_include_directories(vneio_dicom
-        PUBLIC
+        INTERFACE
             $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
-            $<BUILD_INTERFACE:${VNEIO_SRC_DIR}>
             $<INSTALL_INTERFACE:include>
     )
-    target_link_libraries(vneio_dicom
-        PUBLIC VneIoWarnings VneIoBuildSettings
-    )
     if(VNEIO_WITH_GDCM)
-        target_compile_definitions(vneio_dicom PRIVATE VNEIO_WITH_GDCM)
+        target_compile_definitions(vneio_dicom INTERFACE VNEIO_WITH_GDCM)
         # TODO: find_package(GDCM) and link
     endif()
     if(VNEIO_WITH_DCMTK)
-        target_compile_definitions(vneio_dicom PRIVATE VNEIO_WITH_DCMTK)
+        target_compile_definitions(vneio_dicom INTERFACE VNEIO_WITH_DCMTK)
         # TODO: find_package(DCMTK) and link
     endif()
     add_library(vne::io::dicom ALIAS vneio_dicom)
 else()
-    # Always build dicom_loader_registry.cpp (null loader) so the interface is available
-    add_library(vneio_dicom ${_VNEIO_LIB_KIND}
-        src/vertexnova/io/dicom/dicom_loader_registry.cpp
-    )
-    vneio_target_apply_shared_export(vneio_dicom)
-    set_target_properties(vneio_dicom PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
+    # No DICOM backend: expose headers only; AssetIO returns eUnsupportedFormat
+    # when no IDicomLoader is registered.
+    add_library(vneio_dicom INTERFACE)
     target_include_directories(vneio_dicom
-        PUBLIC
+        INTERFACE
             $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
-            $<BUILD_INTERFACE:${VNEIO_SRC_DIR}>
             $<INSTALL_INTERFACE:include>
-    )
-    target_link_libraries(vneio_dicom
-        PUBLIC VneIoWarnings VneIoBuildSettings
     )
     add_library(vne::io::dicom ALIAS vneio_dicom)
 endif()

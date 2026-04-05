@@ -28,7 +28,6 @@
 #include "vertexnova/io/mesh/mesh.h"
 #include "vertexnova/io/mesh/mesh_loader.h"
 #include "vertexnova/io/mesh/assimp_loader.h"
-#include "vertexnova/io/mesh/mesh_loader_registry.h"
 #include "vertexnova/io/mesh/mesh_exporter.h"
 
 // Image (requires stb when building)
@@ -44,4 +43,3 @@
 // DICOM (optional backends: GDCM/DCMTK)
 #include "vertexnova/io/dicom/dicom_series.h"
 #include "vertexnova/io/dicom/dicom_loader.h"
-#include "vertexnova/io/dicom/dicom_loader_registry.h"

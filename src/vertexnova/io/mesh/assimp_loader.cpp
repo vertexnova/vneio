@@ -80,7 +80,7 @@ namespace mesh {
 
 vne::io::LoadResult<Mesh> AssimpLoader::loadMesh(const vne::io::LoadRequest& request) {
     vne::io::LoadResult<Mesh> result;
-    if (!loadFile(request.uri, result.value)) {
+    if (!loadFile(request.uri, result.value, options_)) {
         result.status =
             vne::io::Status::make(vne::io::ErrorCode::eParseError, getLastError(), request.uri, "AssimpLoader");
         return result;
@@ -90,7 +90,7 @@ vne::io::LoadResult<Mesh> AssimpLoader::loadMesh(const vne::io::LoadRequest& req
 }
 
 bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh) {
-    return loadFile(path, out_mesh, AssimpLoaderOptions{});
+    return loadFile(path, out_mesh, options_);
 }
 
 bool AssimpLoader::loadFile(const std::string& path, Mesh& out_mesh, const AssimpLoaderOptions& opts) {
