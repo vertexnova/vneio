@@ -281,6 +281,8 @@ vneio is intentionally **independent of vnescene, vnemath, and vneevents** — i
 | `ENABLE_DOXYGEN` | OFF | Generate Doxygen HTML API docs. |
 | `ENABLE_COVERAGE` | OFF | Enable code coverage reporting. |
 | `ENABLE_ASAN` | OFF | AddressSanitizer + UBSan (GCC/Clang, Linux/macOS). |
+| `VNEIO_UPDATE_SUBMODULES` | OFF | **Top-level VneIo only** (`PROJECT_IS_TOP_LEVEL` / CMake ≥ 3.21, else source-dir heuristic): if ON, configure runs `git submodule update` and submodule path checks via `cmake/GitSubmodule.cmake`. Leave OFF when vneio is used via `add_subdirectory` / FetchContent, or use `git clone --recursive` / CI checkout instead. |
+| `VNEIO_GIT_SUBMODULE` | ON | Only when `GitSubmodule.cmake` is included: perform update and marker verification (set OFF to skip while keeping `VNEIO_UPDATE_SUBMODULES=ON`). |
 
 ### Static vs shared
 

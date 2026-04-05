@@ -44,7 +44,7 @@ execute_process(
 if(NOT _VNEIO_SUBMODULE_RESULT EQUAL "0")
     message(FATAL_ERROR
         "git submodule update --init --recursive failed (${_VNEIO_SUBMODULE_RESULT}). "
-        "Fix your clone or pass -DVNEIO_GIT_SUBMODULE=OFF if dependencies are provided elsewhere (e.g. 3rd_party).")
+        "Fix your clone, or pass -DVNEIO_GIT_SUBMODULE=OFF / -DVNEIO_UPDATE_SUBMODULES=OFF if dependencies are provided elsewhere (e.g. 3rd_party).")
 endif()
 
 # Registered in .gitmodules — expected after a successful update
@@ -60,7 +60,7 @@ foreach(_VNEIO_SM ${_VNEIO_SUBMODULE_MARKERS})
         message(FATAL_ERROR
             "VneIo submodule tree incomplete — missing:\n  ${_VNEIO_SM}\n"
             "Run from the repo root: git submodule update --init --recursive\n"
-            "Or configure with -DVNEIO_GIT_SUBMODULE=OFF if you use 3rd_party/ or other layouts.")
+            "Or configure with -DVNEIO_GIT_SUBMODULE=OFF (or disable -DVNEIO_UPDATE_SUBMODULES) if you use 3rd_party/ or other layouts.")
     endif()
 endforeach()
 
@@ -73,5 +73,5 @@ if(NOT EXISTS "${_VNEIO_ROOT_DIR}/deps/external/nrrdio/CMakeLists.txt"
         "or\n"
         "  deps/external/nrrdio/nrrdio/CMakeLists.txt\n"
         "Run: git submodule update --init --recursive\n"
-        "Or use -DVNEIO_GIT_SUBMODULE=OFF with nrrdio supplied under 3rd_party/ or install tree.")
+        "Or use -DVNEIO_GIT_SUBMODULE=OFF / -DVNEIO_UPDATE_SUBMODULES=OFF with nrrdio supplied under 3rd_party/ or install tree.")
 endif()
