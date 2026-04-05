@@ -167,8 +167,6 @@ option(ENABLE_ASAN "Enable AddressSanitizer + UndefinedBehaviorSanitizer (Clang/
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
 option(VNEIO_BUILD_IMAGE "Build image component" ON)
 option(VNEIO_USE_STB_IMAGE_RESIZE "Enable stb_image_resize for higher-quality resizing" OFF)
-option(VNEIO_WITH_GDCM "Enable DICOM support via GDCM" OFF)
-option(VNEIO_WITH_DCMTK "Enable DICOM support via DCMTK" OFF)
 
 if(VNEIO_CI)
     set(VNEIO_DEV OFF CACHE BOOL "" FORCE)
@@ -606,41 +604,19 @@ if(TARGET vneio_image AND TARGET vneio_mesh)
 endif()
 
 # =============================================================================
-# Target: vneio_dicom — INTERFACE only (no in-tree DICOM .cpp)
+# Target: vneio_dicom — INTERFACE only (DICOM headers; no in-tree backend)
 #
-# Ships include/vertexnova/io/dicom/*.h (IDicomLoader, DicomSeries). When
-# VNEIO_WITH_GDCM or VNEIO_WITH_DCMTK is ON, adds INTERFACE compile definitions
-# and TODO placeholders for future find_package/link; there is no bundled GDCM/DCMTK
-# implementation yet. Otherwise same headers-only target for AssetIO + external loaders.
+# Ships include/vertexnova/io/dicom/*.h (IDicomLoader, DicomSeries). There is no
+# bundled GDCM/DCMTK implementation; register an external IDicomLoader with AssetIO.
+# Reintroduce CMake options and find_package/link here when a backend is added in-tree.
 # =============================================================================
-if(VNEIO_WITH_GDCM OR VNEIO_WITH_DCMTK)
-    # TODO: add concrete backend sources and find_package when GDCM/DCMTK are integrated.
-    add_library(vneio_dicom INTERFACE)
-    target_include_directories(vneio_dicom
-        INTERFACE
-            $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
-            $<INSTALL_INTERFACE:include>
-    )
-    if(VNEIO_WITH_GDCM)
-        target_compile_definitions(vneio_dicom INTERFACE VNEIO_WITH_GDCM)
-        # TODO: find_package(GDCM) and link
-    endif()
-    if(VNEIO_WITH_DCMTK)
-        target_compile_definitions(vneio_dicom INTERFACE VNEIO_WITH_DCMTK)
-        # TODO: find_package(DCMTK) and link
-    endif()
-    add_library(vne::io::dicom ALIAS vneio_dicom)
-else()
-    # No DICOM backend: expose headers only; AssetIO returns eUnsupportedFormat
-    # when no IDicomLoader is registered.
-    add_library(vneio_dicom INTERFACE)
-    target_include_directories(vneio_dicom
-        INTERFACE
-            $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
-            $<INSTALL_INTERFACE:include>
-    )
-    add_library(vne::io::dicom ALIAS vneio_dicom)
-endif()
+add_library(vneio_dicom INTERFACE)
+target_include_directories(vneio_dicom
+    INTERFACE
+        $<BUILD_INTERFACE:${VNEIO_INCLUDE_DIR}>
+        $<INSTALL_INTERFACE:include>
+)
+add_library(vne::io::dicom ALIAS vneio_dicom)
 
 # =============================================================================
 # Aggregate interface target: vneio

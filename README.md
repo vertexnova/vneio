@@ -27,10 +27,10 @@ It is independent of **vnescene**, **vnemath**, and **vneevents**. **vnelogging*
 
 ## Features
 
-- **Mesh** — `AssimpLoader` wraps the [Assimp](https://github.com/assimp/assimp) import library; supports OBJ, STL, PLY, FBX, glTF 2.0, Collada, and more. `AssimpLoaderOptions` controls triangulation, normal/tangent generation, UV flip, barycentrics, and normalization. OBJ export included.
+- **Mesh** — `AssimpLoader` wraps the [Assimp](https://github.com/assimp/assimp) import library. The **default vendored Assimp** build disables all importers by default and enables **OBJ, STL, and PLY** only (see root `CMakeLists.txt` Assimp flags). FBX, glTF 2.0, Collada, and other formats require enabling additional Assimp importers or linking another Assimp build. `AssimpLoaderOptions` (`assimp_loader.h`) controls triangulation, normals/tangents, UV flip, winding, barycentrics, and normalization. OBJ export included.
 - **Image** — `StbImageLoader` and the `Image` class wrap [stb_image](https://github.com/nothings/stb); supports PNG, JPG, BMP, TGA, HDR. `Image` provides resize, flip, and raw pixel access for GPU upload.
 - **Volume** — `NrrdLoader` and `MhdLoader` implement `IVolumeLoader` using [Teem NrrdIO](https://teem.sourceforge.net/nrrd/lib.html); loads 3D voxel data with full spatial metadata (dims, spacing, origin, direction matrix, pixel type). NRRD export and MHD export included.
-- **DICOM** — `vneio` ships the `IDicomLoader` interface and `DicomSeries` type (Volume + metadata map). GDCM/DCMTK-based loading is **not** implemented in-repo; CMake options only expose integration hooks. Use `AssetIO::registerDicomLoader()` to register an externally provided backend if your project supplies one.
+- **DICOM** — `vneio` ships the `IDicomLoader` interface and `DicomSeries` type (Volume + metadata map). No GDCM/DCMTK or other DICOM decoder is built in-tree. Use `AssetIO::registerDicomLoader()` to register an externally provided backend if your project supplies one.
 - **Unified registry** — `AssetIO` registers any combination of loaders and routes `LoadRequest` by asset type and file extension.
 - **Stable error model** — Every call returns `LoadResult<T>` with `Status` (stable `ErrorCode` enum, message, path, subsystem). No exceptions.
 - **Cross-platform** — Linux, macOS, Windows; mobile and Web follow vnescene / vnemath toolchains where those targets are enabled.
@@ -75,7 +75,7 @@ git clone --recursive https://github.com/vertexnova/vneio.git
 cd vneio
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
 cmake --build build
-cmake --install build --component vneio
+cmake --install build
 ```
 
 ## Building
@@ -107,8 +107,6 @@ Helper scripts (Linux, macOS, Windows): see [scripts/README.md](scripts/README.m
 | `VNEIO_DEV` | `ON` (top-level) | Dev preset: tests and examples ON |
 | `VNEIO_CI` | `OFF` | CI preset: tests ON, examples OFF |
 | `VNEIO_LIB_TYPE` | `static` | Library type: `static` or `shared` |
-| `VNEIO_WITH_GDCM` | `OFF` | Sets `VNEIO_WITH_GDCM` for downstream code; does **not** add an in-tree GDCM loader |
-| `VNEIO_WITH_DCMTK` | `OFF` | Sets `VNEIO_WITH_DCMTK` for downstream code; does **not** add an in-tree DCMTK loader |
 | `VNEIO_USE_STB_IMAGE_RESIZE` | `OFF` | stb_image_resize for quality resize |
 | `ENABLE_DOXYGEN` | `OFF` | Build API documentation (Doxygen) |
 | `ENABLE_COVERAGE` | `OFF` | Enable code coverage reporting |

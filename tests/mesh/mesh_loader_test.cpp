@@ -242,11 +242,7 @@ TEST_F(MeshLoaderTest, LoadViaAssetIO) {
 
 TEST_F(MeshLoaderTest, LoadViaAssetIOWithOptions) {
     AssimpLoaderOptions opts;
-    opts.triangulate = true;
-    opts.calc_normals_if_missing = true;
-    opts.pre_transform_vertices = false;
-    opts.flip_uvs = false;
-    opts.gen_tangents = false;
+    opts.generate_barycentrics = true;
 
     vne::io::AssetIO io;
     io.registerMeshLoader(std::make_unique<AssimpLoader>(opts));
@@ -260,6 +256,14 @@ TEST_F(MeshLoaderTest, LoadViaAssetIOWithOptions) {
     EXPECT_FALSE(result.value.isEmpty());
     EXPECT_GT(result.value.getVertexCount(), 0u);
     EXPECT_GT(result.value.getIndexCount(), 0u);
+
+    size_t non_zero_bary = 0;
+    for (const auto& v : result.value.vertices) {
+        if (v.barycentric[0] != 0.0f || v.barycentric[1] != 0.0f || v.barycentric[2] != 0.0f) {
+            ++non_zero_bary;
+        }
+    }
+    EXPECT_GT(non_zero_bary, 0u) << "generate_barycentrics should populate VertexAttributes::barycentric";
 }
 
 TEST_F(MeshLoaderTest, AssetIOUnsupportedFormatReturnsError) {

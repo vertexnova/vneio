@@ -10,7 +10,7 @@ The **VertexNova I/O** library (`vneio`) provides modular, production-ready asse
 - **Stable error model** — Every load returns a `LoadResult<T>` carrying a `Status` with a stable `ErrorCode` enum, message, file path, and subsystem string. No exceptions required.
 - **Single entry point** — `AssetIO` is the canonical API. Register loaders once, then call `loadMesh` / `loadImage` / `loadVolume` / `loadDicomSeries`. The registry routes each `LoadRequest` to the first registered loader that claims support for the extension.
 - **Options at construction** — Loader-specific options (e.g. `AssimpLoaderOptions`) are baked into the loader at construction, keeping `LoadRequest` format-agnostic.
-- **Pluggable backends** — DICOM support is opt-in at configure time (`-DVNEIO_WITH_GDCM=ON` / `-DVNEIO_WITH_DCMTK=ON`); no DICOM symbol is included in the default build.
+- **Pluggable backends** — DICOM decoding is not built in-tree; only `IDicomLoader` / `DicomSeries` headers ship. Register your own loader with `AssetIO::registerDicomLoader()`.
 
 ![System context](diagrams/context.png)
 
@@ -23,7 +23,7 @@ The **VertexNova I/O** library (`vneio`) provides modular, production-ready asse
 | Assimp | Third-party 3D model import library; consumed by `AssimpLoader`. Supports OBJ, STL, FBX, glTF, PLY, DAE, and more. |
 | stb_image | Header-only image decode/encode; consumed by `StbImageLoader` and `Image`. Supports PNG, JPG, BMP, TGA, HDR. |
 | NrrdIO | Teem's NRRD I/O library; consumed by `NrrdLoader` and `MhdLoader` for 3D volume data with optional gzip compression. |
-| GDCM / DCMTK | Optional DICOM backends. Enabled with CMake options; linked only when a `IDicomLoader` implementation is registered. |
+| GDCM / DCMTK | Not bundled with vneio; supply your own `IDicomLoader` if you need DICOM decode. |
 | vne::logging | Optional diagnostic logging; the library uses categorized log macros internally. |
 | vne::common | Shared VertexNova utilities. |
 
@@ -51,7 +51,7 @@ Export `diagrams/class.drawio` → `diagrams/class.png`.
 
 | Stage | Role |
 |-------|------|
-| LoadRequest | Caller sets `asset_type`, `uri`, optional `hint_format`, and optional flags (`generate_mips`, `force_srgb`, `prefer_16bit`); mesh options are set on the loader (e.g. `AssimpLoader`), not on `LoadRequest`. |
+| LoadRequest | Caller constructs a request: `asset_type`, `uri`, optional `hint_format`. |
 | AssetIO | Looks up the registered loader(s) matching the extension or hint; dispatches to the first match. |
 | Concrete Loader | Opens the file via the appropriate external library; validates format. |
 | External Library | Decodes raw bytes (Assimp, stb_image, NrrdIO, or DICOM backend). |
@@ -80,8 +80,8 @@ The design is **layered**: the application constructs a `LoadRequest` and calls 
 | Swimlane | Contents |
 |----------|----------|
 | Public API | `vneio.h` (umbrella), `common/` (status, binary_io, load_request), `mesh/` headers, `image/` headers, `dicom/` headers, `asset_io.h`. |
-| Implementation | Per-component `.cpp` files: `assimp_loader.cpp`, `stb_image_loader.cpp`, `nrrd_loader.cpp`, `mhd_loader.cpp`, exporters, registry impls, `asset_io.cpp`, `path_utils.cpp`. |
-| External | Assimp, stb_image, NrrdIO, optional GDCM/DCMTK. |
+| Implementation | Per-component `.cpp` files: `assimp_loader.cpp`, `stb_image_loader.cpp`, `nrrd_loader.cpp`, `mhd_loader.cpp`, exporters, `asset_io.cpp`, `path_utils.cpp`. |
+| External | Assimp, stb_image, NrrdIO (DICOM decode is external to this repo). |
 
 Export `diagrams/component.drawio` → `diagrams/component.png`.
 
@@ -119,15 +119,16 @@ For direct use without `AssetIO`, `loadFile(path, Mesh&)` and `loadFile(path, Me
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `flip_uvs` | false | Flip V texture coordinate. |
-| `gen_tangents` | false | Generate tangent and bitangent vectors. |
+| `flip_uvs` | true | Flip V texture coordinate. |
+| `gen_tangents` | true | Generate tangent and bitangent vectors. |
 | `triangulate` | true | Triangulate polygonal faces. |
-| `calc_normals_if_missing` | true | Compute per-vertex normals when absent. |
-| `pre_transform_vertices` | false | Flatten node hierarchy into a single mesh. |
+| `calc_normals_if_missing` | false | Compute per-vertex normals when absent. |
+| `pre_transform_vertices` | true | Flatten node hierarchy into a single mesh. |
+| `ensure_ccw_winding` | true | Ensure counter-clockwise triangle winding. |
 | `normalize_to_unit_sphere` | false | Rescale and center geometry. |
-| `generate_barycentrics` | false | Compute barycentric coordinates per vertex. |
+| `generate_barycentrics` | false | Compute barycentric coordinates per vertex (see `VertexAttributes::barycentric`). |
 
-**Supported formats** (depends on Assimp build flags): OBJ, STL, PLY, FBX, glTF 2.0, Collada (DAE), and more.
+**Supported formats** — The **default vendored Assimp** build in vneio sets `ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=OFF` and enables **OBJ, STL, and PLY** only. FBX, glTF 2.0, Collada, and other Assimp importers are available from upstream but require changing Assimp CMake flags or using a different Assimp build; see `AssimpLoader` / `AssimpLoaderOptions` in `assimp_loader.h`.
 
 #### `MeshExporter`
 
@@ -276,8 +277,6 @@ vneio is intentionally **independent of vnescene, vnemath, and vneevents** — i
 | `VNEIO_CI` | OFF | CI preset: tests ON, examples OFF. |
 | `VNEIO_LIB_TYPE` | `static` | Library type: `static` or `shared`. |
 | `VNEIO_USE_STB_IMAGE_RESIZE` | OFF | Use stb_image_resize for quality-preserving resize. |
-| `VNEIO_WITH_GDCM` | OFF | Enable GDCM DICOM backend. |
-| `VNEIO_WITH_DCMTK` | OFF | Enable DCMTK DICOM backend. |
 | `ENABLE_DOXYGEN` | OFF | Generate Doxygen HTML API docs. |
 | `ENABLE_COVERAGE` | OFF | Enable code coverage reporting. |
 | `ENABLE_ASAN` | OFF | AddressSanitizer + UBSan (GCC/Clang, Linux/macOS). |
@@ -296,7 +295,7 @@ vneio is intentionally **independent of vnescene, vnemath, and vneevents** — i
 | `vne::io` | Aggregate interface: links all enabled components. |
 | `vne::io::mesh` | Mesh component only. |
 | `vne::io::image` | Image + Volume component only. |
-| `vne::io::dicom` | DICOM component only (opt-in). |
+| `vne::io::dicom` | DICOM headers only (`IDicomLoader`, `DicomSeries`); no in-tree backend. |
 
 ### Dependency layout
 
