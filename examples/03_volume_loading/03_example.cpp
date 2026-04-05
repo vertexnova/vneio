@@ -28,7 +28,7 @@ namespace vne::io::examples {
 
 // Helper: compute min/max over a uint8 volume buffer
 static void voxelMinMax(const vne::image::Volume& v, uint8_t& out_min, uint8_t& out_max) {
-    const auto* p = v.dataAs<uint8_t>();
+    const uint8_t* p = v.getData();
     out_min = 255;
     out_max = 0;
     for (size_t i = 0; i < v.voxelCount(); ++i) {
@@ -43,16 +43,16 @@ static void voxelMinMax(const vne::image::Volume& v, uint8_t& out_min, uint8_t& 
 
 // Helper: compute min/max over a uint16 volume buffer
 static void voxelMinMaxU16(const vne::image::Volume& v, uint16_t& out_min, uint16_t& out_max) {
-    const auto* p = v.dataAs<uint16_t>();
     size_t n = v.voxelCount();
     out_min = 65535;
     out_max = 0;
     for (size_t i = 0; i < n; ++i) {
-        if (p[i] < out_min) {
-            out_min = p[i];
+        const uint16_t x = v.readVoxelAt<uint16_t>(i);
+        if (x < out_min) {
+            out_min = x;
         }
-        if (p[i] > out_max) {
-            out_max = p[i];
+        if (x > out_max) {
+            out_max = x;
         }
     }
 }

@@ -7,8 +7,8 @@
  *   .nrrd (attached)  |  .nhdr + .raw (detached NRRD)
  *   .mhd  + .raw      |  .mha (inline MHD)
  *
- * Each variant checks dims, spacing, origin, direction, and first/last
- * voxel value to guard against silent truncation or byte-order bugs.
+ * Each variant checks geometry metadata and full voxel payload equality
+ * to guard against silent truncation or byte-order bugs.
  * ----------------------------------------------------------------------
  */
 
@@ -21,6 +21,7 @@
 #include "vertexnova/io/image/mhd_loader.h"
 
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <string>
 
@@ -32,7 +33,7 @@ static bool nearEq(float a, float b) {
     return std::fabs(a - b) < kEps;
 }
 
-// Verify that `loaded` matches `src` geometry and voxel endpoints.
+// Verify that `loaded` matches `src` geometry and raw voxel bytes.
 static bool verifyRoundTrip(const vne::image::Volume& src, const vne::image::Volume& loaded, const char* label) {
     bool ok = true;
     ok &= check(loaded.dims[0] == src.dims[0] && loaded.dims[1] == src.dims[1] && loaded.dims[2] == src.dims[2],
@@ -49,11 +50,7 @@ static bool verifyRoundTrip(const vne::image::Volume& src, const vne::image::Vol
     }
     ok &= check(loaded.pixel_type == src.pixel_type, (std::string(label) + ": pixel_type match").c_str());
     ok &= check(loaded.byteCount() == src.byteCount(), (std::string(label) + ": byteCount match").c_str());
-    // First and last voxel
-    if (!loaded.data.empty() && !src.data.empty()) {
-        ok &= check(loaded.data.front() == src.data.front(), (std::string(label) + ": first voxel match").c_str());
-        ok &= check(loaded.data.back() == src.data.back(), (std::string(label) + ": last voxel match").c_str());
-    }
+    ok &= check(loaded.data == src.data, (std::string(label) + ": voxel payload match").c_str());
     return ok;
 }
 
@@ -83,9 +80,9 @@ int runVolumeExportExample() {
     src.pixel_type = vne::image::VolumePixelType::eUint16;
     src.components = 1;
     src.data.resize(src.byteCount());
-    auto* p = reinterpret_cast<uint16_t*>(src.data.data());
     for (size_t i = 0; i < src.voxelCount(); ++i) {
-        p[i] = static_cast<uint16_t>(i * 100 + 1);
+        const uint16_t v = static_cast<uint16_t>(i * 100 + 1);
+        std::memcpy(src.data.data() + i * sizeof(uint16_t), &v, sizeof(uint16_t));
     }
     printVolumeInfo(src, "source");
     if (!check(src.isMetadataValid(), "source isMetadataValid()==true")) {

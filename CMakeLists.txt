@@ -91,6 +91,33 @@ function(vneio_target_apply_shared_export target_name)
     endif()
 endfunction()
 
+# Embed or link VertexNova logging for a component library (static embed vs shared vne::logging).
+function(vneio_target_add_logging target_name)
+    if(NOT VNEIO_HAS_LOGGING)
+        return()
+    endif()
+    if(_VNEIO_LIB_KIND STREQUAL "STATIC" AND TARGET vneio_logging_embed)
+        target_sources(${target_name} PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
+        add_dependencies(${target_name} vneio_logging_embed)
+        target_include_directories(${target_name} PRIVATE
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
+            "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
+        if(NOT WIN32 AND NOT EMSCRIPTEN)
+            target_link_libraries(${target_name} PUBLIC Threads::Threads)
+        endif()
+        if(VNE_TARGET_PLATFORM STREQUAL "Android")
+            target_link_libraries(${target_name} PUBLIC log)
+        elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
+            target_link_libraries(${target_name} PUBLIC "-framework" "Foundation")
+        endif()
+    elseif(TARGET vne::logging)
+        target_link_libraries(${target_name} PRIVATE vne::logging)
+    endif()
+    target_compile_definitions(${target_name} PRIVATE VNEIO_HAS_LOGGING=1)
+endfunction()
+
 # =============================================================================
 # Options, presets (DEV/CI), coverage, sanitizers
 # =============================================================================
@@ -464,31 +491,8 @@ if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
         PUBLIC VneIoWarnings VneIoBuildSettings
         PRIVATE ${VNEIO_ASSIMP_TARGET}
     )
-    if(VNEIO_HAS_LOGGING)
-        if(_VNEIO_LIB_KIND STREQUAL STATIC AND TARGET vneio_logging_embed)
-            # OBJECT embedding keeps vneio_logging_embed out of install(EXPORT); pthread / log /
-            # Foundation are not pulled in via that edge, so declare them PUBLIC on vneio_mesh
-            # for consumers linking the static library.
-            target_sources(vneio_mesh PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
-            add_dependencies(vneio_mesh vneio_logging_embed)
-            target_include_directories(vneio_mesh PRIVATE
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
-                "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
-            if(NOT WIN32 AND NOT EMSCRIPTEN)
-                target_link_libraries(vneio_mesh PUBLIC Threads::Threads)
-            endif()
-            if(VNE_TARGET_PLATFORM STREQUAL "Android")
-                target_link_libraries(vneio_mesh PUBLIC log)
-            elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
-                target_link_libraries(vneio_mesh PUBLIC "-framework" "Foundation")
-            endif()
-        elseif(TARGET vne::logging)
-            target_link_libraries(vneio_mesh PRIVATE vne::logging)
-        endif()
-        target_compile_definitions(vneio_mesh PRIVATE VNEIO_HAS_LOGGING=1)
-    endif()
+    # Static embed: pthread / log / Foundation are PUBLIC so static lib consumers link them.
+    vneio_target_add_logging(vneio_mesh)
     add_library(vne::io::mesh ALIAS vneio_mesh)
 endif()
 
@@ -549,28 +553,7 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     if(VNEIO_NRRDIO_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
     endif()
-    if(VNEIO_HAS_LOGGING)
-        if(_VNEIO_LIB_KIND STREQUAL STATIC AND TARGET vneio_logging_embed)
-            target_sources(vneio_image PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
-            add_dependencies(vneio_image vneio_logging_embed)
-            target_include_directories(vneio_image PRIVATE
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
-                "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
-            if(NOT WIN32 AND NOT EMSCRIPTEN)
-                target_link_libraries(vneio_image PUBLIC Threads::Threads)
-            endif()
-            if(VNE_TARGET_PLATFORM STREQUAL "Android")
-                target_link_libraries(vneio_image PUBLIC log)
-            elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
-                target_link_libraries(vneio_image PUBLIC "-framework" "Foundation")
-            endif()
-        elseif(TARGET vne::logging)
-            target_link_libraries(vneio_image PRIVATE vne::logging)
-        endif()
-        target_compile_definitions(vneio_image PRIVATE VNEIO_HAS_LOGGING=1)
-    endif()
+    vneio_target_add_logging(vneio_image)
     add_library(vne::io::image ALIAS vneio_image)
 endif()
 

@@ -13,8 +13,9 @@
 #include "vertexnova/io/export.h"
 
 #include <cmath>
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <type_traits>
 #include <vector>
 
@@ -154,12 +155,25 @@ struct VNEIO_API Volume {
     }
 
     /**
-     * @brief Typed read-only view of voxel data (trivially copyable types only).
+     * @brief Copy one stored value of type @a T from the raw buffer at logical index @a linear_index.
+     *
+     * Interprets the buffer as a contiguous array of `T` (stride `sizeof(T)` bytes). The same indexing
+     * applies as for a former `dataAs<T>()[i]` view: for scalar volumes, @a linear_index is the flat
+     * voxel index; multi-component layouts are the caller's responsibility.
+     *
+     * Uses `memcpy`, so no alignment requirement on `data.data()`. If the slice would extend past
+     * `data.size()`, returns a value-initialized `T`.
      */
     template<typename T>
-    [[nodiscard]] const T* dataAs() const {
+    [[nodiscard]] T readVoxelAt(size_t linear_index) const {
         static_assert(std::is_trivially_copyable_v<T>);
-        return reinterpret_cast<const T*>(data.data());
+        T out{};
+        const size_t off = linear_index * sizeof(T);
+        if (off + sizeof(T) > data.size()) {
+            return out;
+        }
+        std::memcpy(&out, data.data() + off, sizeof(T));
+        return out;
     }
 
     /**

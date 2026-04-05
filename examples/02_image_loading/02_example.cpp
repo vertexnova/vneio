@@ -142,23 +142,25 @@ int runImageLoadingExample() {
     // ── Construct from raw data ───────────────────────────────────────────────
     printSection("Construct Image from raw data buffer");
     {
-        const int W = 4, H = 4, CH = 4;
-        uint8_t buf[W * H * CH] = {};
-        for (int i = 0; i < W * H; ++i) {
-            buf[i * CH + 0] = static_cast<uint8_t>((i % 2) * 255);
-            buf[i * CH + 3] = 255;
+        constexpr int kWidth    = 4;
+        constexpr int kHeight   = 4;
+        constexpr int kChannels = 4;
+        uint8_t buf[kWidth * kHeight * kChannels] = {};
+        for (int i = 0; i < kWidth * kHeight; ++i) {
+            buf[i * kChannels + 0] = static_cast<uint8_t>((i % 2) * 255);
+            buf[i * kChannels + 3] = 255;
         }
-        vne::image::Image img(buf, W, H, CH);
+        vne::image::Image img(buf, kWidth, kHeight, kChannels);
         if (!check(!img.isEmpty(), "Image(raw) is not empty")) {
             return 1;
         }
-        if (!check(img.getWidth() == W, "width matches")) {
+        if (!check(img.getWidth() == kWidth, "width matches")) {
             return 1;
         }
-        if (!check(img.getHeight() == H, "height matches")) {
+        if (!check(img.getHeight() == kHeight, "height matches")) {
             return 1;
         }
-        if (!check(img.getChannels() == CH, "channels matches")) {
+        if (!check(img.getChannels() == kChannels, "channels matches")) {
             return 1;
         }
     }

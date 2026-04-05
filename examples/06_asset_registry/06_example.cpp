@@ -35,18 +35,6 @@ int runAssetRegistryExample() {
 
     // ── Build registry ────────────────────────────────────────────────────────
     printSection("Build AssetIO registry");
-    {
-        vne::io::AssetIO registry;
-        registry.registerImageLoader(std::make_unique<vne::image::StbImageLoader>());
-        registry.registerVolumeLoader(std::make_unique<vne::image::NrrdLoader>());
-        registry.registerVolumeLoader(std::make_unique<vne::image::MhdLoader>());
-        registry.registerMeshLoader(std::make_unique<vne::mesh::AssimpLoader>());
-        if (!check(true, "registry constructed and loaders registered")) {
-            return 1;
-        }
-    }
-
-    // ── Shared registry for remaining sections ────────────────────────────────
     vne::io::AssetIO registry;
     registry.registerImageLoader(std::make_unique<vne::image::StbImageLoader>());
     registry.registerVolumeLoader(std::make_unique<vne::image::NrrdLoader>());

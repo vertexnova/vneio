@@ -82,7 +82,20 @@ TEST(VolumeTest, VolumeHelpersFilledScalar) {
     EXPECT_TRUE(vol.hasScalarVoxels());
     EXPECT_TRUE(vol.hasIdentityDirection());
     EXPECT_TRUE(vol.isMetadataValid());
-    EXPECT_EQ(vol.dataAs<uint8_t>()[7], 7);
+    EXPECT_EQ(vol.readVoxelAt<uint8_t>(7), 7);
+}
+
+TEST(VolumeTest, ReadVoxelAtOutOfRangeReturnsZero) {
+    Volume vol;
+    vol.dims[0] = vol.dims[1] = vol.dims[2] = 1;
+    vol.pixel_type = VolumePixelType::eUint8;
+    vol.components = 1;
+    vol.data.assign(1u, 99);
+    EXPECT_EQ(vol.readVoxelAt<uint8_t>(0), 99);
+    EXPECT_EQ(vol.readVoxelAt<uint8_t>(1), 0);
+    vol.pixel_type = VolumePixelType::eUint16;
+    vol.data.assign(1u, 0);
+    EXPECT_EQ(vol.readVoxelAt<uint16_t>(0), 0u);
 }
 
 TEST(VolumeTest, VolumeHelpersNonScalarComponents) {
@@ -381,7 +394,7 @@ TEST(VolumeTest, MhdLoaderMsbUshortInline) {
     Volume vol;
     ASSERT_TRUE(loader.load(path, vol)) << loader.getLastError();
     EXPECT_EQ(vol.pixel_type, VolumePixelType::eUint16);
-    EXPECT_EQ(vol.dataAs<uint16_t>()[0], 258u);
+    EXPECT_EQ(vol.readVoxelAt<uint16_t>(0), 258u);
     std::filesystem::remove(path);
 }
 

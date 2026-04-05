@@ -27,15 +27,15 @@ constexpr float kSpaceDirectionMinLength = 1e-20f;
 /** Relative tolerance when comparing NRRD axis spacing to |space direction|. */
 constexpr float kSpacingVersusDirectionLengthRelTol = 1e-3f;
 constexpr float kIdentityDirection3x3[9] = {
-    1.f,
-    0.f,
-    0.f,
-    0.f,
-    1.f,
-    0.f,
-    0.f,
-    0.f,
-    1.f,
+    1.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    1.0f,
+    0.0f,
+    0.0f,
+    0.0f,
+    1.0f,
 };
 
 }  // namespace

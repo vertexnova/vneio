@@ -26,6 +26,10 @@ namespace io {
 /**
  * @enum ErrorCode
  * @brief Stable error codes for load and export operations.
+ *
+ * Explicit integer values are part of the public contract: do not renumber without a documented
+ * migration. Integrators should compare using these enumerators (or @c static_cast<int> on them)
+ * rather than assuming a dense sequence; @c -16 is intentionally unused (reserved).
  */
 enum class ErrorCode : int {
     eOk = 0,                    //!< Success.
@@ -44,7 +48,7 @@ enum class ErrorCode : int {
     eDataCorrupt = -13,         //!< Corrupt data.
     eDataTruncated = -14,       //!< Truncated or incomplete data.
     eInvalidDimensions = -15,   //!< Invalid dimensions.
-    eInvalidPixelType = -17,    //!< Unsupported pixel type.
+    eInvalidPixelType = -17,    //!< Unsupported pixel type (integer -16 is unused / reserved).
     eThirdPartyError = -18,     //!< Error from third-party library.
 };
 
