@@ -42,6 +42,7 @@ set(VNEIO_TESTDATA_DIR "${VNEIO_ROOT}/testdata")
 
 # vneio_config.h (note: vnelogging may use config.h in its own build dir)
 set(VNEIO_TEST_OUTPUT_DIR "${CMAKE_BINARY_DIR}/test_output")
+file(MAKE_DIRECTORY "${VNEIO_TEST_OUTPUT_DIR}")
 configure_file(${VNEIO_ROOT}/config/config.h.in ${CMAKE_BINARY_DIR}/vneio_config.h @ONLY)
 
 if(EXISTS "${VNEIO_ROOT}/cmake/vnecmake/modules")
@@ -68,6 +69,8 @@ else()
 endif()
 
 message(STATUS "VneIo: VNEIO_LIB_TYPE=${VNEIO_LIB_TYPE} — typical -B build/${VNEIO_LIB_TYPE}/Release or .../Debug")
+# Subdirectories that branch on static vs shared should use get_target_property(TYPE vneio_asset_io)
+# (SHARED_LIBRARY vs STATIC_LIBRARY), not only this cache variable, so behavior matches real targets.
 
 # =============================================================================
 # Helper: visibility / DLL export for shared component libs
@@ -90,6 +93,33 @@ function(vneio_target_apply_shared_export target_name)
     endif()
 endfunction()
 
+# Embed or link VertexNova logging for a component library (static embed vs shared vne::logging).
+function(vneio_target_add_logging target_name)
+    if(NOT VNEIO_HAS_LOGGING)
+        return()
+    endif()
+    if(_VNEIO_LIB_KIND STREQUAL "STATIC" AND TARGET vneio_logging_embed)
+        target_sources(${target_name} PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
+        add_dependencies(${target_name} vneio_logging_embed)
+        target_include_directories(${target_name} PRIVATE
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
+            "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
+            "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
+        if(NOT WIN32 AND NOT EMSCRIPTEN)
+            target_link_libraries(${target_name} PUBLIC Threads::Threads)
+        endif()
+        if(VNE_TARGET_PLATFORM STREQUAL "Android")
+            target_link_libraries(${target_name} PUBLIC log)
+        elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
+            target_link_libraries(${target_name} PUBLIC "-framework" "Foundation")
+        endif()
+    elseif(TARGET vne::logging)
+        target_link_libraries(${target_name} PRIVATE vne::logging)
+    endif()
+    target_compile_definitions(${target_name} PRIVATE VNEIO_HAS_LOGGING=1)
+endfunction()
+
 # =============================================================================
 # Options, presets (DEV/CI), coverage, sanitizers
 # =============================================================================
@@ -98,10 +128,12 @@ if(CMAKE_PROJECT_NAME STREQUAL "vneio")
 else()
     set(VNEIO_DEV_DEFAULT OFF)
 endif()
-option(VNEIO_DEV "Dev build: tests/examples defaults for local development" ${VNEIO_DEV_DEFAULT})
-option(VNEIO_CI "CI build: tighten defaults for pipelines (-DVNEIO_CI=ON)" OFF)
+option(VNEIO_DEV "Dev build: tests + examples ON for local development (-DVNEIO_DEV=ON)" ${VNEIO_DEV_DEFAULT})
+option(VNEIO_CI "CI/release-style build: examples OFF; use with pipeline CMake (-DVNEIO_CI=ON)" OFF)
 option(VNEIO_BUILD_TESTS "Build VneIo tests" OFF)
-option(VNEIO_BUILD_EXAMPLES "Build VneIo examples" OFF)
+option(VNEIO_BUILD_EXAMPLES
+    "Build VneIo headless examples (default OFF; ON when VNEIO_DEV=ON; OFF when VNEIO_CI=ON or ENABLE_COVERAGE=ON)"
+    OFF)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(ENABLE_ASAN "Enable AddressSanitizer + UndefinedBehaviorSanitizer (Clang/GCC, Linux/macOS only)" OFF)
 option(VNEIO_BUILD_MESH "Build mesh component" ON)
@@ -113,11 +145,11 @@ option(VNEIO_WITH_DCMTK "Enable DICOM support via DCMTK" OFF)
 if(VNEIO_CI)
     set(VNEIO_DEV OFF CACHE BOOL "" FORCE)
     set(VNEIO_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    message(STATUS "VneIo: CI build -> VNEIO_BUILD_EXAMPLES=OFF (set VNEIO_BUILD_TESTS in CMake args as needed)")
+    message(STATUS "VneIo: CI/release-style (VNEIO_CI=ON) -> VNEIO_BUILD_EXAMPLES=OFF")
 elseif(VNEIO_DEV)
     set(VNEIO_BUILD_TESTS ON CACHE BOOL "" FORCE)
     set(VNEIO_BUILD_EXAMPLES ON CACHE BOOL "" FORCE)
-    message(STATUS "VneIo: DEV build -> VNEIO_BUILD_TESTS=ON, VNEIO_BUILD_EXAMPLES=ON")
+    message(STATUS "VneIo: DEV (VNEIO_DEV=ON) -> VNEIO_BUILD_TESTS=ON, VNEIO_BUILD_EXAMPLES=ON")
 endif()
 
 # iOS + Xcode: only under CI — skip code signing for static libs (no signing identity on runners).
@@ -141,6 +173,8 @@ if(ENABLE_COVERAGE)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
     endif()
+    set(VNEIO_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    message(STATUS "VneIo: ENABLE_COVERAGE=ON -> VNEIO_BUILD_EXAMPLES=OFF (examples not built for coverage)")
 endif()
 
 if(ENABLE_ASAN)
@@ -200,6 +234,28 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 elseif(CMAKE_BUILD_TYPE MATCHES Release)
     target_compile_definitions(VneIoBuildSettings INTERFACE VNE_BUILD_TYPE_RELEASE)
 endif()
+
+# -----------------------------------------------------------------------------
+# Third-party targets under deps/external (and similar): do not use VneIo strict warnings.
+# -----------------------------------------------------------------------------
+function(vneio_target_suppress_external_warnings target_name)
+    if(NOT TARGET "${target_name}")
+        return()
+    endif()
+    get_target_property(_vneio_ext_imported "${target_name}" IMPORTED)
+    if(_vneio_ext_imported)
+        return()
+    endif()
+    get_target_property(_vneio_ext_type "${target_name}" TYPE)
+    if(_vneio_ext_type STREQUAL "INTERFACE_LIBRARY")
+        return()
+    endif()
+    if(MSVC)
+        target_compile_options("${target_name}" PRIVATE /W0)
+    else()
+        target_compile_options("${target_name}" PRIVATE $<$<COMPILE_LANGUAGE:C,CXX,OBJC,OBJCXX>:-w>)
+    endif()
+endfunction()
 
 # =============================================================================
 # Internal: vnecommon + vnelogging (deps/internal), static embed target
@@ -402,6 +458,19 @@ if(VNEIO_BUILD_IMAGE AND NOT VNEIO_NRRDIO_FOUND)
     message(FATAL_ERROR "VneIo: nrrdio is required for the image component. Add deps/external/nrrdio or set nrrdio_DIR.")
 endif()
 
+# In-tree third-party libraries: silence compiler warnings in their sources only.
+if(VNEIO_BUILD_IMAGE)
+    if(TARGET stb_image)
+        vneio_target_suppress_external_warnings(stb_image)
+    endif()
+    if(TARGET NrrdIO)
+        vneio_target_suppress_external_warnings(NrrdIO)
+    endif()
+endif()
+if(VNEIO_BUILD_MESH AND TARGET assimp)
+    vneio_target_suppress_external_warnings(assimp)
+endif()
+
 # =============================================================================
 # Target: vneio_mesh
 # =============================================================================
@@ -424,31 +493,8 @@ if(VNEIO_BUILD_MESH AND VNEIO_ASSIMP_TARGET)
         PUBLIC VneIoWarnings VneIoBuildSettings
         PRIVATE ${VNEIO_ASSIMP_TARGET}
     )
-    if(VNEIO_HAS_LOGGING)
-        if(_VNEIO_LIB_KIND STREQUAL STATIC AND TARGET vneio_logging_embed)
-            # OBJECT embedding keeps vneio_logging_embed out of install(EXPORT); pthread / log /
-            # Foundation are not pulled in via that edge, so declare them PUBLIC on vneio_mesh
-            # for consumers linking the static library.
-            target_sources(vneio_mesh PRIVATE $<TARGET_OBJECTS:vneio_logging_embed>)
-            add_dependencies(vneio_mesh vneio_logging_embed)
-            target_include_directories(vneio_mesh PRIVATE
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/include"
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnelogging/src"
-                "${CMAKE_BINARY_DIR}/deps/internal/vnelogging"
-                "${VNEIO_DEPS_INTERNAL_DIR}/vnecommon/include")
-            if(NOT WIN32 AND NOT EMSCRIPTEN)
-                target_link_libraries(vneio_mesh PUBLIC Threads::Threads)
-            endif()
-            if(VNE_TARGET_PLATFORM STREQUAL "Android")
-                target_link_libraries(vneio_mesh PUBLIC log)
-            elseif(VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "visionOS")
-                target_link_libraries(vneio_mesh PUBLIC "-framework" "Foundation")
-            endif()
-        elseif(TARGET vne::logging)
-            target_link_libraries(vneio_mesh PRIVATE vne::logging)
-        endif()
-        target_compile_definitions(vneio_mesh PRIVATE VNEIO_HAS_LOGGING=1)
-    endif()
+    # Static embed: pthread / log / Foundation are PUBLIC so static lib consumers link them.
+    vneio_target_add_logging(vneio_mesh)
     add_library(vne::io::mesh ALIAS vneio_mesh)
 endif()
 
@@ -509,6 +555,7 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     if(VNEIO_NRRDIO_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
     endif()
+    vneio_target_add_logging(vneio_image)
     add_library(vne::io::image ALIAS vneio_image)
 endif()
 

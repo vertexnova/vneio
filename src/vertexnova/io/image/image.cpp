@@ -31,6 +31,13 @@
 #include "stb_image_resize.h"
 #endif
 
+namespace {
+
+constexpr float kByteClampMax = 255.0f;
+constexpr int kDefaultJpegQuality = 90;
+
+}  // namespace
+
 namespace vne {
 namespace image {
 
@@ -164,7 +171,6 @@ bool Image::resize(int new_width, int new_height) {
                 const float v0 = v00 + (v10 - v00) * tx;
                 const float v1 = v01 + (v11 - v01) * tx;
                 const float v = v0 + (v1 - v0) * ty;
-                constexpr float kByteClampMax = 255.0f;
                 dst[c] = static_cast<uint8_t>(std::max(0.0f, std::min(kByteClampMax, v)));
             }
         }
@@ -245,7 +251,6 @@ bool saveImage(
     if (format == "png") {
         result = stbi_write_png(file_path.c_str(), width, height, channels, data, stride);
     } else if (format == "jpg" || format == "jpeg") {
-        constexpr int kDefaultJpegQuality = 90;
         result = stbi_write_jpg(file_path.c_str(), width, height, channels, data, kDefaultJpegQuality);
     } else if (format == "bmp") {
         result = stbi_write_bmp(file_path.c_str(), width, height, channels, data);

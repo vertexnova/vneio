@@ -46,9 +46,20 @@ namespace binaryio {
     }
     f.seekg(0, std::ios::beg);
     out.resize(static_cast<size_t>(size));
-    if (!out.empty() && !f.read(reinterpret_cast<char*>(out.data()), size)) {
-        out.clear();
-        return Status::make(ErrorCode::eFileReadFailed, "Failed to read file", path, "BinaryIO");
+    if (!out.empty()) {
+        f.read(reinterpret_cast<char*>(out.data()), size);
+        const std::streamsize n = f.gcount();
+        if (n != size) {
+            out.clear();
+            if (f.bad()) {
+                return Status::make(ErrorCode::eFileReadFailed, "Failed to read file", path, "BinaryIO");
+            }
+            return Status::make(ErrorCode::eDataTruncated,
+                                "Short read (" + std::to_string(static_cast<unsigned long long>(n)) + " of "
+                                    + std::to_string(static_cast<unsigned long long>(size)) + " bytes)",
+                                path,
+                                "BinaryIO");
+        }
     }
     return Status::okStatus();
 }
@@ -83,6 +94,9 @@ namespace binaryio {
  * @param header_text Output: all header bytes up to and including the blank line.
  * @param data_offset Output: absolute offset in file where the binary payload starts.
  * @return Status (eOk when blank line found, eDataTruncated if EOF before blank line).
+ *
+ * Trailing @c '\\r' is stripped from each line so CRLF-encoded headers recognize a blank line
+ * (otherwise @c std::getline yields @c "\\r" and the binary offset is wrong on Windows).
  */
 [[nodiscard]] inline Status readHeaderUntilBlankLine(std::ifstream& f,
                                                      std::string& header_text,
@@ -94,6 +108,9 @@ namespace binaryio {
     }
     std::string line;
     while (std::getline(f, line)) {
+        while (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
         header_text += line;
         header_text += "\n";
         if (line.empty()) {

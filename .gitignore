@@ -78,3 +78,5 @@ test_output/
 *.gcno
 coverage/
 coverage.info
+
+.vscode/

@@ -12,18 +12,19 @@ cmake_minimum_required(VERSION 3.16)
 
 project(TestVneIo)
 
+set(_VNEIO_TESTS_CONFIGURE TRUE)
 # Disable tests for iOS and Web
 if(DEFINED VNE_TARGET_PLATFORM AND (VNE_TARGET_PLATFORM STREQUAL "iOS" OR VNE_TARGET_PLATFORM STREQUAL "Web"))
     message(STATUS "VneIo tests disabled for ${VNE_TARGET_PLATFORM}")
-    return()
+    set(_VNEIO_TESTS_CONFIGURE FALSE)
 endif()
-
 # Require both mesh and image components
 if(NOT TARGET vneio_mesh OR NOT TARGET vneio_image)
     message(STATUS "VneIo tests require VNEIO_BUILD_MESH and VNEIO_BUILD_IMAGE; skipping.")
-    return()
+    set(_VNEIO_TESTS_CONFIGURE FALSE)
 endif()
 
+if(_VNEIO_TESTS_CONFIGURE)
 #-----------------------------------------------------------------------------
 # Google Test (deps/external submodule, stable v1.14.0)
 #-----------------------------------------------------------------------------
@@ -56,6 +57,14 @@ else()
     endif()
 endif()
 
+if(COMMAND vneio_target_suppress_external_warnings)
+    foreach(_vneio_ext_gtest IN ITEMS gtest gtest_main gmock)
+        if(TARGET "${_vneio_ext_gtest}")
+            vneio_target_suppress_external_warnings("${_vneio_ext_gtest}")
+        endif()
+    endforeach()
+endif()
+
 #-----------------------------------------------------------------------------
 # Test sources (mesh + image, from vertexnova/tests/core)
 #-----------------------------------------------------------------------------
@@ -72,9 +81,12 @@ list(APPEND TEST_SOURCES ${VNEIO_ROOT}/src/vertexnova/io/utils/path_utils.cpp)
 add_executable(TestVneIo ${TEST_SOURCES})
 
 # Shared DLL + tests: consumers see VNEIO_DLL / dllimport; MSVC C4251 on STL in exported
-# classes is expected (same as vneio targets' /wd4251 /wd4275).
-if(MSVC AND DEFINED VNEIO_LIB_TYPE AND VNEIO_LIB_TYPE STREQUAL "shared")
-    target_compile_options(TestVneIo PRIVATE /wd4251 /wd4275)
+# classes is expected (same as vneio targets' /wd4251 /wd4275). Match actual vneio_asset_io TYPE.
+if(MSVC AND TARGET vneio_asset_io)
+    get_target_property(_VNEIO_TEST_ASSET_IO_TYPE vneio_asset_io TYPE)
+    if(_VNEIO_TEST_ASSET_IO_TYPE STREQUAL "SHARED_LIBRARY")
+        target_compile_options(TestVneIo PRIVATE /wd4251 /wd4275)
+    endif()
 endif()
 
 target_include_directories(TestVneIo
@@ -92,8 +104,13 @@ set(VNEIO_TEST_LIBS "")
 if(TARGET vneio_asset_io)
     list(APPEND VNEIO_TEST_LIBS vneio_asset_io)
 endif()
+# NrrdIO OBJECT sources are merged into vneio_image; linking NrrdIO again duplicates symbols (e.g. main in sampleIO.c).
 if(VNEIO_NRRDIO_TARGET)
-    list(APPEND VNEIO_TEST_LIBS ${VNEIO_NRRDIO_TARGET})
+    get_target_property(_vneio_test_nrrd_type "${VNEIO_NRRDIO_TARGET}" TYPE)
+    get_target_property(_vneio_test_nrrd_imported "${VNEIO_NRRDIO_TARGET}" IMPORTED)
+    if(_vneio_test_nrrd_imported OR NOT _vneio_test_nrrd_type STREQUAL "OBJECT_LIBRARY")
+        list(APPEND VNEIO_TEST_LIBS ${VNEIO_NRRDIO_TARGET})
+    endif()
 endif()
 
 target_link_libraries(TestVneIo
@@ -108,3 +125,5 @@ target_compile_definitions(TestVneIo PRIVATE "VNEIO_TESTDATA_DIR=\"${VNEIO_TESTD
 # Run from project root so testdata paths resolve; testdata root is absolute from config
 add_test(NAME vneio.test COMMAND TestVneIo)
 set_tests_properties(vneio.test PROPERTIES WORKING_DIRECTORY ${VNEIO_ROOT})
+
+endif()

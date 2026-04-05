@@ -199,6 +199,7 @@ jobs:
             -DCMAKE_BUILD_TYPE="$EFFECTIVE_BUILD_TYPE" \
             -DVNEIO_CI=ON \
             -DVNEIO_BUILD_TESTS=ON \
+            -DVNEIO_BUILD_EXAMPLES=OFF \
             -DVNEIO_BUILD_MESH=ON \
             -DVNEIO_BUILD_IMAGE=ON \
             -DWARNINGS_AS_ERRORS="$WAE" \
@@ -276,7 +277,7 @@ jobs:
           lcov --capture --directory "$BUILD_DIR" --output-file coverage.info \
             --ignore-errors mismatch,unused,empty
           lcov --remove coverage.info \
-            '/usr/*' '*/tests/*' '*/deps/external/*' '*/deps/internal/*' \
+            '/usr/*' '*/tests/*' '*/examples/*' '*/deps/external/*' '*/deps/internal/*' \
             '*/_deps/*' '*/googletest/*' '*/googlemock/*' \
             --output-file coverage.info --ignore-errors mismatch,unused
           lcov --list coverage.info --ignore-errors mismatch,unused
