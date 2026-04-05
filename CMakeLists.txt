@@ -5,6 +5,13 @@
 # Author:    Ajeet Singh Yadav
 # Created:   January 2026
 #
+# Autodoc:   yes
+# =============================================================================
+
+# =============================================================================
+# Description: CMake build system for VneIo — core library, mesh, image.
+# =============================================================================
+
 # VneIo — mesh and image I/O (VertexNova core)
 #
 # File map (top to bottom):
@@ -19,8 +26,8 @@
 #   9. Aggregate target vneio
 #  10. Tests & examples
 #  11. Install, LICENSE/CHANGELOG, optional install-tree sanitize
-# =============================================================================
 
+# =============================================================================
 cmake_minimum_required(VERSION 3.16)
 project(vneio VERSION 1.0.0 LANGUAGES CXX)
 
