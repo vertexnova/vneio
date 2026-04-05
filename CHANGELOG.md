@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/vertexnova/vneio/compare/v1.3.0...v1.4.0) (2026-04-05)
+
+
+### Features
+
+* Updating the vneio documents, examples documents. Reformating the copyright comments and minor other refactoring. ([#10](https://github.com/vertexnova/vneio/issues/10)) ([93d3133](https://github.com/vertexnova/vneio/commit/93d3133b5abb6430411ca43db2483432cad66cca))
+
 ## [1.3.0](https://github.com/vertexnova/vneio/compare/v1.2.0...v1.3.0) (2026-04-05)
 
 
