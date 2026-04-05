@@ -55,8 +55,8 @@ namespace binaryio {
                 return Status::make(ErrorCode::eFileReadFailed, "Failed to read file", path, "BinaryIO");
             }
             return Status::make(ErrorCode::eDataTruncated,
-                                "Short read (" + std::to_string(static_cast<unsigned long long>(n)) + " of " +
-                                    std::to_string(static_cast<unsigned long long>(size)) + " bytes)",
+                                "Short read (" + std::to_string(static_cast<unsigned long long>(n)) + " of "
+                                    + std::to_string(static_cast<unsigned long long>(size)) + " bytes)",
                                 path,
                                 "BinaryIO");
         }
