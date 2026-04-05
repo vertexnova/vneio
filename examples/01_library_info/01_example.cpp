@@ -2,9 +2,18 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Example 01: Library info — enumerate supported formats, pixel types,
- * loader capabilities, and error codes. No file I/O.
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file 01_example.cpp
+ * @brief Example 01: Library info — enumerate supported formats, pixel types, loader capabilities, and error codes.
+ *
+ * No file I/O.
  */
 
 #include "01_example.h"

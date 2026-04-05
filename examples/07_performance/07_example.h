@@ -3,9 +3,17 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Example 07: Load-time performance benchmark — volume (NRRD + MHD),
- * image (PNG), and mesh (OBJ) loaders measured with synthetic data.
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file 07_example.h
+ * @brief Example 07: Load-time performance benchmark — volume (NRRD + MHD), image (PNG), and mesh (OBJ) loaders
+ * measured with synthetic data.
  */
 
 namespace vne::io::examples {

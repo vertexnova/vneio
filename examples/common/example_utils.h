@@ -6,12 +6,18 @@
  * Author:    Ajeet Singh Yadav
  * Created:   April 2026
  *
- * Shared header-only helpers for VneIo headless examples.
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file example_utils.h
+ * @brief Shared header-only helpers for VneIo headless examples.
+ *
  * Pulls in @ref logging_guard.h (RAII + VertexNova logging when
  * VNEIO_EXAMPLES_HAS_LOGGING is set, or console @c VNE_LOG_* stubs).
  * Use @c VNE_LOG_INFO << …, @c VNE_LOG_WARN << …, @c VNE_LOG_ERROR << …
  * in example sources and in these helpers.
- * ----------------------------------------------------------------------
  */
 
 #include "vertexnova/io/common/status.h"

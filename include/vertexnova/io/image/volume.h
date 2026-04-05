@@ -35,37 +35,32 @@ namespace image {
 enum class VolumePixelType : int {
     eUnknown = -1,  //!< Unknown or unsupported type.
     eUint8 = 0,     //!< 8-bit unsigned.
-    eInt8,          //!< 8-bit signed.
-    eUint16,        //!< 16-bit unsigned.
-    eInt16,         //!< 16-bit signed.
-    eUint32,        //!< 32-bit unsigned.
-    eInt32,         //!< 32-bit signed.
-    eFloat32,       //!< 32-bit float.
-    eFloat64,       //!< 64-bit float.
+    eInt8 = 1,      //!< 8-bit signed.
+    eUint16 = 2,    //!< 16-bit unsigned.
+    eInt16 = 3,     //!< 16-bit signed.
+    eUint32 = 4,    //!< 32-bit unsigned.
+    eInt32 = 5,     //!< 32-bit signed.
+    eFloat32 = 6,   //!< 32-bit float.
+    eFloat64 = 7,   //!< 64-bit float.
 };
 
-/** Number of elements in a 3x3 direction matrix (row-major). */
-constexpr int kVolumeDirectionMatrixElements = 9;
+constexpr int kVolumeDirectionMatrixElements = 9;  //!< Number of elements in a 3x3 direction matrix (row-major).
+constexpr int kVolumeSpatialDim = 3;               //!< Spatial axis count (MetaImage / NRRD-style 3D volumes).
 
-/** Spatial axis count (MetaImage / NRRD-style 3D volumes). */
-constexpr int kVolumeSpatialDim = 3;
-
-/** Row-major linear index into @c Volume::direction; @a row and @a col are in `[0, kVolumeSpatialDim)`. */
-[[nodiscard]] constexpr int volumeDirectionIndex(int row, int col) noexcept {
+[[nodiscard]] constexpr int volumeDirectionIndex(
+    int row, int col) noexcept {  //!< Row-major linear index into @c Volume::direction; @a row and @a col are in `[0,
+                                  //!< kVolumeSpatialDim)`.
     return row * kVolumeSpatialDim + col;
 }
 
-/** Bytes per voxel for VolumePixelType::eFloat64. */
-constexpr int kBytesPerFloat64 = 8;
-
-/** Epsilon for direction / metadata checks. */
-constexpr float kVolumeDirectionEpsilon = 1e-4f;
-/** Minimum acceptable row length before treating a direction row as degenerate. */
-constexpr float kVolumeDirectionRowMinLen = 0.01f;
-/** Maximum deviation of row length from 1 for @ref isMetadataValid. */
-constexpr float kVolumeDirectionRowUnitSlack = 0.02f;
-/** Minimum |det(direction)| for a well-conditioned basis in @ref isMetadataValid. */
-constexpr float kVolumeDirectionMinDeterminant = 1e-4f;
+constexpr int kBytesPerFloat64 = 8;               //!< Bytes per voxel for VolumePixelType::eFloat64.
+constexpr float kVolumeDirectionEpsilon = 1e-4f;  //!< Epsilon for direction / metadata checks.
+constexpr float kVolumeDirectionRowMinLen =
+    0.01f;  //!< Minimum acceptable row length before treating a direction row as degenerate.
+constexpr float kVolumeDirectionRowUnitSlack =
+    0.02f;  //!< Maximum deviation of row length from 1 for @ref isMetadataValid.
+constexpr float kVolumeDirectionMinDeterminant =
+    1e-4f;  //!< Minimum |det(direction)| for a well-conditioned basis in @ref isMetadataValid.
 
 /**
  * @brief Bytes per voxel for the given VolumePixelType.
@@ -164,11 +159,10 @@ struct VNEIO_API Volume {
 
     /** True if @a direction is approximately the 3×3 identity. */
     [[nodiscard]] bool hasIdentityDirection() const {
-        const float e = kVolumeDirectionEpsilon;
         for (int r = 0; r < kVolumeSpatialDim; ++r) {
             for (int c = 0; c < kVolumeSpatialDim; ++c) {
                 const float expected = (r == c) ? 1.0f : 0.0f;
-                if (std::fabs(direction[volumeDirectionIndex(r, c)] - expected) >= e) {
+                if (std::fabs(direction[volumeDirectionIndex(r, c)] - expected) >= kVolumeDirectionEpsilon) {
                     return false;
                 }
             }

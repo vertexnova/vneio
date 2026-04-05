@@ -3,9 +3,17 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Example 05: Mesh load via AssimpLoader — geometry inspection, AABB,
- * vertex attributes, OBJ export + reload round-trip, error path.
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file 05_example.h
+ * @brief Example 05: Mesh load via AssimpLoader — geometry inspection, AABB, vertex attributes, OBJ export + reload
+ * round-trip, error path.
  */
 
 namespace vne::io::examples {

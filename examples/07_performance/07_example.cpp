@@ -2,19 +2,27 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Example 07: Load-time performance benchmark.
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
  *
- * All assets are generated synthetically and written to /tmp so the
- * benchmark is fully self-contained (no testdata directory required).
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file 07_example.cpp
+ * @brief Example 07: Load-time performance benchmark.
+ *
+ * All assets are generated synthetically and written to /tmp so the benchmark is fully self-contained
+ * (no testdata directory required).
  *
  * Sections:
- *   1. Volume NRRD load throughput    (64^3 uint16, N=10)
- *   2. Volume MHD/MHA load throughput (64^3 uint16, N=10)
- *   3. Image PNG load throughput      (512x512 RGBA, N=10)
- *   4. Mesh OBJ load — baseline       (100x100 grid, N=5)
- *   5. Mesh OBJ load — post-process   (same grid + normalize + barycentrics)
- *   6. AssetIO registry dispatch overhead (volume, N=10)
- * ----------------------------------------------------------------------
+ * - Volume NRRD load throughput (64³ uint16, N=10)
+ * - Volume MHD/MHA load throughput (64³ uint16, N=10)
+ * - Image PNG load throughput (512×512 RGBA, N=10)
+ * - Mesh OBJ load — baseline (100×100 grid, N=5)
+ * - Mesh OBJ load — post-process (same grid + normalize + barycentrics)
+ * - AssetIO registry dispatch overhead (volume, N=10)
  */
 
 #include "07_example.h"

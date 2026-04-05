@@ -2,10 +2,19 @@
  * Copyright (c) 2025 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
  *
- * Example 02: 2D image load / inspect / resize / save pipeline.
+ * Author:    Ajeet Singh Yadav
+ * Created:   April 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file 02_example.cpp
+ * @brief Example 02: 2D image load / inspect / resize / save pipeline.
+ *
  * Exercises Image class and image_utils; verifies GPU-upload readiness
  * (non-empty, correct dims, channel count) without a renderer.
- * ----------------------------------------------------------------------
  */
 
 #include "02_example.h"
