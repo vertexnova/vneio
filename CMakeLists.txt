@@ -541,10 +541,15 @@ endif()
 # =============================================================================
 if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     add_library(vneio_image ${_VNEIO_LIB_KIND}
+        src/vertexnova/io/common/compression.cpp
         src/vertexnova/io/image/image.cpp
         src/vertexnova/io/image/nrrd_loader.cpp
         src/vertexnova/io/image/mhd_loader.cpp
         src/vertexnova/io/image/stb_image_loader.cpp
+        src/vertexnova/io/image/tar_slice_volume_loader.cpp
+        src/vertexnova/io/image/gzip_flat_volume_loader.cpp
+        src/vertexnova/io/image/volume_format.cpp
+        src/vertexnova/io/image/volume_loader_dispatch.cpp
         src/vertexnova/io/image/volume_exporter_nrrd.cpp
         src/vertexnova/io/image/volume_exporter_mhd.cpp
     )
@@ -575,6 +580,7 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         add_dependencies(vneio_image ${VNEIO_NRRDIO_TARGET})
         if(NRRDIO_USE_ZLIB AND TARGET ZLIB::ZLIB)
             target_link_libraries(vneio_image PRIVATE ZLIB::ZLIB)
+            target_compile_definitions(vneio_image PRIVATE VNEIO_HAS_ZLIB=1)
         endif()
         if(NRRDIO_USE_BZIP2 AND TARGET BZip2::BZip2)
             target_link_libraries(vneio_image PRIVATE BZip2::BZip2)
@@ -592,6 +598,19 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     endif()
     if(VNEIO_NRRDIO_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
+    endif()
+    if(EMSCRIPTEN AND TARGET zlibstatic)
+        target_include_directories(vneio_image PRIVATE "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib")
+        target_link_libraries(vneio_image PRIVATE zlibstatic)
+        target_compile_definitions(vneio_image PRIVATE VNEIO_HAS_ZLIB=1)
+    else()
+        if(NOT TARGET ZLIB::ZLIB)
+            find_package(ZLIB QUIET)
+        endif()
+        if(TARGET ZLIB::ZLIB)
+            target_link_libraries(vneio_image PRIVATE ZLIB::ZLIB)
+            target_compile_definitions(vneio_image PRIVATE VNEIO_HAS_ZLIB=1)
+        endif()
     endif()
     vneio_target_add_logging(vneio_image)
     add_library(vne::io::image ALIAS vneio_image)
