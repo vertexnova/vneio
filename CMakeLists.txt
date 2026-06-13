@@ -406,6 +406,22 @@ if(VNEIO_BUILD_MESH)
     endif()
 endif()
 
+# Assimp's zlibstatic uses directory-scope includes; record paths for consumers (NrrdIO, vneio_image).
+if(TARGET zlibstatic)
+    set(_vneio_assimp_zlib_includes "")
+    if(EXISTS "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib")
+        list(APPEND _vneio_assimp_zlib_includes
+            "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib"
+            "${CMAKE_CURRENT_BINARY_DIR}/deps/external/assimp/contrib/zlib"
+        )
+    elseif(EXISTS "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib")
+        list(APPEND _vneio_assimp_zlib_includes
+            "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib"
+            "${CMAKE_CURRENT_BINARY_DIR}/3rd_party/assimp/contrib/zlib"
+        )
+    endif()
+endif()
+
 # =============================================================================
 # External: stb_image — external → 3rd_party → FetchContent (header-only)
 # =============================================================================
@@ -452,9 +468,11 @@ if(VNEIO_BUILD_IMAGE)
     set(VNEIO_NRRDIO_INCLUDE "")
     set(VNEIO_NRRDIO_FOUND OFF)
 
-    if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt" OR EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
+    if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt"
+       OR EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt"
+       OR EXISTS "${VNEIO_THIRD_PARTY_DIR}/nrrdio/CMakeLists.txt")
         find_package(ZLIB QUIET)
-        if(NOT ZLIB_FOUND AND TARGET zlibstatic)
+        if(NOT ZLIB_FOUND AND TARGET zlibstatic AND NOT TARGET ZLIB::ZLIB)
             add_library(ZLIB::ZLIB ALIAS zlibstatic)
             set(ZLIB_FOUND TRUE)
             message(STATUS "VneIo: using Assimp zlibstatic for NrrdIO/compression")
@@ -463,6 +481,9 @@ if(VNEIO_BUILD_IMAGE)
             set(NRRDIO_USE_ZLIB OFF CACHE BOOL "Disable ZLIB in NrrdIO when ZLIB not found" FORCE)
             message(STATUS "VneIo: ZLIB not found; building NrrdIO without gzip support")
         endif()
+    endif()
+
+    if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt" OR EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
         # Try nrrdio subdirectory first (if cloned as teem-nrrdio-nrrdio.git)
         if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
             set(NRRDIO_OBJECT_LIBRARY ON CACHE BOOL "Embed NrrdIO into vneio_image (VneIo)" FORCE)
@@ -511,6 +532,9 @@ if(VNEIO_BUILD_IMAGE)
     endif()
     if(TARGET NrrdIO)
         vneio_target_suppress_external_warnings(NrrdIO)
+        if(_vneio_assimp_zlib_includes)
+            target_include_directories(NrrdIO PRIVATE ${_vneio_assimp_zlib_includes})
+        endif()
     endif()
 endif()
 if(VNEIO_BUILD_MESH AND TARGET assimp)
@@ -608,18 +632,6 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
     endif()
     if(TARGET zlibstatic AND NOT _vneio_image_zlib_linked)
-        set(_vneio_assimp_zlib_includes "")
-        if(EXISTS "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib")
-            list(APPEND _vneio_assimp_zlib_includes
-                "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib"
-                "${CMAKE_CURRENT_BINARY_DIR}/deps/external/assimp/contrib/zlib"
-            )
-        elseif(EXISTS "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib")
-            list(APPEND _vneio_assimp_zlib_includes
-                "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib"
-                "${CMAKE_CURRENT_BINARY_DIR}/3rd_party/assimp/contrib/zlib"
-            )
-        endif()
         if(_vneio_assimp_zlib_includes)
             target_include_directories(vneio_image PRIVATE ${_vneio_assimp_zlib_includes})
         endif()
