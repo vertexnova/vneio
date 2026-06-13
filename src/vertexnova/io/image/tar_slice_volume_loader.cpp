@@ -277,7 +277,7 @@ bool TarSliceVolumeLoader::detectLayout(const std::string& path, TarSliceVolumeL
         inout_layout.depth = best_depth;
     }
 
-    const std::size_t bpp = static_cast<std::size_t>(bytesPerVoxel(inout_layout.pixel_type));
+    const auto bpp = static_cast<std::size_t>(bytesPerVoxel(inout_layout.pixel_type));
     if (inout_layout.width <= 0 || inout_layout.height <= 0) {
         if (!inferSquareDimensions(best->slice_bytes, bpp, inout_layout.width, inout_layout.height)) {
             return false;
@@ -339,7 +339,7 @@ bool TarSliceVolumeLoader::load(const std::string& path, const TarSliceVolumeLay
     const int width = layout.width;
     const int height = layout.height;
     const int depth = layout.depth;
-    const std::size_t bytes_per_voxel = static_cast<std::size_t>(bytesPerVoxel(layout.pixel_type));
+    const auto bytes_per_voxel = static_cast<std::size_t>(bytesPerVoxel(layout.pixel_type));
     const std::size_t slice_bytes =
         static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * bytes_per_voxel;
     const std::size_t voxel_count =

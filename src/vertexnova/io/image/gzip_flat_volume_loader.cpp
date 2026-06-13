@@ -342,7 +342,7 @@ bool GzipFlatVolumeLoader::load(const std::string& path, const FlatVolumeLayout&
         last_error_ = "GzipFlatVolumeLoader: volume dimensions exceed addressable memory";
         return false;
     }
-    const std::size_t expected = static_cast<std::size_t>(expected64);
+    const auto expected = static_cast<std::size_t>(expected64);
     if (decompressed.value.size() != expected) {
         last_error_ = "GzipFlatVolumeLoader: size mismatch (got " + std::to_string(decompressed.value.size())
                       + ", expected " + std::to_string(expected) + ")";
