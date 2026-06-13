@@ -25,9 +25,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.io.image.tar_slice_volume_loader")
 constexpr std::size_t kTarBlock = 512U;
 
 [[nodiscard]] std::string lowerString(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return s;
 }
 
@@ -142,7 +140,10 @@ struct SliceGroup {
     std::uint64_t slice_bytes = 0;
 };
 
-[[nodiscard]] bool parseSliceMember(const std::string& name, std::string& out_prefix, std::string& out_subdir, int& out_index) {
+[[nodiscard]] bool parseSliceMember(const std::string& name,
+                                    std::string& out_prefix,
+                                    std::string& out_subdir,
+                                    int& out_index) {
     if (name.empty()) {
         return false;
     }
@@ -333,7 +334,8 @@ bool TarSliceVolumeLoader::load(const std::string& path, const TarSliceVolumeLay
     const int height = layout.height;
     const int depth = layout.depth;
     const std::size_t bytes_per_voxel = (layout.pixel_type == VolumePixelType::eUint16) ? 2U : 1U;
-    const std::size_t slice_bytes = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * bytes_per_voxel;
+    const std::size_t slice_bytes =
+        static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * bytes_per_voxel;
     const std::size_t voxel_count =
         static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * static_cast<std::size_t>(depth);
     const std::size_t total_bytes = voxel_count * bytes_per_voxel;

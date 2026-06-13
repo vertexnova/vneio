@@ -29,9 +29,9 @@ LoadResult<std::vector<std::uint8_t>> decompressGzip(std::span<const std::uint8_
     LoadResult<std::vector<std::uint8_t>> result;
 #if !defined(VNEIO_HAS_ZLIB)
     result.status = Status::make(ErrorCode::eNotImplemented,
-                               "gzip decompression requires ZLIB (VNEIO_HAS_ZLIB)",
-                               {},
-                               "Compression");
+                                 "gzip decompression requires ZLIB (VNEIO_HAS_ZLIB)",
+                                 {},
+                                 "Compression");
     return result;
 #else
     if (compressed.empty()) {
@@ -75,8 +75,7 @@ LoadResult<std::vector<std::uint8_t>> decompressGzip(std::span<const std::uint8_
     inflateEnd(&stream);
 
     if (zret != Z_STREAM_END) {
-        result.status =
-            Status::make(ErrorCode::eDataCorrupt, "gzip stream truncated or corrupt", {}, "Compression");
+        result.status = Status::make(ErrorCode::eDataCorrupt, "gzip stream truncated or corrupt", {}, "Compression");
         return result;
     }
 

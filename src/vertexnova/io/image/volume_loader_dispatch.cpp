@@ -96,15 +96,15 @@ bool VolumeLoader::load(const std::string& path, Volume& out_volume, const Volum
             last_error_ = "VolumeLoader: bare '.gz' is ambiguous (gzip(tar) vs gzip(flat)); use '.tar.gz' or '.bin-gz'";
         } else {
             last_error_ = "VolumeLoader: unrecognized path '" + path
-                            + "' — use .nrrd/.mhd, .tar/.tar.gz (slice stack), or .bin-gz (dense grid)";
+                          + "' — use .nrrd/.mhd, .tar/.tar.gz (slice stack), or .bin-gz (dense grid)";
         }
         return false;
     }
 
     if (hints.format != VolumeLoadRoute::eUnknown && hints.format != detected) {
         last_error_ = std::string("VolumeLoader: route hint '") + volumeLoadRouteName(hints.format)
-                        + "' does not match detected '" + volumeLoadRouteName(detected) + "' ("
-                        + describeVolumePath(path_desc) + ") for '" + path + "'";
+                      + "' does not match detected '" + volumeLoadRouteName(detected) + "' ("
+                      + describeVolumePath(path_desc) + ") for '" + path + "'";
         VNE_LOG_WARN << last_error_;
         return false;
     }
@@ -112,8 +112,7 @@ bool VolumeLoader::load(const std::string& path, Volume& out_volume, const Volum
     switch (route) {
         case VolumeLoadRoute::eDenseGridGzip: {
             if (detected == VolumeLoadRoute::eSliceStackArchive) {
-                last_error_ = "VolumeLoader: '" + path
-                                + "' is tar + slice-stack layout, not a .bin-gz dense grid";
+                last_error_ = "VolumeLoader: '" + path + "' is tar + slice-stack layout, not a .bin-gz dense grid";
                 VNE_LOG_ERROR << last_error_;
                 return false;
             }
@@ -135,8 +134,7 @@ bool VolumeLoader::load(const std::string& path, Volume& out_volume, const Volum
         }
         case VolumeLoadRoute::eSliceStackArchive: {
             if (detected == VolumeLoadRoute::eDenseGridGzip) {
-                last_error_ = "VolumeLoader: '" + path
-                                + "' is a .bin-gz dense grid, not tar + slice-stack layout";
+                last_error_ = "VolumeLoader: '" + path + "' is a .bin-gz dense grid, not tar + slice-stack layout";
                 VNE_LOG_ERROR << last_error_;
                 return false;
             }

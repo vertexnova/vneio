@@ -12,9 +12,7 @@
 namespace {
 
 [[nodiscard]] std::string lowerString(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return s;
 }
 
@@ -57,14 +55,13 @@ VolumePathDescriptor parseVolumePath(const std::string& path) {
     const std::string lower = lowerString(path);
 
     // Semantic formats first (self-describing; tar/gzip wrappers not used).
-    if (lower.size() >= 5U && (lower.compare(lower.size() - 5U, 5U, ".nrrd") == 0
-                               || lower.compare(lower.size() - 5U, 5U, ".nhdr") == 0)) {
+    if (lower.size() >= 5U
+        && (lower.compare(lower.size() - 5U, 5U, ".nrrd") == 0 || lower.compare(lower.size() - 5U, 5U, ".nhdr") == 0)) {
         desc.semantic = VolumeSemanticFormat::eNrrd;
         return desc;
     }
     if (lower.size() >= 4U
-        && (lower.compare(lower.size() - 4U, 4U, ".mhd") == 0
-            || lower.compare(lower.size() - 4U, 4U, ".mha") == 0)) {
+        && (lower.compare(lower.size() - 4U, 4U, ".mhd") == 0 || lower.compare(lower.size() - 4U, 4U, ".mha") == 0)) {
         desc.semantic = VolumeSemanticFormat::eMhd;
         return desc;
     }

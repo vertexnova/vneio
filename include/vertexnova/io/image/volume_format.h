@@ -83,7 +83,7 @@ struct VolumePathDescriptor {
 enum class VolumeLoadRoute {
     eUnknown = 0,
     eSliceStackArchive,  //!< `.tar` or `.tar.gz` / `.tgz` numbered slices.
-    eDenseGridGzip,    //!< `.bin-gz` gzip-wrapped dense voxel blob.
+    eDenseGridGzip,      //!< `.bin-gz` gzip-wrapped dense voxel blob.
     eNrrd,
     eMhd,
 };

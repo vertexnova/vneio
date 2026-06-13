@@ -148,8 +148,8 @@ CREATE_VNE_LOGGER_CATEGORY("vne.io.image.gzip_flat_volume_loader")
 }
 
 [[nodiscard]] bool inferPixelTypeFromSize(const vne::image::FlatVolumeLayout& layout,
-                                        const std::uint64_t uncompressed_bytes,
-                                        vne::image::VolumePixelType& inout_type) {
+                                          const std::uint64_t uncompressed_bytes,
+                                          vne::image::VolumePixelType& inout_type) {
     if (layout.width <= 0 || layout.height <= 0 || layout.depth <= 0) {
         return false;
     }
