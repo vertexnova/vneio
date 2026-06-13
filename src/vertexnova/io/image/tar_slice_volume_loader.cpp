@@ -104,8 +104,16 @@ struct TarEntry {
             out_index[entry_name] = entry;
         }
 
+        const std::size_t remaining = size - offset;
+        if (file_size > static_cast<std::uint64_t>(remaining)) {
+            return false;
+        }
         const std::uint64_t data_blocks = (file_size + kTarBlock - 1U) / kTarBlock;
-        offset += static_cast<std::size_t>(data_blocks * kTarBlock);
+        const std::uint64_t data_bytes = data_blocks * kTarBlock;
+        if (data_bytes > static_cast<std::uint64_t>(remaining)) {
+            return false;
+        }
+        offset += static_cast<std::size_t>(data_bytes);
     }
     return true;
 }
@@ -127,10 +135,7 @@ struct TarEntry {
 }
 
 [[nodiscard]] std::string sliceMemberName(const vne::image::TarSliceVolumeLayout& layout, const int slice_index) {
-    if (!layout.member_subdirectory.empty()) {
-        return layout.member_subdirectory + std::to_string(slice_index);
-    }
-    return layout.member_prefix + std::to_string(slice_index);
+    return layout.member_subdirectory + layout.member_prefix + std::to_string(slice_index);
 }
 
 struct SliceGroup {
@@ -272,7 +277,7 @@ bool TarSliceVolumeLoader::detectLayout(const std::string& path, TarSliceVolumeL
         inout_layout.depth = best_depth;
     }
 
-    const std::size_t bpp = (inout_layout.pixel_type == VolumePixelType::eUint16) ? 2U : 1U;
+    const std::size_t bpp = static_cast<std::size_t>(bytesPerVoxel(inout_layout.pixel_type));
     if (inout_layout.width <= 0 || inout_layout.height <= 0) {
         if (!inferSquareDimensions(best->slice_bytes, bpp, inout_layout.width, inout_layout.height)) {
             return false;
@@ -334,7 +339,7 @@ bool TarSliceVolumeLoader::load(const std::string& path, const TarSliceVolumeLay
     const int width = layout.width;
     const int height = layout.height;
     const int depth = layout.depth;
-    const std::size_t bytes_per_voxel = (layout.pixel_type == VolumePixelType::eUint16) ? 2U : 1U;
+    const std::size_t bytes_per_voxel = static_cast<std::size_t>(bytesPerVoxel(layout.pixel_type));
     const std::size_t slice_bytes =
         static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * bytes_per_voxel;
     const std::size_t voxel_count =

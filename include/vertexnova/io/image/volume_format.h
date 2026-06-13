@@ -18,13 +18,13 @@ namespace image {
  */
 enum class VolumeCompression {
     eNone = 0,
-    eGzip,
+    eGzip = 1,
 };
 
 /** @brief Archive wrapper on disk (USTAR tar of member files). */
 enum class VolumeArchive {
     eNone = 0,
-    eTar,
+    eTar = 1,
 };
 
 /**

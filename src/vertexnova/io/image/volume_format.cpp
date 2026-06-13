@@ -137,7 +137,8 @@ VolumeLoadRoute volumeLoadRouteFromDescriptor(const VolumePathDescriptor& desc) 
     if (desc.layout == VolumeVoxelLayout::eSliceStack && desc.archive == VolumeArchive::eTar) {
         return VolumeLoadRoute::eSliceStackArchive;
     }
-    if (desc.layout == VolumeVoxelLayout::eDenseGrid && desc.compression == VolumeCompression::eGzip) {
+    if (desc.layout == VolumeVoxelLayout::eDenseGrid && desc.compression == VolumeCompression::eGzip
+        && desc.archive == VolumeArchive::eNone) {
         return VolumeLoadRoute::eDenseGridGzip;
     }
     return VolumeLoadRoute::eUnknown;

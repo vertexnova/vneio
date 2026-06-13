@@ -600,10 +600,21 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
     endif()
     if(EMSCRIPTEN AND TARGET zlibstatic)
-        target_include_directories(vneio_image PRIVATE
-            "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib"
-            "${CMAKE_CURRENT_BINARY_DIR}/deps/external/assimp/contrib/zlib"
-        )
+        set(_vneio_assimp_zlib_includes "")
+        if(EXISTS "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib")
+            list(APPEND _vneio_assimp_zlib_includes
+                "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib"
+                "${CMAKE_CURRENT_BINARY_DIR}/deps/external/assimp/contrib/zlib"
+            )
+        elseif(EXISTS "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib")
+            list(APPEND _vneio_assimp_zlib_includes
+                "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib"
+                "${CMAKE_CURRENT_BINARY_DIR}/3rd_party/assimp/contrib/zlib"
+            )
+        endif()
+        if(_vneio_assimp_zlib_includes)
+            target_include_directories(vneio_image PRIVATE ${_vneio_assimp_zlib_includes})
+        endif()
         target_link_libraries(vneio_image PRIVATE zlibstatic)
         target_compile_definitions(vneio_image PRIVATE VNEIO_HAS_ZLIB=1)
     else()

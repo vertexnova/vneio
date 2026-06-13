@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <climits>
 #include <cmath>
 #include <cstdlib>
 #include <cstdint>
@@ -71,7 +72,8 @@ constexpr std::size_t kBinGzSuffixLen = 7U;  // length of ".bin-gz"
     if (end == token.c_str() + x2 + 1U) {
         return false;
     }
-    if (w <= 0 || h <= 0 || d <= 0) {
+    if (w <= 0 || h <= 0 || d <= 0 || w > static_cast<long>(INT_MAX) || h > static_cast<long>(INT_MAX)
+        || d > static_cast<long>(INT_MAX)) {
         return false;
     }
     out_layout.width = static_cast<int>(w);
@@ -223,7 +225,7 @@ bool GzipFlatVolumeLoader::canLoad(const vne::io::LoadRequest& request) const {
 vne::io::LoadResult<Volume> GzipFlatVolumeLoader::loadVolume(const vne::io::LoadRequest& request) {
     vne::io::LoadResult<Volume> result;
     FlatVolumeLayout layout;
-    if (!request.hint_format.empty()) {
+    if (!request.hint_format.empty() && request.hint_format != "bin-gz" && request.hint_format != "gzip-flat") {
         if (!parseLayoutHint(request.hint_format, layout)) {
             result.status = vne::io::Status::make(vne::io::ErrorCode::eInvalidArgument,
                                                   "hint_format must be WxHxD or uint8:WxHxD for gzip flat volumes",
@@ -333,8 +335,15 @@ bool GzipFlatVolumeLoader::load(const std::string& path, const FlatVolumeLayout&
         return false;
     }
 
-    const std::size_t expected = static_cast<std::size_t>(layout.width) * static_cast<std::size_t>(layout.height)
-                                 * static_cast<std::size_t>(layout.depth) * bpp;
+    const std::uint64_t expected64 = static_cast<std::uint64_t>(layout.width)
+                                     * static_cast<std::uint64_t>(layout.height)
+                                     * static_cast<std::uint64_t>(layout.depth)
+                                     * static_cast<std::uint64_t>(bpp);
+    if (expected64 > static_cast<std::uint64_t>(SIZE_MAX)) {
+        last_error_ = "GzipFlatVolumeLoader: volume dimensions exceed addressable memory";
+        return false;
+    }
+    const std::size_t expected = static_cast<std::size_t>(expected64);
     if (decompressed.value.size() != expected) {
         last_error_ = "GzipFlatVolumeLoader: size mismatch (got " + std::to_string(decompressed.value.size())
                       + ", expected " + std::to_string(expected) + ")";

@@ -31,7 +31,7 @@
 #include "vertexnova/io/mesh/assimp_loader.h"
 #include "vertexnova/io/mesh/mesh_exporter.h"
 
-// Image (requires stb when building)
+// Image (requires stb; tar-slice loader requires tar library; gzip-flat/compression require ZLIB)
 #include "vertexnova/io/image/image.h"
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/image_loader.h"

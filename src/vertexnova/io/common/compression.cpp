@@ -10,11 +10,13 @@
 #include <vector>
 
 #if defined(VNEIO_HAS_ZLIB)
+#include <limits>
 #include <zlib.h>
 #endif
 
 namespace {
-constexpr std::size_t kDecompressChunkBytes = 65536U;
+constexpr std::size_t kDecompressChunkBytes  = 65536U;
+constexpr std::size_t kMaxDecompressBytes    = 16ULL * 1024ULL * 1024ULL * 1024ULL;  // 16 GB
 }  // namespace
 
 namespace vne {
@@ -49,6 +51,14 @@ LoadResult<std::vector<std::uint8_t>> decompressGzip(std::span<const std::uint8_
         return result;
     }
 
+    if (compressed.size() > static_cast<std::size_t>(std::numeric_limits<uInt>::max())) {
+        inflateEnd(&stream);
+        result.status = Status::make(ErrorCode::eInvalidArgument,
+                                     "gzip input exceeds 4 GB zlib single-call limit",
+                                     {},
+                                     "Compression");
+        return result;
+    }
     stream.next_in = const_cast<Bytef*>(reinterpret_cast<const Bytef*>(compressed.data()));
     stream.avail_in = static_cast<uInt>(compressed.size());
 
@@ -70,6 +80,14 @@ LoadResult<std::vector<std::uint8_t>> decompressGzip(std::span<const std::uint8_
         }
         const std::size_t produced = chunk.size() - stream.avail_out;
         if (produced > 0) {
+            if (out.size() + produced > kMaxDecompressBytes) {
+                inflateEnd(&stream);
+                result.status = Status::make(ErrorCode::eDataCorrupt,
+                                             "decompressed output exceeds 16 GB limit",
+                                             {},
+                                             "Compression");
+                return result;
+            }
             out.insert(out.end(), chunk.data(), chunk.data() + produced);
         }
         if (zret == Z_BUF_ERROR && stream.avail_out == chunk.size()) {
