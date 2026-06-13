@@ -7,6 +7,7 @@
 
 #include "vertexnova/io/common/binary_io.h"
 
+#include <string>
 #include <vector>
 
 #if defined(VNEIO_HAS_ZLIB)

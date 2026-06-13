@@ -191,7 +191,7 @@ jobs:
           fi
 
           IPO_OFF=""
-          if [[ "$PLATFORM_ID" == "linux-clang" || "$PLATFORM_ID" == "linux-asan" ]]; then
+          if [[ "$PLATFORM_ID" == "linux-clang" || "$PLATFORM_ID" == "linux-asan" || "$PLATFORM_ID" == "windows" ]]; then
               IPO_OFF="-DENABLE_IPO=OFF"
           fi
 
