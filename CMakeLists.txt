@@ -521,6 +521,10 @@ if(VNEIO_BUILD_IMAGE)
     endif()
 endif()
 
+if(EMSCRIPTEN AND TARGET NrrdIO)
+    set_target_properties(NrrdIO PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
 if(VNEIO_BUILD_IMAGE AND NOT VNEIO_NRRDIO_FOUND)
     message(FATAL_ERROR "VneIo: nrrdio is required for the image component. Add deps/external/nrrdio or set nrrdio_DIR.")
 endif()
