@@ -337,8 +337,7 @@ bool GzipFlatVolumeLoader::load(const std::string& path, const FlatVolumeLayout&
 
     const std::uint64_t expected64 = static_cast<std::uint64_t>(layout.width)
                                      * static_cast<std::uint64_t>(layout.height)
-                                     * static_cast<std::uint64_t>(layout.depth)
-                                     * static_cast<std::uint64_t>(bpp);
+                                     * static_cast<std::uint64_t>(layout.depth) * static_cast<std::uint64_t>(bpp);
     if (expected64 > static_cast<std::uint64_t>(SIZE_MAX)) {
         last_error_ = "GzipFlatVolumeLoader: volume dimensions exceed addressable memory";
         return false;

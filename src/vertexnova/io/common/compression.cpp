@@ -15,8 +15,8 @@
 #endif
 
 namespace {
-constexpr std::size_t kDecompressChunkBytes  = 65536U;
-constexpr std::size_t kMaxDecompressBytes    = 16ULL * 1024ULL * 1024ULL * 1024ULL;  // 16 GB
+constexpr std::size_t kDecompressChunkBytes = 65536U;
+constexpr std::size_t kMaxDecompressBytes = 16ULL * 1024ULL * 1024ULL * 1024ULL;  // 16 GB
 }  // namespace
 
 namespace vne {
@@ -82,10 +82,8 @@ LoadResult<std::vector<std::uint8_t>> decompressGzip(std::span<const std::uint8_
         if (produced > 0) {
             if (out.size() + produced > kMaxDecompressBytes) {
                 inflateEnd(&stream);
-                result.status = Status::make(ErrorCode::eDataCorrupt,
-                                             "decompressed output exceeds 16 GB limit",
-                                             {},
-                                             "Compression");
+                result.status =
+                    Status::make(ErrorCode::eDataCorrupt, "decompressed output exceeds 16 GB limit", {}, "Compression");
                 return result;
             }
             out.insert(out.end(), chunk.data(), chunk.data() + produced);

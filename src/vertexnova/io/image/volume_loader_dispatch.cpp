@@ -94,8 +94,10 @@ bool VolumeLoader::load(const std::string& path, Volume& out_volume, const Volum
             return static_cast<char>(std::tolower(c));
         });
         if (lower.size() >= 3U && lower.compare(lower.size() - 3U, 3U, ".gz") == 0
-            && !(lower.size() >= kTarGzSuffixLen && lower.compare(lower.size() - kTarGzSuffixLen, kTarGzSuffixLen, ".tar.gz") == 0)
-            && !(lower.size() >= kBinGzSuffixLen && lower.compare(lower.size() - kBinGzSuffixLen, kBinGzSuffixLen, ".bin-gz") == 0)) {
+            && !(lower.size() >= kTarGzSuffixLen
+                 && lower.compare(lower.size() - kTarGzSuffixLen, kTarGzSuffixLen, ".tar.gz") == 0)
+            && !(lower.size() >= kBinGzSuffixLen
+                 && lower.compare(lower.size() - kBinGzSuffixLen, kBinGzSuffixLen, ".bin-gz") == 0)) {
             last_error_ = "VolumeLoader: bare '.gz' is ambiguous (gzip(tar) vs gzip(flat)); use '.tar.gz' or '.bin-gz'";
         } else {
             last_error_ = "VolumeLoader: unrecognized path '" + path
@@ -143,13 +145,11 @@ bool VolumeLoader::load(const std::string& path, Volume& out_volume, const Volum
             }
             TarSliceVolumeLoader loader;
             TarSliceVolumeLayout layout = hints.tar_slice;
-            const bool has_partial_hints = layout.width > 0 || layout.height > 0 || layout.depth > 0
-                                           || !layout.member_prefix.empty() || !layout.member_subdirectory.empty()
-                                           || layout.first_slice_index != 1
-                                           || layout.pixel_type != VolumePixelType::eUint16
-                                           || !layout.big_endian
-                                           || layout.spacing[0] != 1.0f || layout.spacing[1] != 1.0f
-                                           || layout.spacing[2] != 1.0f;
+            const bool has_partial_hints =
+                layout.width > 0 || layout.height > 0 || layout.depth > 0 || !layout.member_prefix.empty()
+                || !layout.member_subdirectory.empty() || layout.first_slice_index != 1
+                || layout.pixel_type != VolumePixelType::eUint16 || !layout.big_endian || layout.spacing[0] != 1.0f
+                || layout.spacing[1] != 1.0f || layout.spacing[2] != 1.0f;
             if (!has_partial_hints) {
                 if (!loader.load(path, out_volume)) {
                     last_error_ = loader.getLastError();
