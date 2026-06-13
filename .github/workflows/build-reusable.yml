@@ -152,6 +152,11 @@ jobs:
         shell: bash
         run: rm -rf ${{ env.BUILD_DIR }}
 
+      - name: Remove stale CMakeCache (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: rm -f "$BUILD_DIR/CMakeCache.txt"
+
       - name: Configure CMake
         shell: bash
         env:

@@ -13,6 +13,10 @@
 #include <zlib.h>
 #endif
 
+namespace {
+constexpr std::size_t kDecompressChunkBytes = 65536U;
+}  // namespace
+
 namespace vne {
 namespace io {
 namespace compression {
@@ -50,7 +54,7 @@ LoadResult<std::vector<std::uint8_t>> decompressGzip(std::span<const std::uint8_
 
     std::vector<std::uint8_t> out;
     out.reserve(compressed.size() * 4U);
-    std::vector<std::uint8_t> chunk(65536U);
+    std::vector<std::uint8_t> chunk(kDecompressChunkBytes);
     int zret = Z_OK;
     while (zret != Z_STREAM_END) {
         stream.next_out = chunk.data();

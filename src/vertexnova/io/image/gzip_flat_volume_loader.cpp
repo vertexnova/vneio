@@ -22,11 +22,13 @@ namespace {
 
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.gzip_flat_volume_loader")
 
+constexpr std::size_t kBinGzSuffixLen = 7U;  // length of ".bin-gz"
+
 [[nodiscard]] bool endsWithBinGz(const std::string& path) {
-    if (path.size() < 7U) {
+    if (path.size() < kBinGzSuffixLen) {
         return false;
     }
-    const std::string tail = path.substr(path.size() - 7U);
+    const std::string tail = path.substr(path.size() - kBinGzSuffixLen);
     std::string lower = tail;
     std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));

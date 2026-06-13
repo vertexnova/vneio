@@ -23,6 +23,7 @@ namespace {
 CREATE_VNE_LOGGER_CATEGORY("vne.io.image.tar_slice_volume_loader")
 
 constexpr std::size_t kTarBlock = 512U;
+constexpr std::size_t kTarNameLen = 100U;
 
 [[nodiscard]] std::string lowerString(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
@@ -87,9 +88,9 @@ struct TarEntry {
             break;
         }
 
-        char name[101];
-        std::memcpy(name, hdr, 100);
-        name[100] = '\0';
+        char name[kTarNameLen + 1U];
+        std::memcpy(name, hdr, kTarNameLen);
+        name[kTarNameLen] = '\0';
         const std::string entry_name(name);
 
         const char typeflag = static_cast<char>(hdr[156]);

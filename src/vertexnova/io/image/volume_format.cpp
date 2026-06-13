@@ -55,8 +55,7 @@ VolumePathDescriptor parseVolumePath(const std::string& path) {
     const std::string lower = lowerString(path);
 
     // Semantic formats first (self-describing; tar/gzip wrappers not used).
-    if (lower.size() >= 5U
-        && (lower.compare(lower.size() - 5U, 5U, ".nrrd") == 0 || lower.compare(lower.size() - 5U, 5U, ".nhdr") == 0)) {
+    if (pathEndsWith(lower, ".nrrd") || pathEndsWith(lower, ".nhdr")) {
         desc.semantic = VolumeSemanticFormat::eNrrd;
         return desc;
     }
