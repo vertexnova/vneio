@@ -18,6 +18,7 @@
 // Common (Status, BinaryIO)
 #include "vertexnova/io/common/status.h"
 #include "vertexnova/io/common/binary_io.h"
+#include "vertexnova/io/common/compression.h"
 
 // Asset io (LoadRequest, registry, loader interfaces)
 #include "vertexnova/io/load_request.h"
@@ -30,7 +31,7 @@
 #include "vertexnova/io/mesh/assimp_loader.h"
 #include "vertexnova/io/mesh/mesh_exporter.h"
 
-// Image (requires stb when building)
+// Image (requires stb; tar-slice loader requires tar library; gzip-flat/compression require ZLIB)
 #include "vertexnova/io/image/image.h"
 #include "vertexnova/io/image/volume.h"
 #include "vertexnova/io/image/image_loader.h"
@@ -38,6 +39,10 @@
 #include "vertexnova/io/image/stb_image_loader.h"
 #include "vertexnova/io/image/nrrd_loader.h"
 #include "vertexnova/io/image/mhd_loader.h"
+#include "vertexnova/io/image/tar_slice_volume_loader.h"
+#include "vertexnova/io/image/gzip_flat_volume_loader.h"
+#include "vertexnova/io/image/volume_format.h"
+#include "vertexnova/io/image/volume_loader_dispatch.h"
 #include "vertexnova/io/image/volume_exporter.h"
 
 // DICOM (optional backends: GDCM/DCMTK)

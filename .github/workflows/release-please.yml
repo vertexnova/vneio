@@ -191,6 +191,7 @@ jobs:
               -DVNEIO_LIB_TYPE=shared \
               -DVNEIO_BUILD_TESTS=OFF \
               -DVNEIO_SANITIZE_INSTALL=ON \
+              -DENABLE_IPO=OFF \
               -DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
               $COMPILER_FLAGS
           else

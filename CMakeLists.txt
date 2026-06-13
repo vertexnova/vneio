@@ -171,7 +171,9 @@ option(VNEIO_USE_STB_IMAGE_RESIZE "Enable stb_image_resize for higher-quality re
 if(VNEIO_CI)
     set(VNEIO_DEV OFF CACHE BOOL "" FORCE)
     set(VNEIO_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    message(STATUS "VneIo: CI/release-style (VNEIO_CI=ON) -> VNEIO_BUILD_EXAMPLES=OFF")
+    set(ENABLE_IPO OFF CACHE BOOL "" FORCE)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
+    message(STATUS "VneIo: CI/release-style (VNEIO_CI=ON) -> VNEIO_BUILD_EXAMPLES=OFF, ENABLE_IPO=OFF")
 elseif(VNEIO_DEV)
     set(VNEIO_BUILD_TESTS ON CACHE BOOL "" FORCE)
     set(VNEIO_BUILD_EXAMPLES ON CACHE BOOL "" FORCE)
@@ -404,6 +406,22 @@ if(VNEIO_BUILD_MESH)
     endif()
 endif()
 
+# Assimp's zlibstatic uses directory-scope includes; record paths for consumers (NrrdIO, vneio_image).
+if(TARGET zlibstatic)
+    set(_vneio_assimp_zlib_includes "")
+    if(EXISTS "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib")
+        list(APPEND _vneio_assimp_zlib_includes
+            "${VNEIO_EXTERNAL_DIR}/assimp/contrib/zlib"
+            "${CMAKE_CURRENT_BINARY_DIR}/deps/external/assimp/contrib/zlib"
+        )
+    elseif(EXISTS "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib")
+        list(APPEND _vneio_assimp_zlib_includes
+            "${VNEIO_THIRD_PARTY_DIR}/assimp/contrib/zlib"
+            "${CMAKE_CURRENT_BINARY_DIR}/3rd_party/assimp/contrib/zlib"
+        )
+    endif()
+endif()
+
 # =============================================================================
 # External: stb_image — external → 3rd_party → FetchContent (header-only)
 # =============================================================================
@@ -450,12 +468,22 @@ if(VNEIO_BUILD_IMAGE)
     set(VNEIO_NRRDIO_INCLUDE "")
     set(VNEIO_NRRDIO_FOUND OFF)
 
-    if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt" OR EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
+    if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt"
+       OR EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt"
+       OR EXISTS "${VNEIO_THIRD_PARTY_DIR}/nrrdio/CMakeLists.txt")
         find_package(ZLIB QUIET)
+        if(NOT ZLIB_FOUND AND TARGET zlibstatic AND NOT TARGET ZLIB::ZLIB)
+            add_library(ZLIB::ZLIB ALIAS zlibstatic)
+            set(ZLIB_FOUND TRUE)
+            message(STATUS "VneIo: using Assimp zlibstatic for NrrdIO/compression")
+        endif()
         if(NOT ZLIB_FOUND)
             set(NRRDIO_USE_ZLIB OFF CACHE BOOL "Disable ZLIB in NrrdIO when ZLIB not found" FORCE)
             message(STATUS "VneIo: ZLIB not found; building NrrdIO without gzip support")
         endif()
+    endif()
+
+    if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/CMakeLists.txt" OR EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
         # Try nrrdio subdirectory first (if cloned as teem-nrrdio-nrrdio.git)
         if(EXISTS "${VNEIO_EXTERNAL_DIR}/nrrdio/nrrdio/CMakeLists.txt")
             set(NRRDIO_OBJECT_LIBRARY ON CACHE BOOL "Embed NrrdIO into vneio_image (VneIo)" FORCE)
@@ -504,6 +532,9 @@ if(VNEIO_BUILD_IMAGE)
     endif()
     if(TARGET NrrdIO)
         vneio_target_suppress_external_warnings(NrrdIO)
+        if(_vneio_assimp_zlib_includes)
+            target_include_directories(NrrdIO PRIVATE ${_vneio_assimp_zlib_includes})
+        endif()
     endif()
 endif()
 if(VNEIO_BUILD_MESH AND TARGET assimp)
@@ -541,10 +572,15 @@ endif()
 # =============================================================================
 if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     add_library(vneio_image ${_VNEIO_LIB_KIND}
+        src/vertexnova/io/common/compression.cpp
         src/vertexnova/io/image/image.cpp
         src/vertexnova/io/image/nrrd_loader.cpp
         src/vertexnova/io/image/mhd_loader.cpp
         src/vertexnova/io/image/stb_image_loader.cpp
+        src/vertexnova/io/image/tar_slice_volume_loader.cpp
+        src/vertexnova/io/image/gzip_flat_volume_loader.cpp
+        src/vertexnova/io/image/volume_format.cpp
+        src/vertexnova/io/image/volume_loader_dispatch.cpp
         src/vertexnova/io/image/volume_exporter_nrrd.cpp
         src/vertexnova/io/image/volume_exporter_mhd.cpp
     )
@@ -568,6 +604,7 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     )
     get_target_property(_vneio_nrrd_imported ${VNEIO_NRRDIO_TARGET} IMPORTED)
     get_target_property(_vneio_nrrd_type ${VNEIO_NRRDIO_TARGET} TYPE)
+    set(_vneio_image_zlib_linked FALSE)
     if(_vneio_nrrd_imported OR NOT _vneio_nrrd_type STREQUAL "OBJECT_LIBRARY")
         target_link_libraries(vneio_image PRIVATE ${VNEIO_NRRDIO_TARGET})
     else()
@@ -575,6 +612,7 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
         add_dependencies(vneio_image ${VNEIO_NRRDIO_TARGET})
         if(NRRDIO_USE_ZLIB AND TARGET ZLIB::ZLIB)
             target_link_libraries(vneio_image PRIVATE ZLIB::ZLIB)
+            set(_vneio_image_zlib_linked TRUE)
         endif()
         if(NRRDIO_USE_BZIP2 AND TARGET BZip2::BZip2)
             target_link_libraries(vneio_image PRIVATE BZip2::BZip2)
@@ -592,6 +630,24 @@ if(VNEIO_BUILD_IMAGE AND VNEIO_STB_INCLUDE)
     endif()
     if(VNEIO_NRRDIO_INCLUDE)
         target_include_directories(vneio_image PRIVATE ${VNEIO_NRRDIO_INCLUDE})
+    endif()
+    if(TARGET zlibstatic AND NOT _vneio_image_zlib_linked)
+        if(_vneio_assimp_zlib_includes)
+            target_include_directories(vneio_image PRIVATE ${_vneio_assimp_zlib_includes})
+        endif()
+        target_link_libraries(vneio_image PRIVATE zlibstatic)
+        set(_vneio_image_zlib_linked TRUE)
+    elseif(NOT _vneio_image_zlib_linked)
+        if(NOT TARGET ZLIB::ZLIB)
+            find_package(ZLIB QUIET)
+        endif()
+        if(TARGET ZLIB::ZLIB)
+            target_link_libraries(vneio_image PRIVATE ZLIB::ZLIB)
+            set(_vneio_image_zlib_linked TRUE)
+        endif()
+    endif()
+    if(_vneio_image_zlib_linked)
+        target_compile_definitions(vneio_image PRIVATE VNEIO_HAS_ZLIB=1)
     endif()
     vneio_target_add_logging(vneio_image)
     add_library(vne::io::image ALIAS vneio_image)
