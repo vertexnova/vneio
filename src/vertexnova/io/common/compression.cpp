@@ -7,6 +7,7 @@
 
 #include "vertexnova/io/common/binary_io.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -17,7 +18,8 @@
 
 namespace {
 constexpr std::size_t kDecompressChunkBytes = 65536U;
-constexpr std::size_t kMaxDecompressBytes = 16ULL * 1024ULL * 1024ULL * 1024ULL;  // 16 GB
+// Use uint64_t: on wasm32, size_t is 32-bit and 16GiB truncates to 0, rejecting all output.
+constexpr std::uint64_t kMaxDecompressBytes = 16ULL * 1024ULL * 1024ULL * 1024ULL;  // 16 GB
 }  // namespace
 
 namespace vne {
@@ -81,7 +83,10 @@ LoadResult<std::vector<std::uint8_t>> decompressGzip(std::span<const std::uint8_
         }
         const std::size_t produced = chunk.size() - stream.avail_out;
         if (produced > 0) {
-            if (out.size() + produced > kMaxDecompressBytes) {
+            const std::uint64_t next_size =
+                static_cast<std::uint64_t>(out.size()) + static_cast<std::uint64_t>(produced);
+            if (next_size > kMaxDecompressBytes
+                || next_size > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max())) {
                 inflateEnd(&stream);
                 result.status =
                     Status::make(ErrorCode::eDataCorrupt, "decompressed output exceeds 16 GB limit", {}, "Compression");

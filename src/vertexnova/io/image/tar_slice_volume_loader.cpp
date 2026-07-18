@@ -122,6 +122,7 @@ struct TarEntry {
     if (isTarGzPath(path)) {
         vne::io::LoadResult<std::vector<std::uint8_t>> gz = vne::io::compression::decompressGzipFile(path);
         if (!gz.ok()) {
+            VNE_LOG_ERROR << "TarSliceVolumeLoader: gzip read failed for '" << path << "': " << gz.status.message;
             return false;
         }
         out_tar = std::move(gz.value);
@@ -129,7 +130,11 @@ struct TarEntry {
     }
     if (isTarPath(path)) {
         const vne::io::Status st = vne::io::binaryio::readFile(path, out_tar);
-        return st.ok();
+        if (!st.ok()) {
+            VNE_LOG_ERROR << "TarSliceVolumeLoader: tar read failed for '" << path << "': " << st.message;
+            return false;
+        }
+        return true;
     }
     return false;
 }
