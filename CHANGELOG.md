@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0](https://github.com/vertexnova/vneio/compare/v1.6.0...v1.7.0) (2026-07-18)
+
+
+### Features
+
+* Added tar file loader. ([#21](https://github.com/vertexnova/vneio/issues/21)) ([ee848b3](https://github.com/vertexnova/vneio/commit/ee848b376836db20f66326808a02d6e6a4b64a90))
+* nrrdio updates. ([#22](https://github.com/vertexnova/vneio/issues/22)) ([510a5ab](https://github.com/vertexnova/vneio/commit/510a5aba16a8100626d8c56fe9f327a87ba15adb))
+
+
+### Bug Fixes
+
+* force PIC on NrrdIO OBJECT library for Emscripten pthreads builds ([ca1d3fa](https://github.com/vertexnova/vneio/commit/ca1d3fa04896b2b5a8433fcb4fa8e4cd96e16b01))
+
 ## [1.6.0](https://github.com/vertexnova/vneio/compare/v1.5.0...v1.6.0) (2026-06-13)
 
 
