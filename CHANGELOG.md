@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0](https://github.com/vertexnova/vneio/compare/v1.7.0...v1.8.0) (2026-10-02)
+
+
+### Features
+
+* Enabled the USD ([#23](https://github.com/vertexnova/vneio/issues/23)) ([b579863](https://github.com/vertexnova/vneio/commit/b5798631e753d897f7ef0af942e3ad0a6e04edcc))
+
 ## [1.7.0](https://github.com/vertexnova/vneio/compare/v1.6.0...v1.7.0) (2026-07-18)
 
 
