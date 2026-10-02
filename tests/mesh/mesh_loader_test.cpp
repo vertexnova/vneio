@@ -278,3 +278,37 @@ TEST_F(MeshLoaderTest, AssetIOUnsupportedFormatReturnsError) {
     EXPECT_FALSE(result.ok());
     EXPECT_EQ(result.status.code, vne::io::ErrorCode::eUnsupportedFormat);
 }
+
+#if defined(VNEIO_HAS_USD)
+// ---------------------------------------------------------------------------
+// USD import (Assimp + tinyusdz), only compiled when -DVNEIO_BUILD_USD=ON.
+// ---------------------------------------------------------------------------
+namespace {
+const std::string kUsdMeshPath = getTestdataPath("meshes/minimal.usd");
+}  // namespace
+
+TEST_F(MeshLoaderTest, UsdExtensionsAreSupported) {
+    AssimpLoader loader;
+    EXPECT_TRUE(loader.isExtensionSupported("robot.usd"));
+    EXPECT_TRUE(loader.isExtensionSupported("robot.usda"));
+    EXPECT_TRUE(loader.isExtensionSupported("robot.usdc"));
+    EXPECT_TRUE(loader.isExtensionSupported("robot.usdz"));
+}
+
+TEST_F(MeshLoaderTest, LoadMinimalUsdaTriangle) {
+    if (!std::filesystem::exists(kUsdMeshPath)) {
+        GTEST_SKIP() << "Test mesh not found: " << kUsdMeshPath;
+    }
+    AssimpLoader loader;
+    Mesh mesh;
+
+    // minimal.usd has no normals or UVs; leave the defaults on so Assimp generates them,
+    // and keep the raw coordinates so the three known points can be checked directly.
+    AssimpLoaderOptions opts;
+    opts.normalize_to_unit_sphere = false;
+
+    ASSERT_TRUE(loader.loadFile(kUsdMeshPath, mesh, opts));
+    EXPECT_EQ(mesh.getVertexCount(), 3u);
+    EXPECT_EQ(mesh.getIndexCount(), 3u);
+}
+#endif  // VNEIO_HAS_USD

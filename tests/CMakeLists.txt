@@ -121,6 +121,9 @@ target_link_libraries(TestVneIo
 
 # Ensure testdata root is defined (config.h or fallback from CMake)
 target_compile_definitions(TestVneIo PRIVATE "VNEIO_TESTDATA_DIR=\"${VNEIO_TESTDATA_DIR}\"")
+if(VNEIO_BUILD_USD)
+    target_compile_definitions(TestVneIo PRIVATE VNEIO_HAS_USD=1)
+endif()
 
 # Run from project root so testdata paths resolve; testdata root is absolute from config
 add_test(NAME vneio.test COMMAND TestVneIo)
